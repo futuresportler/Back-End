@@ -3,20 +3,24 @@ const Joi = require("joi");
 
 // Validation rules using express-validator
 const validateCreateUser = [
-  body("email").isEmail().withMessage("Invalid email format"),
+  body("mobile")
+    .isString()
+    .matches(/^\+?[1-9]\d{1,14}$/)
+    .withMessage("Invalid mobile number"),
   body("password")
     .isLength({ min: 6 })
     .withMessage("Password must be at least 6 characters long"),
-  body("phone_number")
-    .optional()
-    .isMobilePhone()
-    .withMessage("Invalid phone number"),
   body("profile_picture").optional().isURL().withMessage("Invalid URL"),
-  body("is_verified").optional().isBoolean().withMessage("Must be a boolean"),
-  body("status")
-    .optional()
-    .isIn(["active", "inactive", "banned"])
-    .withMessage("Invalid status"),
+  body("first_name")
+    .isString()
+    .withMessage("First name must be a string")
+    .isLength({ min: 1 })
+    .withMessage("First name is required"),
+  body("last_name")
+    .isString()
+    .withMessage("Last name must be a string")
+    .isLength({ min: 1 })
+    .withMessage("Last name is required"),
 ];
 
 const validateUpdateUser = [
@@ -26,7 +30,7 @@ const validateUpdateUser = [
     .optional()
     .isLength({ min: 6 })
     .withMessage("Password must be at least 6 characters long"),
-  body("phone_number")
+  body("mobile")
     .optional()
     .isMobilePhone()
     .withMessage("Invalid phone number"),
@@ -50,9 +54,22 @@ const validateRequest = (req, res, next) => {
   next();
 };
 
+
+const validateOTPRequest = [
+  body("email").isEmail().withMessage("Invalid email format"),
+];
+
+const validateOTPVerification = [
+  body("email").isEmail().withMessage("Invalid email format"),
+  body("otp").isNumeric().isLength({ min: 6, max: 6 }).withMessage("OTP must be 6 digits"),
+];
+
+
 module.exports = {
   validateCreateUser,
   validateUpdateUser,
   validateUserId,
   validateRequest,
+  validateOTPRequest,
+  validateOTPVerification,
 };

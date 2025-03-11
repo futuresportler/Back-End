@@ -3,6 +3,7 @@ const {
   successResponse,
   errorResponse,
 } = require("../../common/utils/response");
+const { verifyAndExtractUser } = require("../../config/otp");
 
 const getAllUsers = async (req, res) => {
   try {
@@ -88,6 +89,53 @@ const deleteUser = async (req, res) => {
   }
 };
 
+const verifyTokenAndUpdateUser = async (req, res) => {
+  try {
+    const { idToken } = req.body;
+
+    // Step 1: Verify Token & Extract Data
+    const { mobileNumber } = await verifyAndExtractUser(idToken);
+
+    // Step 2: Fetch user by email
+    const user = await userService.getUserByMobile(mobileNumber);
+    if (!user) errorResponse(res, { message: "User not found" }, user, 404);
+
+    // Step 3: Add mobile number if missing
+    const updatedUser = await userService.updateUser(user.user_id, {
+      mobileNumber,
+      is_verified: true,
+    });
+
+    successResponse(
+      res,
+      { message: "User verified successfully" },
+      updatedUser
+    );
+  } catch (error) {
+    errorResponse(res, error.message, error);
+  }
+};
+
+const requestOTP = async (req, res) => {
+  try {
+    const { email } = req.body;
+    const response = await userService.requestOTP(email);
+    successResponse(res, response.message, response);
+  } catch (error) {
+    errorResponse(res, error.message, error);
+  }
+};
+
+const verifyOTP = async (req, res) => {
+  try {
+    const { email, otp } = req.body;
+    const response = await userService.verifyOTPCode(email, otp);
+    successResponse(res, response.message, response);
+  } catch (error) {
+    errorResponse(res, error.message, error);
+  }
+};
+
 module.exports = {
   getAllUsers,
   getUserById,
@@ -96,4 +144,7 @@ module.exports = {
   refreshToken,
   updateUser,
   deleteUser,
+  verifyTokenAndUpdateUser,
+  requestOTP,
+  verifyOTP,
 };
