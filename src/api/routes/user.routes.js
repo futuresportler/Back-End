@@ -6,6 +6,8 @@ const {
   validateUpdateUser,
   validateUserId,
   validateRequest,
+  validateOTPRequest,
+  validateOTPVerification,
 } = require("../validation/userValidator");
 
 router.get("/", userController.getAllUsers);
@@ -31,5 +33,10 @@ router.delete(
   validateRequest,
   userController.deleteUser
 );
+
+
+router.post("/verify-token", userController.verifyTokenAndUpdateUser);
+router.post("/request-otp", validateOTPRequest, userController.requestOTP);
+router.post("/verify-otp", validateOTPVerification, userController.verifyOTP);
 
 module.exports = router;

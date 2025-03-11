@@ -23,5 +23,3 @@ app.listen(PORT, () => {
   connectPostgres();
   info(`Server running on port ${PORT}`);
 });
-
-// connectMongoDB();
