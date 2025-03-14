@@ -12,8 +12,19 @@ const sendOTPEmail = async (email, otp) => {
   const mailOptions = {
     from: process.env.EMAIL_USER,
     to: email,
-    subject: `Email Verification OTP For ${email}`,
-    text: `Your OTP is: ${otp}. It will expire in 5 minutes.`,
+    subject: `Future Sportler Email Verification OTP For ${email}`,
+    html: `
+      <div style="font-family: Arial, sans-serif; line-height: 1.6;">
+        <h2 style="color: #333;">Future Sportler Email Verification</h2>
+        <p>Dear User,</p>
+        <p>Thank you for registering with Future Sportler. Please use the following One-Time Password (OTP) to verify your email address:</p>
+        <p style="font-size: 20px; font-weight: bold; color: #333;">${otp}</p>
+        <p>This OTP will expire in <strong>5 minutes</strong>.</p>
+        <p>If you did not request this verification, please ignore this email.</p>
+        <p>Best regards,</p>
+        <p>The Future Sportler Team</p>
+      </div>
+    `,
   };
 
   await transporter.sendMail(mailOptions);

@@ -1,15 +1,11 @@
 const db = require("../../../database/index"); // Ensure this properly imports Sequelize models
 
-const findAll = async () => {
-  return await db.User.findAll();
-};
-
 const findById = async (userId) => {
   return await db.User.findByPk(userId);
 };
 
-const findByMobile = async (mobile) => {
-  return await db.User.findOne({ where: { mobile } });
+const findByEmail = async (email) => {
+  return await db.User.findOne({ where: { email } });
 };
 
 const createUser = async (userData) => {
@@ -30,9 +26,8 @@ const deleteUser = async (userId) => {
 };
 
 module.exports = {
-  findAll,
   findById,
-  findByMobile,
+  findByEmail,
   createUser,
   updateUser,
   deleteUser,

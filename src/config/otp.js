@@ -1,19 +1,16 @@
 const auth = require("./firebase"); // Import Firebase Auth
-const redis = require("redis");
-
-const redisClient = redis.createClient();
-redisClient.connect();
-
+const {setCache, getCache, delCache} = require("./cache");
 
 const generateOTP = () => Math.floor(100000 + Math.random() * 900000).toString();
 
 const storeOTP = async (email, otp) => {
-  await redisClient.setEx(`otp:${email}`, 300, otp); // OTP expires in 5 minutes
+  await setCache(`otp:${email}`, otp, 300); // OTP expires in 5 minutes
 };
 
 const verifyOTP = async (email, otp) => {
-  const storedOTP = await redisClient.get(`otp:${email}`);
+  const storedOTP = await getCache(`otp:${email}`);
   if (!storedOTP) return false;
+  await delCache(`otp:${email}`); // Delete OTP after verification
   return storedOTP === otp;
 };
 
