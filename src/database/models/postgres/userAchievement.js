@@ -4,7 +4,7 @@ const User = require("./user");
 
 const UserAchievement = sequelize.define("UserAchievement", {
   achievement_id: { type: DataTypes.INTEGER, primaryKey: true, autoIncrement: true },
-  user_id: { type: DataTypes.UUID, references: { model: User, key: "user_id" } },
+  userId: { type: DataTypes.UUID, references: { model: User, key: "userId" } },
   title: { type: DataTypes.STRING, allowNull: false },
   description: { type: DataTypes.TEXT },
   date_achieved: { type: DataTypes.DATE, allowNull: false },

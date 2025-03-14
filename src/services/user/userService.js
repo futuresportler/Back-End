@@ -1,13 +1,16 @@
 const userRepository = require("./repositories/userRepository");
-const { generateTokens, verifyRefreshToken } = require("../../config/auth");
+const { generateTokens } = require("../../config/auth");
 const { hashPassword, comparePassword } = require("../../common/utils/hash");
-
-const getAllUsers = async () => {
-  return await userRepository.findAll();
-};
+const { warn } = require("../../config/logging");
+const { generateOTP, storeOTP, verifyOTP } = require("../../config/otp");
+const { sendOTPEmail } = require("../../config/emailService");
 
 const getUserById = async (userId) => {
   return await userRepository.findById(userId);
+};
+
+const getUserByEmail = async (email) => {
+  return await userRepository.findByEmail(email);
 };
 
 const signUp = async (userData) => {
@@ -21,24 +24,31 @@ const signUp = async (userData) => {
     error.message = "User already exists";
     throw error;
   }
-
   // Hash password
   const hashedPassword = await hashPassword(password);
   // Create user
   const newUser = await userRepository.createUser({
     email,
     password: hashedPassword,
-    otherData,
+    ...otherData,
   });
+
+  setTimeout(async () => {
+    const user = await userRepository.findById(newUser.userId);
+    if (user && !user.isVerified) {
+      await userRepository.deleteUser(user.userId);
+      warn(
+        `User with Email ${user.email} deleted due to non-verification.`
+      );
+    }
+  }, 1 * 30 * 1000); // 2 minute in milliseconds
 
   // Generate tokens
   const tokens = generateTokens(newUser);
-  return { user: newUser, tokens };
+  return { tokens };
 };
 
-
 const signIn = async (data) => {
-
   const { email, password: passwordRaw } = data;
   // Find user
   const user = await userRepository.findByEmail(email);
@@ -52,33 +62,23 @@ const signIn = async (data) => {
   const isMatch = comparePassword(passwordRaw, user.password);
   if (!isMatch) throw new Error("Invalid credentials");
 
-  // Remove password from response
-  const { password, ...sanitizedUser } = user.get({ plain: true });
-
   // Generate tokens
-  const tokens = generateTokens(sanitizedUser);
+  const tokens = generateTokens(user);
 
-  return { user: sanitizedUser, tokens };
+  return tokens;
 };
 
-const refreshToken = async (refreshToken) => {
-  const decoded = verifyRefreshToken(refreshToken);
-  if (!decoded) {
-    const error = new Error("Invalid refresh token");
-    error.statusCode = 401;
-    error.message = "Invalid refresh token";
-    throw error;
-  }
-  const user = await userRepository.findById(decoded.userId);
+const refreshToken = async (userId) => {
+  const user = await userRepository.findById(userId);
   if (!user) {
     const error = new Error("User not found");
     error.statusCode = 404;
     throw error;
   }
 
-  return generateTokens(user);
+  const { accessToken, refreshToken } = generateTokens(user);
+  return accessToken;
 };
-
 
 const updateUser = async (userId, updateData) => {
   return await userRepository.updateUser(userId, updateData);
@@ -88,12 +88,36 @@ const deleteUser = async (userId) => {
   return await userRepository.deleteUser(userId);
 };
 
+const requestOTP = async (email) => {
+  const otp = generateOTP();
+  await storeOTP(email, otp);
+  await sendOTPEmail(email, otp);
+  return { message: "OTP sent successfully!" };
+};
+
+const verifyOTPCode = async (email, otp) => {
+  const isValid = await verifyOTP(email, otp);
+  if (!isValid) throw new Error("Invalid or expired OTP");
+
+
+  const user = await getUserByEmail(email);
+  if (!user) {
+    const error = new Error("User not found");
+    error.statusCode = 404;
+    throw error;
+  }
+  await updateUser(user.userId, { isVerified: true });
+  return { message: "OTP verified successfully!" };
+};
+
 module.exports = {
-  getAllUsers,
   getUserById,
+  getUserByEmail,
   signUp,
   signIn,
   refreshToken,
   updateUser,
   deleteUser,
+  requestOTP,
+  verifyOTPCode,
 };

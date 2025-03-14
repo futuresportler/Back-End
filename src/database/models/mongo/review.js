@@ -7,7 +7,7 @@ const reviewSchema = new mongoose.Schema({
   rating: { type: Number, min: 1, max: 5, required: true },
   comment: { type: String },
   created_at: { type: Date, default: Date.now },
-  is_verified: { type: Boolean, default: false }
+  isVerified: { type: Boolean, default: false }
 });
 
 module.exports = mongoose.model("Review", reviewSchema);

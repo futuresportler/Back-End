@@ -1,9 +1,5 @@
 const db = require("../../../database/index"); // Ensure this properly imports Sequelize models
 
-const findAll = async () => {
-  return await db.User.findAll();
-};
-
 const findById = async (userId) => {
   return await db.User.findByPk(userId);
 };
@@ -30,7 +26,6 @@ const deleteUser = async (userId) => {
 };
 
 module.exports = {
-  findAll,
   findById,
   findByEmail,
   createUser,

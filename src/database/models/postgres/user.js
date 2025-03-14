@@ -4,10 +4,18 @@ const { sequelize } = require("../../../config/database"); // Ensure correct pat
 const User = sequelize.define(
   "User",
   {
-    user_id: {
+    userId: {
       type: DataTypes.UUID,
       defaultValue: DataTypes.UUIDV4,
       primaryKey: true,
+    },
+    first_name: {
+      type: DataTypes.STRING,
+      allowNull: false,
+    },
+    last_name: {
+      type: DataTypes.STRING,
+      allowNull: false,
     },
     email: {
       type: DataTypes.STRING,
@@ -18,22 +26,18 @@ const User = sequelize.define(
       type: DataTypes.STRING,
       allowNull: false,
     },
-    phone_number: {
+    mobile: {
       type: DataTypes.STRING,
+      allowNull: true,
       unique: true,
     },
     profile_picture: {
       type: DataTypes.STRING,
       allowNull: true,
     },
-    is_verified: {
+    isVerified: {
       type: DataTypes.BOOLEAN,
       defaultValue: false,
-    },
-    status: {
-      type: DataTypes.ENUM,
-      values: ["active", "inactive", "banned"],
-      defaultValue: "active",
     },
   },
   {
