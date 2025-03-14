@@ -21,8 +21,8 @@ User.belongsTo(Role, { foreignKey: "role_id" });
 Role.hasMany(User, { foreignKey: "role_id" });
 
 // User & UserAchievement (One-to-Many)
-User.hasMany(UserAchievement, { foreignKey: "user_id" });
-UserAchievement.belongsTo(User, { foreignKey: "user_id" });
+User.hasMany(UserAchievement, { foreignKey: "userId" });
+UserAchievement.belongsTo(User, { foreignKey: "userId" });
 
 // User & CoachProfile (One-to-One)
 User.hasOne(CoachProfile, { foreignKey: "coach_id" });
