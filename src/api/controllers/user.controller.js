@@ -113,6 +113,37 @@ const verifyOTP = async (req, res) => {
   }
 };
 
+const forgotPassword = async (req, res) => {
+  try {
+    const { email } = req.body;
+    const response = await userService.forgotPassword(email);
+    successResponse(res, response.message, response);
+  } catch (error) {
+    errorResponse(res, error.message, error);
+  }
+}
+
+const forgotPasswordOTPVerify = async (req, res) => {
+  try {
+    const { otp, email } = req.body;
+    const response = await userService.forgotPasswordOTPVerify(email, otp);
+    successResponse(res, response.message, response);
+  } catch (error) {
+    errorResponse(res, error.message, error);
+  }
+}
+
+
+const resetPassword = async (req, res) => {
+  try {
+    const {password} = req.body
+    const response = await userService.resetPassword(req.user.userId, password);
+    successResponse(res, response.message, response);
+  } catch (error) {
+    errorResponse(res, error.message, error);
+  }
+}
+
 module.exports = {
   getUserById,
   signup,
@@ -123,4 +154,7 @@ module.exports = {
   // verifyTokenAndUpdateUser,
   requestOTP,
   verifyOTP,
+  forgotPassword,
+  forgotPasswordOTPVerify,
+  resetPassword,
 };
