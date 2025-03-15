@@ -37,11 +37,9 @@ const signUp = async (userData) => {
     const user = await userRepository.findById(newUser.userId);
     if (user && !user.isVerified) {
       await userRepository.deleteUser(user.userId);
-      warn(
-        `User with Email ${user.email} deleted due to non-verification.`
-      );
+      warn(`User with Email ${user.email} deleted due to non-verification.`);
     }
-  }, 1 * 30 * 1000); // 2 minute in milliseconds
+  }, 10 * 60 * 1000); // 2 minute in milliseconds
 
   // Generate tokens
   const tokens = generateTokens(newUser);
@@ -99,7 +97,6 @@ const verifyOTPCode = async (email, otp) => {
   const isValid = await verifyOTP(email, otp);
   if (!isValid) throw new Error("Invalid or expired OTP");
 
-
   const user = await getUserByEmail(email);
   if (!user) {
     const error = new Error("User not found");
@@ -109,6 +106,42 @@ const verifyOTPCode = async (email, otp) => {
   await updateUser(user.userId, { isVerified: true });
   return { message: "OTP verified successfully!" };
 };
+
+const forgotPassword = async (email) => {
+  const user = await getUserByEmail(email);
+  if (!user) {
+    const error = new Error("User not found");
+    error.statusCode = 404;
+    throw error;
+  }
+  const otp = generateOTP();
+  await storeOTP(email, otp);
+  await sendOTPEmail(email, otp);
+  return { message: "OTP sent successfully!" };
+};
+
+const forgotPasswordOTPVerify = async (email, otp) => {
+  const isValid = await verifyOTP(email, otp);
+  if (!isValid) throw new Error("Invalid or expired OTP");
+
+  const user = await getUserByEmail(email);
+  if (!user) {
+    const error = new Error("User not found");
+    error.statusCode = 404;
+    throw error;
+  }
+
+  await updateUser(user.userId, { isVerified: true });
+  const tokens = generateTokens(user);
+  return { tokens };
+};
+
+
+const resetPassword = async (userId, password) => {
+  const hashedPassword = await hashPassword(password);
+  await updateUser(userId, { password: hashedPassword });
+  return { message: "Password reset successfully!" };
+}
 
 module.exports = {
   getUserById,
@@ -120,4 +153,7 @@ module.exports = {
   deleteUser,
   requestOTP,
   verifyOTPCode,
+  forgotPassword,
+  forgotPasswordOTPVerify,
+  resetPassword,
 };
