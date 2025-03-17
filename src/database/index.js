@@ -25,12 +25,12 @@ User.hasMany(UserAchievement, { foreignKey: "userId" });
 UserAchievement.belongsTo(User, { foreignKey: "userId" });
 
 // User & CoachProfile (One-to-One)
-User.hasOne(CoachProfile, { foreignKey: "coach_id" });
-CoachProfile.belongsTo(User, { foreignKey: "coach_id" });
+// User.hasOne(CoachProfile, { foreignKey: "coachId" });
+// CoachProfile.belongsTo(User, { foreignKey: "coachId" });
 
 // User & AcademyProfile (One-to-One)
-User.hasOne(AcademyProfile, { foreignKey: "academy_id" });
-AcademyProfile.belongsTo(User, { foreignKey: "academy_id" });
+// User.hasOne(AcademyProfile, { foreignKey: "academy_id" });
+// AcademyProfile.belongsTo(User, { foreignKey: "academy_id" });
 
 // Sport & AcademySports (One-to-Many)
 Sport.hasMany(AcademySport, { foreignKey: "sport_id" });
@@ -41,8 +41,8 @@ AcademyProfile.hasMany(AcademySport, { foreignKey: "academy_id" });
 AcademySport.belongsTo(AcademyProfile, { foreignKey: "academy_id" });
 
 // CoachProfile & CoachSports (One-to-Many)
-CoachProfile.hasMany(CoachSport, { foreignKey: "coach_id" });
-CoachSport.belongsTo(CoachProfile, { foreignKey: "coach_id" });
+CoachProfile.hasMany(CoachSport, { foreignKey: "coachId" });
+CoachSport.belongsTo(CoachProfile, { foreignKey: "coachId" });
 
 // Sport & CoachSports (One-to-Many)
 Sport.hasMany(CoachSport, { foreignKey: "sport_id" });
@@ -51,7 +51,7 @@ CoachSport.belongsTo(Sport, { foreignKey: "sport_id" });
 // CoachProfile & AcademyProfile (Many-to-Many via AcademyCoach)
 CoachProfile.belongsToMany(AcademyProfile, {
   through: AcademyCoach,
-  foreignKey: "coach_id",
+  foreignKey: "coachId",
 });
 AcademyProfile.belongsToMany(CoachProfile, {
   through: AcademyCoach,
@@ -59,9 +59,9 @@ AcademyProfile.belongsToMany(CoachProfile, {
 });
 
 // Define explicit AcademyCoach associations
-AcademyCoach.belongsTo(CoachProfile, { foreignKey: "coach_id" });
+AcademyCoach.belongsTo(CoachProfile, { foreignKey: "coachId" });
 AcademyCoach.belongsTo(AcademyProfile, { foreignKey: "academy_id" });
-CoachProfile.hasMany(AcademyCoach, { foreignKey: "coach_id" });
+CoachProfile.hasMany(AcademyCoach, { foreignKey: "coachId" });
 AcademyProfile.hasMany(AcademyCoach, { foreignKey: "academy_id" });
 
 
