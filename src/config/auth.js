@@ -14,8 +14,22 @@ const generateTokens = (user) => {
   return { accessToken, refreshToken };
 };
 
+const generateCoachTokens = (coach) => {
+  const payload = { coachId: coach.coachId, email: coach.email };
+
+  const accessToken = jwt.sign(payload, process.env.JWT_SECRET, {
+    expiresIn: "1h",
+  });
+
+  const refreshToken = jwt.sign(payload, process.env.REFRESH_SECRET, {
+    expiresIn: "30d",
+  });
+
+  return { accessToken, refreshToken };
+};
+
 const verifyToken = (token) => jwt.verify(token, process.env.JWT_SECRET);
 const verifyRefresh = (token) => jwt.verify(token, process.env.REFRESH_SECRET);
 
 
-module.exports = { generateTokens, verifyToken, verifyRefresh };
+module.exports = { generateTokens, generateCoachTokens, verifyToken, verifyRefresh };
