@@ -1,0 +1,34 @@
+const db = require("../../../database/index"); // Ensure this properly imports Sequelize models
+
+const findById = async (coachId) => {
+  return await db.CoachProfile.findByPk(coachId);
+};
+
+const findByEmail = async (email) => {
+  return await db.CoachProfile.findOne({ where: { email } });
+};
+
+const createCoach = async (coachData) => {
+  return await db.CoachProfile.create(coachData);
+};
+
+const updateCoach = async (coachId, updateData) => {
+  const coach = await db.CoachProfile.findByPk(coachId);
+  if (!coach) return null;
+  return await coach.update(updateData);
+};
+
+const deleteCoach = async (coachId) => {
+  const coach = await db.CoachProfile.findByPk(coachId);
+  if (!coach) return null;
+  await coach.destroy();
+  return coach;
+};
+
+module.exports = {
+  findById,
+  findByEmail,
+  createCoach,
+  updateCoach,
+  deleteCoach,
+};
