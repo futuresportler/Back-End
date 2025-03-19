@@ -21,7 +21,6 @@ const validateCreateUser = [
 ];
 
 const validateUpdateUser = [
-  param("id").isUUID().withMessage("Invalid user ID format"),
   body("email").optional().isEmail().withMessage("Invalid email format"),
   body("password")
     .optional()
