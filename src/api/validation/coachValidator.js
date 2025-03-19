@@ -31,7 +31,6 @@ const validateCreateCoach = [
 ];
 
 const validateUpdateCoach = [
-  param("id").isUUID().withMessage("Invalid coach ID format"),
   body("email").optional().isEmail().withMessage("Invalid email format"),
   body("password")
     .optional()

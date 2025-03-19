@@ -29,16 +29,16 @@ UserAchievement.belongsTo(User, { foreignKey: "userId" });
 // CoachProfile.belongsTo(User, { foreignKey: "coachId" });
 
 // User & AcademyProfile (One-to-One)
-// User.hasOne(AcademyProfile, { foreignKey: "academy_id" });
-// AcademyProfile.belongsTo(User, { foreignKey: "academy_id" });
+// User.hasOne(AcademyProfile, { foreignKey: "academyId" });
+// AcademyProfile.belongsTo(User, { foreignKey: "academyId" });
 
 // Sport & AcademySports (One-to-Many)
 Sport.hasMany(AcademySport, { foreignKey: "sport_id" });
 AcademySport.belongsTo(Sport, { foreignKey: "sport_id" });
 
 // AcademyProfile & AcademySports (One-to-Many)
-AcademyProfile.hasMany(AcademySport, { foreignKey: "academy_id" });
-AcademySport.belongsTo(AcademyProfile, { foreignKey: "academy_id" });
+AcademyProfile.hasMany(AcademySport, { foreignKey: "academyId" });
+AcademySport.belongsTo(AcademyProfile, { foreignKey: "academyId" });
 
 // CoachProfile & CoachSports (One-to-Many)
 CoachProfile.hasMany(CoachSport, { foreignKey: "coachId" });
@@ -55,14 +55,14 @@ CoachProfile.belongsToMany(AcademyProfile, {
 });
 AcademyProfile.belongsToMany(CoachProfile, {
   through: AcademyCoach,
-  foreignKey: "academy_id",
+  foreignKey: "academyId",
 });
 
 // Define explicit AcademyCoach associations
 AcademyCoach.belongsTo(CoachProfile, { foreignKey: "coachId" });
-AcademyCoach.belongsTo(AcademyProfile, { foreignKey: "academy_id" });
+AcademyCoach.belongsTo(AcademyProfile, { foreignKey: "academyId" });
 CoachProfile.hasMany(AcademyCoach, { foreignKey: "coachId" });
-AcademyProfile.hasMany(AcademyCoach, { foreignKey: "academy_id" });
+AcademyProfile.hasMany(AcademyCoach, { foreignKey: "academyId" });
 
 
 const syncDatabase = async () => {

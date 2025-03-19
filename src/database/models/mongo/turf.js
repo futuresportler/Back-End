@@ -1,7 +1,7 @@
 const mongoose = require("mongoose");
 
 const turfSchema = new mongoose.Schema({
-  academy_id: { type: mongoose.Schema.Types.ObjectId, ref: "Academy", required: false },
+  academyId: { type: mongoose.Schema.Types.ObjectId, ref: "Academy", required: false },
   name: { type: String, required: true },
   location: { type: String, required: true },
   sports_supported: [{ type: String, required: true }],
