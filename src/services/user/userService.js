@@ -57,7 +57,7 @@ const signIn = async (data) => {
     throw error;
   }
   // Compare passwords
-  const isMatch = comparePassword(passwordRaw, user.password);
+  const isMatch = await comparePassword(passwordRaw, user.password);
   if (!isMatch) throw new Error("Invalid credentials");
 
   // Generate tokens
