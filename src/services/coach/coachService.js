@@ -13,6 +13,10 @@ const getCoachByEmail = async (email) => {
   return await coachRepository.findByEmail(email);
 };
 
+const getCoachByMobile = async (mobileNumber) => {
+  return await coachRepository.findByMobile(mobileNumber);
+};
+
 const signUp = async (coachData) => {
   const { email, password, ...otherData } = coachData;
 
@@ -97,18 +101,18 @@ const verifyOTPCode = async (email, otp) => {
   const isValid = await verifyOTP(email, otp);
   if (!isValid) throw new Error("Invalid or expired OTP");
 
-  const coach = await getcoachByEmail(email);
+  const coach = await getCoachByEmail(email);
   if (!coach) {
     const error = new Error("coach not found");
     error.statusCode = 404;
     throw error;
   }
-  await updatecoach(coach.coachId, { isVerified: true });
+  await updateCoach(coach.coachId, { isVerified: true });
   return { message: "OTP verified successfully!" };
 };
 
 const forgotPassword = async (email) => {
-  const coach = await getcoachByEmail(email);
+  const coach = await getCoachByEmail(email);
   if (!coach) {
     const error = new Error("coach not found");
     error.statusCode = 404;
@@ -124,7 +128,7 @@ const forgotPasswordOTPVerify = async (email, otp) => {
   const isValid = await verifyOTP(email, otp);
   if (!isValid) throw new Error("Invalid or expired OTP");
 
-  const coach = await getcoachByEmail(email);
+  const coach = await getCoachByEmail(email);
   if (!coach) {
     const error = new Error("coach not found");
     error.statusCode = 404;
@@ -138,13 +142,14 @@ const forgotPasswordOTPVerify = async (email, otp) => {
 
 const resetPassword = async (coachId, password) => {
   const hashedPassword = await hashPassword(password);
-  await updatecoach(coachId, { password: hashedPassword });
+  await updateCoach(coachId, { password: hashedPassword });
   return { message: "Password reset successfully!" };
 };
 
 module.exports = {
   getCoachById,
   getCoachByEmail,
+  getCoachByMobile,
   signUp,
   signIn,
   refreshToken,

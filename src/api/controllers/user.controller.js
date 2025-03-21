@@ -3,7 +3,7 @@ const {
   successResponse,
   errorResponse,
 } = require("../../common/utils/response");
-// const { verifyAndExtractUser } = require("../../config/otp");
+const { verifyAndExtractUser } = require("../../config/otp");
 const { fatal } = require("../../config/logging");
 
 const getUserById = async (req, res) => {
@@ -68,28 +68,28 @@ const deleteUser = async (req, res) => {
   }
 };
 
-// const verifyTokenAndUpdateUser = async (req, res) => {
-//   try {
-//     const { idToken } = req.body;
+const verifyTokenAndUpdateUser = async (req, res) => {
+  try {
+    const { idToken } = req.body;
 
-//     // Step 1: Verify Token & Extract Data
-//     const { mobileNumber } = await verifyAndExtractUser(idToken);
+    // Step 1: Verify Token & Extract Data
+    const { mobileNumber } = await verifyAndExtractUser(idToken);
 
-//     // Step 2: Fetch user by email
-//     const user = await userService.getUserByMobile(mobileNumber);
-//     if (!user) errorResponse(res, "User not found", user, 404);
+    // Step 2: Fetch user by mobile number
+    const user = await userService.getUserByMobile(mobileNumber);
+    if (!user) return errorResponse(res, "User not found", null, 404);
 
-//     // Step 3: Add mobile number if missing
-//     const updatedUser = await userService.updateUser(user.userId, {
-//       mobileNumber,
-//       isVerified: true,
-//     });
+    // Step 3: Add mobile number if missing
+    const updatedUser = await userService.updateUser(user.userId, {
+      mobile: mobileNumber, // Changed from mobileNumber to mobile
+      isVerified: true,
+    });
 
-//     successResponse(res, "User verified successfully", updatedUser);
-//   } catch (error) {
-//     errorResponse(res, error.message, error);
-//   }
-// };
+    successResponse(res, "User verified successfully", updatedUser);
+  } catch (error) {
+    errorResponse(res, error.message, error);
+  }
+};
 
 const requestOTP = async (req, res) => {
   try {
@@ -121,7 +121,7 @@ const forgotPassword = async (req, res) => {
   } catch (error) {
     errorResponse(res, error.message, error);
   }
-}
+};
 
 const forgotPasswordOTPVerify = async (req, res) => {
   try {
@@ -131,18 +131,17 @@ const forgotPasswordOTPVerify = async (req, res) => {
   } catch (error) {
     errorResponse(res, error.message, error);
   }
-}
-
+};
 
 const resetPassword = async (req, res) => {
   try {
-    const {password} = req.body
+    const { password } = req.body;
     const response = await userService.resetPassword(req.user.userId, password);
     successResponse(res, response.message, response);
   } catch (error) {
     errorResponse(res, error.message, error);
   }
-}
+};
 
 module.exports = {
   getUserById,
@@ -151,7 +150,7 @@ module.exports = {
   refreshToken,
   updateUser,
   deleteUser,
-  // verifyTokenAndUpdateUser,
+  verifyTokenAndUpdateUser,
   requestOTP,
   verifyOTP,
   forgotPassword,

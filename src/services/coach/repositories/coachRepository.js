@@ -8,6 +8,10 @@ const findByEmail = async (email) => {
   return await db.CoachProfile.findOne({ where: { email } });
 };
 
+const findByMobile = async (mobileNumber) => {
+  return await db.CoachProfile.findOne({ where: { mobile: mobileNumber } });
+};
+
 const createCoach = async (coachData) => {
   return await db.CoachProfile.create(coachData);
 };
@@ -28,6 +32,7 @@ const deleteCoach = async (coachId) => {
 module.exports = {
   findById,
   findByEmail,
+  findByMobile,
   createCoach,
   updateCoach,
   deleteCoach,

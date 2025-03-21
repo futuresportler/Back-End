@@ -13,6 +13,10 @@ const getUserByEmail = async (email) => {
   return await userRepository.findByEmail(email);
 };
 
+const getUserByMobile = async (mobileNumber) => {
+  return await userRepository.findByMobile(mobileNumber);
+};
+
 const signUp = async (userData) => {
   const { email, password, ...otherData } = userData;
 
@@ -136,16 +140,16 @@ const forgotPasswordOTPVerify = async (email, otp) => {
   return { tokens };
 };
 
-
 const resetPassword = async (userId, password) => {
   const hashedPassword = await hashPassword(password);
   await updateUser(userId, { password: hashedPassword });
   return { message: "Password reset successfully!" };
-}
+};
 
 module.exports = {
   getUserById,
   getUserByEmail,
+  getUserByMobile,
   signUp,
   signIn,
   refreshToken,

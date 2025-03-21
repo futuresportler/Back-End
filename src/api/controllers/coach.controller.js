@@ -3,7 +3,7 @@ const {
   successResponse,
   errorResponse,
 } = require("../../common/utils/response");
-// const { verifyAndExtractCoach } = require("../../config/otp");
+const { verifyAndExtractUser } = require("../../config/otp");
 const { fatal } = require("../../config/logging");
 
 const getCoachById = async (req, res) => {
@@ -72,28 +72,29 @@ const deleteCoach = async (req, res) => {
   }
 };
 
-// const verifyTokenAndUpdateCoach = async (req, res) => {
-//   try {
-//     const { idToken } = req.body;
+const verifyTokenAndUpdateCoach = async (req, res) => {
+  try {
+    const { idToken } = req.body;
 
-//     // Step 1: Verify Token & Extract Data
-//     const { mobileNumber } = await verifyAndExtractCoach(idToken);
+    // Step 1: Verify Token & Extract Data
+    const { mobileNumber } = await verifyAndExtractUser(idToken);
+    // const mobileNumber = "+1234567890";
 
-//     // Step 2: Fetch coach by email
-//     const coach = await coachService.getCoachByMobile(mobileNumber);
-//     if (!coach) errorResponse(res, "Coach not found", coach, 404);
+    // Step 2: Fetch coach by email
+    const coach = await coachService.getCoachByMobile(mobileNumber);
+    if (!coach) return errorResponse(res, "Coach not found", null, 404);
 
-//     // Step 3: Add mobile number if missing
-//     const updatedCoach = await coachService.updateCoach(coach.coachId, {
-//       mobileNumber,
-//       isVerified: true,
-//     });
+    // Step 3: Add mobile number if missing
+    const updatedCoach = await coachService.updateCoach(coach.coachId, {
+      mobile: mobileNumber, // Changed from mobileNumber to mobile
+      isVerified: true,
+    });
 
-//     successResponse(res, "Coach verified successfully", updatedCoach);
-//   } catch (error) {
-//     errorResponse(res, error.message, error);
-//   }
-// };
+    successResponse(res, "Coach verified successfully", updatedCoach);
+  } catch (error) {
+    errorResponse(res, error.message, error);
+  }
+};
 
 const requestOTP = async (req, res) => {
   try {
@@ -157,7 +158,7 @@ module.exports = {
   refreshToken,
   updateCoach,
   deleteCoach,
-  // verifyTokenAndUpdateCoach,
+  verifyTokenAndUpdateCoach,
   requestOTP,
   verifyOTP,
   forgotPassword,
