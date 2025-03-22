@@ -47,6 +47,15 @@ const Coach = sequelize.define(
       type: DataTypes.BOOLEAN,
       defaultValue: false,
     },
+    isOAuth: {
+      type: DataTypes.BOOLEAN,
+      defaultValue: false,
+    },
+    firebaseUID: {
+      type: DataTypes.STRING,
+      allowNull: true,
+      unique: true,
+    },
     biography: {
       type: DataTypes.TEXT,
     },
