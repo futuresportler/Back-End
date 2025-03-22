@@ -4,7 +4,7 @@ const { hashPassword, comparePassword } = require("../../common/utils/hash");
 const { warn } = require("../../config/logging");
 const { generateOTP, storeOTP, verifyOTP } = require("../../config/otp");
 const { sendOTPEmail } = require("../../config/emailService");
-const admin = require("firebase-admin");
+const firebase = require("../../config/firebase");
 
 const getUserById = async (userId) => {
   return await userRepository.findById(userId);
@@ -149,7 +149,7 @@ const resetPassword = async (userId, password) => {
 
 const handleOAuth = async (idToken) => {
   try {
-    const decodedToken = await admin.auth().verifyIdToken(idToken);
+    const decodedToken = await firebase.verifyIdToken(idToken);
 
     const { email, name, picture, uid } = decodedToken;
 
