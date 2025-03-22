@@ -167,6 +167,15 @@ const handleOAuthSignIn = async (req, res) => {
   }
 };
 
+const getAllCoaches = async (req, res) => {
+  try {
+    const coaches = await coachService.getAllCoaches();
+    successResponse(res, "Coaches fetched", coaches);
+  } catch (error) {
+    errorResponse(res, error);
+  }
+};
+
 module.exports = {
   getCoachById,
   signup,
@@ -181,4 +190,5 @@ module.exports = {
   forgotPasswordOTPVerify,
   resetPassword,
   handleOAuthSignIn,
+  getAllCoaches,
 };

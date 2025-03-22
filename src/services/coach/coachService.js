@@ -191,6 +191,10 @@ const createCoach = async (coachData) => {
   return await coachRepository.createCoach(coachData);
 };
 
+const getAllCoaches = async () => {
+  return await coachRepository.findAll();
+}
+
 module.exports = {
   getCoachById,
   getCoachByEmail,
@@ -207,4 +211,5 @@ module.exports = {
   resetPassword,
   handleOAuth,
   createCoach,
+  getAllCoaches,
 };

@@ -15,6 +15,9 @@ const {
 } = require("../validation/coachValidator");
 const auth = require("../../config/firebase");
 
+//get all coaches list
+router.get("/all", authMiddleware, coachController.getAllCoaches);
+
 //coach actions
 router.get("/", validateRequest, authMiddleware, coachController.getCoachById);
 router.patch(

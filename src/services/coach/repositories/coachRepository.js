@@ -29,6 +29,10 @@ const deleteCoach = async (coachId) => {
   return coach;
 };
 
+const findAll = async () => {
+  return await db.CoachProfile.findAll();
+};
+
 module.exports = {
   findById,
   findByEmail,
@@ -36,4 +40,5 @@ module.exports = {
   createCoach,
   updateCoach,
   deleteCoach,
+  findAll,
 };
