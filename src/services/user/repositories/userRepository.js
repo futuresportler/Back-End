@@ -8,6 +8,10 @@ const findByEmail = async (email) => {
   return await db.User.findOne({ where: { email } });
 };
 
+const findByMobile = async (mobileNumber) => {
+  return await db.User.findOne({ where: { mobile: mobileNumber } });
+};
+
 const createUser = async (userData) => {
   return await db.User.create(userData);
 };
@@ -28,6 +32,7 @@ const deleteUser = async (userId) => {
 module.exports = {
   findById,
   findByEmail,
+  findByMobile,
   createUser,
   updateUser,
   deleteUser,

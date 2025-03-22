@@ -4,6 +4,7 @@ const { hashPassword, comparePassword } = require("../../common/utils/hash");
 const { warn } = require("../../config/logging");
 const { generateOTP, storeOTP, verifyOTP } = require("../../config/otp");
 const { sendOTPEmail } = require("../../config/emailService");
+const admin = require("firebase-admin");
 
 const getCoachById = async (coachId) => {
   return await coachRepository.findById(coachId);
@@ -11,6 +12,10 @@ const getCoachById = async (coachId) => {
 
 const getCoachByEmail = async (email) => {
   return await coachRepository.findByEmail(email);
+};
+
+const getCoachByMobile = async (mobileNumber) => {
+  return await coachRepository.findByMobile(mobileNumber);
 };
 
 const signUp = async (coachData) => {
@@ -97,18 +102,18 @@ const verifyOTPCode = async (email, otp) => {
   const isValid = await verifyOTP(email, otp);
   if (!isValid) throw new Error("Invalid or expired OTP");
 
-  const coach = await getcoachByEmail(email);
+  const coach = await getCoachByEmail(email);
   if (!coach) {
     const error = new Error("coach not found");
     error.statusCode = 404;
     throw error;
   }
-  await updatecoach(coach.coachId, { isVerified: true });
+  await updateCoach(coach.coachId, { isVerified: true });
   return { message: "OTP verified successfully!" };
 };
 
 const forgotPassword = async (email) => {
-  const coach = await getcoachByEmail(email);
+  const coach = await getCoachByEmail(email);
   if (!coach) {
     const error = new Error("coach not found");
     error.statusCode = 404;
@@ -124,7 +129,7 @@ const forgotPasswordOTPVerify = async (email, otp) => {
   const isValid = await verifyOTP(email, otp);
   if (!isValid) throw new Error("Invalid or expired OTP");
 
-  const coach = await getcoachByEmail(email);
+  const coach = await getCoachByEmail(email);
   if (!coach) {
     const error = new Error("coach not found");
     error.statusCode = 404;
@@ -138,13 +143,58 @@ const forgotPasswordOTPVerify = async (email, otp) => {
 
 const resetPassword = async (coachId, password) => {
   const hashedPassword = await hashPassword(password);
-  await updatecoach(coachId, { password: hashedPassword });
+  await updateCoach(coachId, { password: hashedPassword });
   return { message: "Password reset successfully!" };
+};
+
+const handleOAuth = async (idToken) => {
+  try {
+    const decodedToken = await admin.auth().verifyIdToken(idToken);
+
+    const { email, name, picture, uid } = decodedToken;
+
+    const displayName = name || email.split("@")[0];
+    const nameParts = displayName.split(" ");
+    const first_name = nameParts[0];
+    const last_name = nameParts.length > 1 ? nameParts.slice(1).join(" ") : "";
+
+    let coach = await coachRepository.findByEmail(email);
+
+    if (coach) {
+      if (!coach.isOAuth) {
+        coach = await coachRepository.updateCoach(coach.coachId, {
+          isOAuth: true,
+          firebaseUID: uid,
+        });
+      }
+    } else {
+      coach = await coachRepository.createCoach({
+        email,
+        first_name,
+        last_name,
+        profile_picture: picture || null,
+        isOAuth: true,
+        isVerified: true,
+        firebaseUID: uid,
+      });
+    }
+
+    const tokens = generateCoachTokens(coach);
+    return { coach, tokens };
+  } catch (error) {
+    console.error("Firebase token verification failed:", error);
+    throw new Error("Invalid or expired authentication token");
+  }
+};
+
+const createCoach = async (coachData) => {
+  return await coachRepository.createCoach(coachData);
 };
 
 module.exports = {
   getCoachById,
   getCoachByEmail,
+  getCoachByMobile,
   signUp,
   signIn,
   refreshToken,
@@ -155,4 +205,6 @@ module.exports = {
   forgotPassword,
   forgotPasswordOTPVerify,
   resetPassword,
+  handleOAuth,
+  createCoach,
 };

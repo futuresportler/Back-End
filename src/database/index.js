@@ -69,10 +69,10 @@ const syncDatabase = async () => {
   try {
     await sequelize.authenticate(); // Ensure DB connection is active
 
-    await User.sync({ alter: true });
     await Role.sync({ alter: true });
     await Sport.sync({ alter: true });
     await Certification.sync({ alter: true });
+    await User.sync({ alter: true });
     await CoachProfile.sync({ alter: true }); 
     await AcademyProfile.sync({ alter: true });
 
