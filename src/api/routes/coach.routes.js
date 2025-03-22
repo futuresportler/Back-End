@@ -34,6 +34,9 @@ router.delete(
   coachController.deleteCoach
 );
 
+// Review routes
+router.post("/:coachId/reviews", authMiddleware, coachController.addReview);
+
 //login actions
 router.post(
   "/signup",

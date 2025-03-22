@@ -5,6 +5,7 @@ const { warn } = require("../../config/logging");
 const { generateOTP, storeOTP, verifyOTP } = require("../../config/otp");
 const { sendOTPEmail } = require("../../config/emailService");
 const admin = require("firebase-admin");
+const db = require("../../database/index");
 
 const getCoachById = async (coachId) => {
   return await coachRepository.findById(coachId);
@@ -193,7 +194,34 @@ const createCoach = async (coachData) => {
 
 const getAllCoaches = async () => {
   return await coachRepository.findAll();
-}
+};
+
+const addReview = async (reviewData) => {
+  // Verify that the coach exists
+  const coach = await coachRepository.findById(reviewData.entity_id);
+  if (!coach) {
+    const error = new Error("Coach not found");
+    error.statusCode = 404;
+    throw error;
+  }
+
+  // Create the review
+  const newReview = await db.Review.create(reviewData);
+
+  // Update the coach's review_ids array if it exists
+  if (coach.review_ids) {
+    const updatedReviewIds = [...coach.review_ids, newReview.review_id];
+    await coachRepository.updateCoach(coach.coachId, {
+      review_ids: updatedReviewIds,
+    });
+  } else {
+    await coachRepository.updateCoach(coach.coachId, {
+      review_ids: [newReview.review_id],
+    });
+  }
+
+  return newReview;
+};
 
 module.exports = {
   getCoachById,
@@ -212,4 +240,5 @@ module.exports = {
   handleOAuth,
   createCoach,
   getAllCoaches,
+  addReview,
 };

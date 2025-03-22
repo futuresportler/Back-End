@@ -71,6 +71,10 @@ const Coach = sequelize.define(
     certification_ids: {
       type: DataTypes.ARRAY(DataTypes.INTEGER),
     },
+    review_ids: {
+      type: DataTypes.ARRAY(DataTypes.INTEGER),
+      defaultValue: [],
+    },
   },
   {
     tableName: "Coach",
