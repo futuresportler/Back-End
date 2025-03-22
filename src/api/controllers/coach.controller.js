@@ -195,6 +195,30 @@ const addReview = async (req, res) => {
   }
 };
 
+const updateReview = async (req, res) => {
+  try {
+    const { coachId, reviewId } = req.params;
+    const userId = req.user.userId;
+
+    const updatedReview = await coachService.updateReview(reviewId, {
+      ...req.body,
+      reviewer_id: userId,
+      entity_id: coachId,
+      entity_type: "Coach",
+    });
+
+    successResponse(res, "Review updated successfully", updatedReview);
+  } catch (error) {
+    fatal(error);
+    errorResponse(
+      res,
+      error.message || "Failed to update review",
+      error,
+      error.statusCode || 500
+    );
+  }
+};
+
 module.exports = {
   getCoachById,
   signup,
@@ -211,4 +235,5 @@ module.exports = {
   handleOAuthSignIn,
   getAllCoaches,
   addReview,
+  updateReview,
 };

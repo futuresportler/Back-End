@@ -36,6 +36,11 @@ router.delete(
 
 // Review routes
 router.post("/:coachId/reviews", authMiddleware, coachController.addReview);
+router.put(
+  "/:coachId/reviews/:reviewId",
+  authMiddleware,
+  coachController.updateReview
+);
 
 //login actions
 router.post(

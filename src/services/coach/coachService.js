@@ -223,6 +223,49 @@ const addReview = async (reviewData) => {
   return newReview;
 };
 
+const updateReview = async (reviewId, updateData) => {
+  // Find the review first
+  const review = await db.Review.findByPk(reviewId);
+  if (!review) {
+    const error = new Error("Review not found");
+    error.statusCode = 404;
+    throw error;
+  }
+
+  // Verify ownership - ensure the user updating the review is the one who created it
+  if (review.reviewer_id !== updateData.reviewer_id) {
+    const error = new Error(
+      "Unauthorized: You can only update your own reviews"
+    );
+    error.statusCode = 403;
+    throw error;
+  }
+
+  // Verify that the review belongs to the specified coach
+  if (
+    review.entity_id !== updateData.entity_id ||
+    review.entity_type !== "Coach"
+  ) {
+    const error = new Error("Review does not match the specified coach");
+    error.statusCode = 400;
+    throw error;
+  }
+
+  // Update only allowed fields
+  const allowedUpdates = ["rating", "comment"];
+  const filteredUpdates = Object.keys(updateData)
+    .filter((key) => allowedUpdates.includes(key))
+    .reduce((obj, key) => {
+      obj[key] = updateData[key];
+      return obj;
+    }, {});
+
+  // Update the review
+  await review.update(filteredUpdates);
+
+  return review;
+};
+
 module.exports = {
   getCoachById,
   getCoachByEmail,
@@ -241,4 +284,5 @@ module.exports = {
   createCoach,
   getAllCoaches,
   addReview,
+  updateReview,
 };
