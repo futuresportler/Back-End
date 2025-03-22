@@ -72,16 +72,13 @@ const verifyTokenAndUpdateUser = async (req, res) => {
   try {
     const { idToken } = req.body;
 
-    // Step 1: Verify Token & Extract Data
     const { mobileNumber } = await verifyAndExtractUser(idToken);
 
-    // Step 2: Fetch user by mobile number
     const user = await userService.getUserByMobile(mobileNumber);
     if (!user) return errorResponse(res, "User not found", null, 404);
 
-    // Step 3: Add mobile number if missing
     const updatedUser = await userService.updateUser(user.userId, {
-      mobile: mobileNumber, // Changed from mobileNumber to mobile
+      mobile: mobileNumber,
       isVerified: true,
     });
 
@@ -143,6 +140,27 @@ const resetPassword = async (req, res) => {
   }
 };
 
+const handleOAuthSignIn = async (req, res) => {
+  try {
+    const { idToken } = req.body;
+
+    if (!idToken) {
+      return errorResponse(res, "ID token is required", null, 400);
+    }
+
+    const result = await userService.handleOAuth(idToken);
+
+    successResponse(res, "OAuth authentication successful", result);
+  } catch (error) {
+    errorResponse(
+      res,
+      error.message || "OAuth authentication failed",
+      error,
+      error.statusCode || 401
+    );
+  }
+};
+
 module.exports = {
   getUserById,
   signup,
@@ -156,4 +174,5 @@ module.exports = {
   forgotPassword,
   forgotPasswordOTPVerify,
   resetPassword,
+  handleOAuthSignIn,
 };

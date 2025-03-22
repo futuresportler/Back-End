@@ -75,18 +75,13 @@ const deleteCoach = async (req, res) => {
 const verifyTokenAndUpdateCoach = async (req, res) => {
   try {
     const { idToken } = req.body;
-
-    // Step 1: Verify Token & Extract Data
     const { mobileNumber } = await verifyAndExtractUser(idToken);
-    // const mobileNumber = "+1234567890";
 
-    // Step 2: Fetch coach by email
     const coach = await coachService.getCoachByMobile(mobileNumber);
     if (!coach) return errorResponse(res, "Coach not found", null, 404);
 
-    // Step 3: Add mobile number if missing
     const updatedCoach = await coachService.updateCoach(coach.coachId, {
-      mobile: mobileNumber, // Changed from mobileNumber to mobile
+      mobile: mobileNumber, 
       isVerified: true,
     });
 
@@ -151,6 +146,27 @@ const resetPassword = async (req, res) => {
   }
 };
 
+const handleOAuthSignIn = async (req, res) => {
+  try {
+    const { idToken } = req.body;
+
+    if (!idToken) {
+      return errorResponse(res, "ID token is required", null, 400);
+    }
+
+    const result = await coachService.handleOAuth(idToken);
+
+    successResponse(res, "OAuth authentication successful", result);
+  } catch (error) {
+    errorResponse(
+      res,
+      error.message || "OAuth authentication failed",
+      error,
+      error.statusCode || 401
+    );
+  }
+};
+
 module.exports = {
   getCoachById,
   signup,
@@ -164,4 +180,5 @@ module.exports = {
   forgotPassword,
   forgotPasswordOTPVerify,
   resetPassword,
+  handleOAuthSignIn,
 };

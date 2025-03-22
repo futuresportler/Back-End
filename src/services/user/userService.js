@@ -4,6 +4,7 @@ const { hashPassword, comparePassword } = require("../../common/utils/hash");
 const { warn } = require("../../config/logging");
 const { generateOTP, storeOTP, verifyOTP } = require("../../config/otp");
 const { sendOTPEmail } = require("../../config/emailService");
+const admin = require("firebase-admin");
 
 const getUserById = async (userId) => {
   return await userRepository.findById(userId);
@@ -146,6 +147,50 @@ const resetPassword = async (userId, password) => {
   return { message: "Password reset successfully!" };
 };
 
+const handleOAuth = async (idToken) => {
+  try {
+    const decodedToken = await admin.auth().verifyIdToken(idToken);
+
+    const { email, name, picture, uid } = decodedToken;
+
+    const displayName = name || email.split("@")[0];
+    const nameParts = displayName.split(" ");
+    const first_name = nameParts[0];
+    const last_name = nameParts.length > 1 ? nameParts.slice(1).join(" ") : "";
+
+    let user = await userRepository.findByEmail(email);
+
+    if (user) {
+      if (!user.isOAuth) {
+        user = await userRepository.updateUser(user.userId, {
+          isOAuth: true,
+          firebaseUID: uid,
+        });
+      }
+    } else {
+      user = await userRepository.createUser({
+        email,
+        first_name,
+        last_name,
+        profile_picture: picture || null,
+        isOAuth: true,
+        isVerified: true,
+        firebaseUID: uid,
+      });
+    }
+
+    const tokens = generateTokens(user);
+    return { user, tokens };
+  } catch (error) {
+    console.error("Firebase token verification failed:", error);
+    throw new Error("Invalid or expired authentication token");
+  }
+};
+
+const createUser = async (userData) => {
+  return await userRepository.createUser(userData);
+};
+
 module.exports = {
   getUserById,
   getUserByEmail,
@@ -160,4 +205,6 @@ module.exports = {
   forgotPassword,
   forgotPasswordOTPVerify,
   resetPassword,
+  handleOAuth,
+  createUser, 
 };

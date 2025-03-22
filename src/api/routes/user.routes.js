@@ -51,4 +51,8 @@ router.post(
 router.post("/forgot-password", userController.forgotPassword);
 router.post("/verify-forgot-password", userController.forgotPasswordOTPVerify);
 router.post("/reset-password", authMiddleware, userController.resetPassword);
+
+//OAuth authentication
+router.post("/oauth", userController.handleOAuthSignIn);
+
 module.exports = router;

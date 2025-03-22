@@ -4,6 +4,7 @@ const { hashPassword, comparePassword } = require("../../common/utils/hash");
 const { warn } = require("../../config/logging");
 const { generateOTP, storeOTP, verifyOTP } = require("../../config/otp");
 const { sendOTPEmail } = require("../../config/emailService");
+const admin = require("firebase-admin");
 
 const getCoachById = async (coachId) => {
   return await coachRepository.findById(coachId);
@@ -146,6 +147,50 @@ const resetPassword = async (coachId, password) => {
   return { message: "Password reset successfully!" };
 };
 
+const handleOAuth = async (idToken) => {
+  try {
+    const decodedToken = await admin.auth().verifyIdToken(idToken);
+
+    const { email, name, picture, uid } = decodedToken;
+
+    const displayName = name || email.split("@")[0];
+    const nameParts = displayName.split(" ");
+    const first_name = nameParts[0];
+    const last_name = nameParts.length > 1 ? nameParts.slice(1).join(" ") : "";
+
+    let coach = await coachRepository.findByEmail(email);
+
+    if (coach) {
+      if (!coach.isOAuth) {
+        coach = await coachRepository.updateCoach(coach.coachId, {
+          isOAuth: true,
+          firebaseUID: uid,
+        });
+      }
+    } else {
+      coach = await coachRepository.createCoach({
+        email,
+        first_name,
+        last_name,
+        profile_picture: picture || null,
+        isOAuth: true,
+        isVerified: true,
+        firebaseUID: uid,
+      });
+    }
+
+    const tokens = generateCoachTokens(coach);
+    return { coach, tokens };
+  } catch (error) {
+    console.error("Firebase token verification failed:", error);
+    throw new Error("Invalid or expired authentication token");
+  }
+};
+
+const createCoach = async (coachData) => {
+  return await coachRepository.createCoach(coachData);
+};
+
 module.exports = {
   getCoachById,
   getCoachByEmail,
@@ -160,4 +205,6 @@ module.exports = {
   forgotPassword,
   forgotPasswordOTPVerify,
   resetPassword,
+  handleOAuth,
+  createCoach,
 };
