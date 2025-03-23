@@ -81,7 +81,7 @@ const verifyTokenAndUpdateCoach = async (req, res) => {
     if (!coach) return errorResponse(res, "Coach not found", null, 404);
 
     const updatedCoach = await coachService.updateCoach(coach.coachId, {
-      mobile: mobileNumber, 
+      mobile: mobileNumber,
       isVerified: true,
     });
 
@@ -176,6 +176,48 @@ const getAllCoaches = async (req, res) => {
   }
 };
 
+const addReview = async (req, res) => {
+  try {
+    const { coachId } = req.params;
+    const userId = req.user.userId;
+    const reviewData = {
+      ...req.body,
+      reviewer_id: userId,
+      entity_id: coachId,
+      entity_type: "Coach",
+    };
+
+    const newReview = await coachService.addReview(reviewData);
+    successResponse(res, "Review added successfully", newReview, 201);
+  } catch (error) {
+    fatal(error);
+    errorResponse(res, error.message || "Failed to add review", error);
+  }
+};
+
+const updateReview = async (req, res) => {
+  try {
+    const { coachId, reviewId } = req.params;
+    const userId = req.user.userId;
+
+    const updatedReview = await coachService.updateReview(reviewId, {
+      ...req.body,
+      reviewer_id: userId,
+      entity_id: coachId,
+      entity_type: "Coach",
+    });
+
+    successResponse(res, "Review updated successfully", updatedReview);
+  } catch (error) {
+    fatal(error);
+    errorResponse(
+      res,
+      error.message || "Failed to update review",
+      error,
+      error.statusCode || 500
+    );
+  }
+};
 module.exports = {
   getCoachById,
   signup,
@@ -191,4 +233,6 @@ module.exports = {
   resetPassword,
   handleOAuthSignIn,
   getAllCoaches,
+  addReview,
+  updateReview,
 };

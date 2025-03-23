@@ -5,6 +5,7 @@ const { warn } = require("../../config/logging");
 const { generateOTP, storeOTP, verifyOTP } = require("../../config/otp");
 const { sendOTPEmail } = require("../../config/emailService");
 const admin = require("firebase-admin");
+const db = require("../../database/index");
 
 const getCoachById = async (coachId) => {
   return await coachRepository.findById(coachId);
@@ -193,7 +194,77 @@ const createCoach = async (coachData) => {
 
 const getAllCoaches = async () => {
   return await coachRepository.findAll();
-}
+};
+
+const addReview = async (reviewData) => {
+  // Verify that the coach exists
+  const coach = await coachRepository.findById(reviewData.entity_id);
+  if (!coach) {
+    const error = new Error("Coach not found");
+    error.statusCode = 404;
+    throw error;
+  }
+
+  // Create the review
+  const newReview = await db.Review.create(reviewData);
+
+  // Update the coach's review_ids array if it exists
+  if (coach.review_ids) {
+    const updatedReviewIds = [...coach.review_ids, newReview.review_id];
+    await coachRepository.updateCoach(coach.coachId, {
+      review_ids: updatedReviewIds,
+    });
+  } else {
+    await coachRepository.updateCoach(coach.coachId, {
+      review_ids: [newReview.review_id],
+    });
+  }
+
+  return newReview;
+};
+
+const updateReview = async (reviewId, updateData) => {
+  // Find the review first
+  const review = await db.Review.findByPk(reviewId);
+  if (!review) {
+    const error = new Error("Review not found");
+    error.statusCode = 404;
+    throw error;
+  }
+
+  // Verify ownership - ensure the user updating the review is the one who created it
+  if (review.reviewer_id !== updateData.reviewer_id) {
+    const error = new Error(
+      "Unauthorized: You can only update your own reviews"
+    );
+    error.statusCode = 403;
+    throw error;
+  }
+
+  // Verify that the review belongs to the specified coach
+  if (
+    review.entity_id !== updateData.entity_id ||
+    review.entity_type !== "Coach"
+  ) {
+    const error = new Error("Review does not match the specified coach");
+    error.statusCode = 400;
+    throw error;
+  }
+
+  // Update only allowed fields
+  const allowedUpdates = ["rating", "comment"];
+  const filteredUpdates = Object.keys(updateData)
+    .filter((key) => allowedUpdates.includes(key))
+    .reduce((obj, key) => {
+      obj[key] = updateData[key];
+      return obj;
+    }, {});
+
+  // Update the review
+  await review.update(filteredUpdates);
+
+  return review;
+};
 
 module.exports = {
   getCoachById,
@@ -212,4 +283,6 @@ module.exports = {
   handleOAuth,
   createCoach,
   getAllCoaches,
+  addReview,
+  updateReview,
 };
