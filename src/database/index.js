@@ -10,6 +10,7 @@ const Certification = require("./models/postgres/certification");
 const AcademySport = require("./models/postgres/academySport");
 const AcademyProfile = require("./models/postgres/academyProfile");
 const AcademyCoach = require("./models/postgres/academyCoach");
+const TurfProfile = require("./models/postgres/turfProfile");
 const Review = require("./models/postgres/review");
 
 const { sequelize } = require("../config/database");
@@ -78,6 +79,16 @@ CoachProfile.hasMany(Review, {
   as: "reviews",
 });
 
+// Turf can have many reviews
+TurfProfile.hasMany(Review, {
+  foreignKey: "entity_id",
+  constraints: false,
+  scope: {
+    entity_type: "Turf",
+  },
+  as: "reviews",
+});
+
 const syncDatabase = async () => {
   try {
     await sequelize.authenticate(); // Ensure DB connection is active
@@ -88,6 +99,7 @@ const syncDatabase = async () => {
     await User.sync({ alter: true });
     await CoachProfile.sync({ alter: true });
     await AcademyProfile.sync({ alter: true });
+    await TurfProfile.sync({ alter: true });
 
     await Review.sync({ alter: true });
     await CoachSport.sync({ alter: true });
@@ -115,6 +127,7 @@ module.exports = {
   AcademySport,
   AcademyProfile,
   AcademyCoach,
+  TurfProfile,
   Review,
   connectMongoDB,
   connectPostgres,
