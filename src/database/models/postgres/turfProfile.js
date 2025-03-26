@@ -1,8 +1,8 @@
 const { DataTypes } = require("sequelize");
 const { sequelize } = require("../../../config/database");
 
-const AcademyProfile = sequelize.define("AcademyProfile", {
-  academyId: {
+const TurfProfile = sequelize.define("TurfProfile", {
+  turfId: {
     type: DataTypes.UUID,
     defaultValue: DataTypes.UUIDV4,
     primaryKey: true,
@@ -31,33 +31,45 @@ const AcademyProfile = sequelize.define("AcademyProfile", {
   },
   location: {
     type: DataTypes.STRING,
-    allowNull: true,
-  },
-  sport_type: {
-    type: DataTypes.STRING,
-    allowNull: true,
+    allowNull: false,
   },
   isVerified: {
     type: DataTypes.BOOLEAN,
     defaultValue: false,
   },
-  description: { 
+  description: {
     type: DataTypes.TEXT,
     allowNull: true,
   },
-  address: { 
+  address: {
     type: DataTypes.STRING,
-    allowNull: true,
+    allowNull: false,
   },
-  facilities: { 
+  facilities: {
     type: DataTypes.JSON,
     allowNull: true,
   },
-  sports_offered: { 
+  sports_supported: {
+    type: DataTypes.ARRAY(DataTypes.STRING),
+    allowNull: false,
+  },
+  hourly_rate: {
+    type: DataTypes.FLOAT,
+    allowNull: false,
+  },
+  availability: {
+    type: DataTypes.JSON,
+    allowNull: true,
+  },
+  images: {
     type: DataTypes.ARRAY(DataTypes.STRING),
     allowNull: true,
   },
-  founding_year: { 
+  review_ids: {
+    type: DataTypes.ARRAY(DataTypes.INTEGER),
+    defaultValue: [],
+  },
+  establishment_year: {
     type: DataTypes.INTEGER,
     allowNull: true,
     validate: {
@@ -66,14 +78,14 @@ const AcademyProfile = sequelize.define("AcademyProfile", {
       max: new Date().getFullYear(),
     },
   },
-  contact_email: { 
+  contact_email: {
     type: DataTypes.STRING,
     allowNull: true,
     validate: {
       isEmail: true,
     },
   },
-  contact_phone: { 
+  contact_phone: {
     type: DataTypes.STRING,
     allowNull: true,
     validate: {
@@ -82,4 +94,4 @@ const AcademyProfile = sequelize.define("AcademyProfile", {
   },
 });
 
-module.exports = AcademyProfile;
+module.exports = TurfProfile;

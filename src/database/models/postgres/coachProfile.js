@@ -47,6 +47,15 @@ const Coach = sequelize.define(
       type: DataTypes.BOOLEAN,
       defaultValue: false,
     },
+    isOAuth: {
+      type: DataTypes.BOOLEAN,
+      defaultValue: false,
+    },
+    firebaseUID: {
+      type: DataTypes.STRING,
+      allowNull: true,
+      unique: true,
+    },
     biography: {
       type: DataTypes.TEXT,
     },
@@ -61,6 +70,10 @@ const Coach = sequelize.define(
     },
     certification_ids: {
       type: DataTypes.ARRAY(DataTypes.INTEGER),
+    },
+    review_ids: {
+      type: DataTypes.ARRAY(DataTypes.INTEGER),
+      defaultValue: [],
     },
   },
   {

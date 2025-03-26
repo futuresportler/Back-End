@@ -10,9 +10,10 @@ const Certification = require("./models/postgres/certification");
 const AcademySport = require("./models/postgres/academySport");
 const AcademyProfile = require("./models/postgres/academyProfile");
 const AcademyCoach = require("./models/postgres/academyCoach");
+const TurfProfile = require("./models/postgres/turfProfile");
+const Review = require("./models/postgres/review");
 
 const { sequelize } = require("../config/database");
-
 
 // 🔗 Define Associations
 
@@ -64,23 +65,47 @@ AcademyCoach.belongsTo(AcademyProfile, { foreignKey: "academyId" });
 CoachProfile.hasMany(AcademyCoach, { foreignKey: "coachId" });
 AcademyProfile.hasMany(AcademyCoach, { foreignKey: "academyId" });
 
+// Reviews associations
+User.hasMany(Review, { foreignKey: "reviewer_id", as: "authoredReviews" });
+Review.belongsTo(User, { foreignKey: "reviewer_id", as: "reviewer" });
+
+// Coach can have many reviews
+CoachProfile.hasMany(Review, {
+  foreignKey: "entity_id",
+  constraints: false,
+  scope: {
+    entity_type: "Coach",
+  },
+  as: "reviews",
+});
+
+// Turf can have many reviews
+TurfProfile.hasMany(Review, {
+  foreignKey: "entity_id",
+  constraints: false,
+  scope: {
+    entity_type: "Turf",
+  },
+  as: "reviews",
+});
 
 const syncDatabase = async () => {
   try {
     await sequelize.authenticate(); // Ensure DB connection is active
 
-    await User.sync({ alter: true });
     await Role.sync({ alter: true });
     await Sport.sync({ alter: true });
     await Certification.sync({ alter: true });
-    await CoachProfile.sync({ alter: true }); 
+    await User.sync({ alter: true });
+    await CoachProfile.sync({ alter: true });
     await AcademyProfile.sync({ alter: true });
+    await TurfProfile.sync({ alter: true });
 
+    await Review.sync({ alter: true });
     await CoachSport.sync({ alter: true });
     await AcademySport.sync({ alter: true });
     await AcademyCoach.sync({ alter: true });
     await UserAchievement.sync({ alter: true });
-
 
     console.log("✅ Database synced successfully!");
   } catch (error) {
@@ -89,7 +114,6 @@ const syncDatabase = async () => {
 };
 
 syncDatabase();
-
 
 module.exports = {
   sequelize,
@@ -103,6 +127,8 @@ module.exports = {
   AcademySport,
   AcademyProfile,
   AcademyCoach,
+  TurfProfile,
+  Review,
   connectMongoDB,
   connectPostgres,
 };

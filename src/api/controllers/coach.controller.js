@@ -3,7 +3,7 @@ const {
   successResponse,
   errorResponse,
 } = require("../../common/utils/response");
-// const { verifyAndExtractCoach } = require("../../config/otp");
+const { verifyAndExtractUser } = require("../../config/otp");
 const { fatal } = require("../../config/logging");
 
 const getCoachById = async (req, res) => {
@@ -72,28 +72,24 @@ const deleteCoach = async (req, res) => {
   }
 };
 
-// const verifyTokenAndUpdateCoach = async (req, res) => {
-//   try {
-//     const { idToken } = req.body;
+const verifyTokenAndUpdateCoach = async (req, res) => {
+  try {
+    const { idToken } = req.body;
+    const { mobileNumber } = await verifyAndExtractUser(idToken);
 
-//     // Step 1: Verify Token & Extract Data
-//     const { mobileNumber } = await verifyAndExtractCoach(idToken);
+    const coach = await coachService.getCoachByMobile(mobileNumber);
+    if (!coach) return errorResponse(res, "Coach not found", null, 404);
 
-//     // Step 2: Fetch coach by email
-//     const coach = await coachService.getCoachByMobile(mobileNumber);
-//     if (!coach) errorResponse(res, "Coach not found", coach, 404);
+    const updatedCoach = await coachService.updateCoach(coach.coachId, {
+      mobile: mobileNumber,
+      isVerified: true,
+    });
 
-//     // Step 3: Add mobile number if missing
-//     const updatedCoach = await coachService.updateCoach(coach.coachId, {
-//       mobileNumber,
-//       isVerified: true,
-//     });
-
-//     successResponse(res, "Coach verified successfully", updatedCoach);
-//   } catch (error) {
-//     errorResponse(res, error.message, error);
-//   }
-// };
+    successResponse(res, "Coach verified successfully", updatedCoach);
+  } catch (error) {
+    errorResponse(res, error.message, error);
+  }
+};
 
 const requestOTP = async (req, res) => {
   try {
@@ -150,6 +146,97 @@ const resetPassword = async (req, res) => {
   }
 };
 
+const handleOAuthSignIn = async (req, res) => {
+  try {
+    const { idToken } = req.body;
+
+    if (!idToken) {
+      return errorResponse(res, "ID token is required", null, 400);
+    }
+
+    const result = await coachService.handleOAuth(idToken);
+
+    successResponse(res, "OAuth authentication successful", result);
+  } catch (error) {
+    errorResponse(
+      res,
+      error.message || "OAuth authentication failed",
+      error,
+      error.statusCode || 401
+    );
+  }
+};
+
+const getAllCoaches = async (req, res) => {
+  try {
+    const coaches = await coachService.getAllCoaches();
+    successResponse(res, "Coaches fetched", coaches);
+  } catch (error) {
+    errorResponse(res, error);
+  }
+};
+
+const addReview = async (req, res) => {
+  try {
+    const { coachId } = req.params;
+    const userId = req.user.userId;
+    const reviewData = {
+      ...req.body,
+      reviewer_id: userId,
+      entity_id: coachId,
+      entity_type: "Coach",
+    };
+
+    const newReview = await coachService.addReview(reviewData);
+    successResponse(res, "Review added successfully", newReview, 201);
+  } catch (error) {
+    fatal(error);
+    errorResponse(res, error.message || "Failed to add review", error);
+  }
+};
+
+const updateReview = async (req, res) => {
+  try {
+    const { coachId, reviewId } = req.params;
+    const userId = req.user.userId;
+
+    const updatedReview = await coachService.updateReview(reviewId, {
+      ...req.body,
+      reviewer_id: userId,
+      entity_id: coachId,
+      entity_type: "Coach",
+    });
+
+    successResponse(res, "Review updated successfully", updatedReview);
+  } catch (error) {
+    fatal(error);
+    errorResponse(
+      res,
+      error.message || "Failed to update review",
+      error,
+      error.statusCode || 500
+    );
+  }
+};
+
+const deleteReview = async (req, res) => {
+  try {
+    const { reviewId } = req.params;
+    const userId = req.user.userId;
+
+    const result = await coachService.deleteReview(reviewId, userId);
+    successResponse(res, result.message);
+  } catch (error) {
+    fatal(error);
+    errorResponse(
+      res,
+      error.message || "Failed to delete review",
+      error,
+      error.statusCode || 500
+    );
+  }
+};
+
 module.exports = {
   getCoachById,
   signup,
@@ -157,10 +244,15 @@ module.exports = {
   refreshToken,
   updateCoach,
   deleteCoach,
-  // verifyTokenAndUpdateCoach,
+  verifyTokenAndUpdateCoach,
   requestOTP,
   verifyOTP,
   forgotPassword,
   forgotPasswordOTPVerify,
   resetPassword,
+  handleOAuthSignIn,
+  getAllCoaches,
+  addReview,
+  updateReview,
+  deleteReview,
 };
