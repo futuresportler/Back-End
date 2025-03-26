@@ -218,6 +218,25 @@ const updateReview = async (req, res) => {
     );
   }
 };
+
+const deleteReview = async (req, res) => {
+  try {
+    const { reviewId } = req.params;
+    const userId = req.user.userId;
+
+    const result = await coachService.deleteReview(reviewId, userId);
+    successResponse(res, result.message);
+  } catch (error) {
+    fatal(error);
+    errorResponse(
+      res,
+      error.message || "Failed to delete review",
+      error,
+      error.statusCode || 500
+    );
+  }
+};
+
 module.exports = {
   getCoachById,
   signup,
@@ -235,4 +254,5 @@ module.exports = {
   getAllCoaches,
   addReview,
   updateReview,
+  deleteReview,
 };
