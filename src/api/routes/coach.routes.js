@@ -41,6 +41,11 @@ router.put(
   authMiddleware,
   coachController.updateReview
 );
+router.delete(
+  "/reviews/:reviewId",
+  authMiddleware,
+  coachController.deleteReview
+);
 
 //login actions
 router.post(

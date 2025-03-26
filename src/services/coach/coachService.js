@@ -266,6 +266,48 @@ const updateReview = async (reviewId, updateData) => {
   return review;
 };
 
+const deleteReview = async (reviewId, userId) => {
+  // Find the review first
+  const review = await db.Review.findByPk(reviewId);
+  if (!review) {
+    const error = new Error("Review not found");
+    error.statusCode = 404;
+    throw error;
+  }
+
+  // Verify ownership - ensure the user deleting the review is the one who created it
+  if (review.reviewer_id !== userId) {
+    const error = new Error(
+      "Unauthorized: You can only delete your own reviews"
+    );
+    error.statusCode = 403;
+    throw error;
+  }
+
+  // Check if this review belongs to a coach
+  if (review.entity_type !== "Coach") {
+    const error = new Error("Review does not belong to a coach");
+    error.statusCode = 400;
+    throw error;
+  }
+
+  // Get the coach to update its review_ids array
+  const coach = await coachRepository.findById(review.entity_id);
+  if (coach && coach.review_ids) {
+    const updatedReviewIds = coach.review_ids.filter(
+      (id) => id !== review.review_id
+    );
+    await coachRepository.updateCoach(coach.coachId, {
+      review_ids: updatedReviewIds,
+    });
+  }
+
+  // Delete the review
+  await review.destroy();
+
+  return { message: "Review deleted successfully" };
+};
+
 module.exports = {
   getCoachById,
   getCoachByEmail,
@@ -285,4 +327,5 @@ module.exports = {
   getAllCoaches,
   addReview,
   updateReview,
+  deleteReview,
 };
