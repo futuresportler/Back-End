@@ -3,7 +3,7 @@ const {
   successResponse,
   errorResponse,
 } = require("../../common/utils/response");
-// const { verifyAndExtractUser } = require("../../config/otp");
+const { verifyAndExtractUser } = require("../../config/otp");
 const { fatal } = require("../../config/logging");
 
 const getUserById = async (req, res) => {
@@ -68,28 +68,25 @@ const deleteUser = async (req, res) => {
   }
 };
 
-// const verifyTokenAndUpdateUser = async (req, res) => {
-//   try {
-//     const { idToken } = req.body;
+const verifyTokenAndUpdateUser = async (req, res) => {
+  try {
+    const { idToken } = req.body;
 
-//     // Step 1: Verify Token & Extract Data
-//     const { mobileNumber } = await verifyAndExtractUser(idToken);
+    const { mobileNumber } = await verifyAndExtractUser(idToken);
 
-//     // Step 2: Fetch user by email
-//     const user = await userService.getUserByMobile(mobileNumber);
-//     if (!user) errorResponse(res, "User not found", user, 404);
+    const user = await userService.getUserByMobile(mobileNumber);
+    if (!user) return errorResponse(res, "User not found", null, 404);
 
-//     // Step 3: Add mobile number if missing
-//     const updatedUser = await userService.updateUser(user.userId, {
-//       mobileNumber,
-//       isVerified: true,
-//     });
+    const updatedUser = await userService.updateUser(user.userId, {
+      mobile: mobileNumber,
+      isVerified: true,
+    });
 
-//     successResponse(res, "User verified successfully", updatedUser);
-//   } catch (error) {
-//     errorResponse(res, error.message, error);
-//   }
-// };
+    successResponse(res, "User verified successfully", updatedUser);
+  } catch (error) {
+    errorResponse(res, error.message, error);
+  }
+};
 
 const requestOTP = async (req, res) => {
   try {
@@ -121,7 +118,7 @@ const forgotPassword = async (req, res) => {
   } catch (error) {
     errorResponse(res, error.message, error);
   }
-}
+};
 
 const forgotPasswordOTPVerify = async (req, res) => {
   try {
@@ -131,18 +128,38 @@ const forgotPasswordOTPVerify = async (req, res) => {
   } catch (error) {
     errorResponse(res, error.message, error);
   }
-}
-
+};
 
 const resetPassword = async (req, res) => {
   try {
-    const {password} = req.body
+    const { password } = req.body;
     const response = await userService.resetPassword(req.user.userId, password);
     successResponse(res, response.message, response);
   } catch (error) {
     errorResponse(res, error.message, error);
   }
-}
+};
+
+const handleOAuthSignIn = async (req, res) => {
+  try {
+    const { idToken } = req.body;
+
+    if (!idToken) {
+      return errorResponse(res, "ID token is required", null, 400);
+    }
+
+    const result = await userService.handleOAuth(idToken);
+
+    successResponse(res, "OAuth authentication successful", result);
+  } catch (error) {
+    errorResponse(
+      res,
+      error.message || "OAuth authentication failed",
+      error,
+      error.statusCode || 401
+    );
+  }
+};
 
 module.exports = {
   getUserById,
@@ -151,10 +168,11 @@ module.exports = {
   refreshToken,
   updateUser,
   deleteUser,
-  // verifyTokenAndUpdateUser,
+  verifyTokenAndUpdateUser,
   requestOTP,
   verifyOTP,
   forgotPassword,
   forgotPasswordOTPVerify,
   resetPassword,
+  handleOAuthSignIn,
 };

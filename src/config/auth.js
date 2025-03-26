@@ -42,6 +42,20 @@ const generateAcademyTokens = (academy) => {
   return { accessToken, refreshToken };
 };
 
+const generateTurfTokens = (turf) => {
+  const payload = { turfId: turf.turfId, email: turf.email };
+
+  const accessToken = jwt.sign(payload, process.env.JWT_SECRET, {
+    expiresIn: "1h",
+  });
+
+  const refreshToken = jwt.sign(payload, process.env.REFRESH_SECRET, {
+    expiresIn: "30d",
+  });
+
+  return { accessToken, refreshToken };
+};
+
 const verifyToken = (token) => jwt.verify(token, process.env.JWT_SECRET);
 const verifyRefresh = (token) => jwt.verify(token, process.env.REFRESH_SECRET);
 
@@ -49,6 +63,7 @@ module.exports = {
   generateTokens,
   generateCoachTokens,
   generateAcademyTokens,
+  generateTurfTokens,
   verifyToken,
   verifyRefresh,
 };

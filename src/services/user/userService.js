@@ -4,6 +4,7 @@ const { hashPassword, comparePassword } = require("../../common/utils/hash");
 const { warn } = require("../../config/logging");
 const { generateOTP, storeOTP, verifyOTP } = require("../../config/otp");
 const { sendOTPEmail } = require("../../config/emailService");
+const firebase = require("../../config/firebase");
 
 const getUserById = async (userId) => {
   return await userRepository.findById(userId);
@@ -11,6 +12,10 @@ const getUserById = async (userId) => {
 
 const getUserByEmail = async (email) => {
   return await userRepository.findByEmail(email);
+};
+
+const getUserByMobile = async (mobileNumber) => {
+  return await userRepository.findByMobile(mobileNumber);
 };
 
 const signUp = async (userData) => {
@@ -136,16 +141,60 @@ const forgotPasswordOTPVerify = async (email, otp) => {
   return { tokens };
 };
 
-
 const resetPassword = async (userId, password) => {
   const hashedPassword = await hashPassword(password);
   await updateUser(userId, { password: hashedPassword });
   return { message: "Password reset successfully!" };
-}
+};
+
+const handleOAuth = async (idToken) => {
+  try {
+    const decodedToken = await firebase.verifyIdToken(idToken);
+
+    const { email, name, picture, uid } = decodedToken;
+
+    const displayName = name || email.split("@")[0];
+    const nameParts = displayName.split(" ");
+    const first_name = nameParts[0];
+    const last_name = nameParts.length > 1 ? nameParts.slice(1).join(" ") : "";
+
+    let user = await userRepository.findByEmail(email);
+
+    if (user) {
+      if (!user.isOAuth) {
+        user = await userRepository.updateUser(user.userId, {
+          isOAuth: true,
+          firebaseUID: uid,
+        });
+      }
+    } else {
+      user = await userRepository.createUser({
+        email,
+        first_name,
+        last_name,
+        profile_picture: picture || null,
+        isOAuth: true,
+        isVerified: true,
+        firebaseUID: uid,
+      });
+    }
+
+    const tokens = generateTokens(user);
+    return { user, tokens };
+  } catch (error) {
+    console.error("Firebase token verification failed:", error);
+    throw new Error("Invalid or expired authentication token");
+  }
+};
+
+const createUser = async (userData) => {
+  return await userRepository.createUser(userData);
+};
 
 module.exports = {
   getUserById,
   getUserByEmail,
+  getUserByMobile,
   signUp,
   signIn,
   refreshToken,
@@ -156,4 +205,6 @@ module.exports = {
   forgotPassword,
   forgotPasswordOTPVerify,
   resetPassword,
+  handleOAuth,
+  createUser, 
 };
