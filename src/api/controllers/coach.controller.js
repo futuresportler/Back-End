@@ -1,4 +1,5 @@
 const coachService = require("../../services/coach/index");
+const userService = require("../../services/user/index");
 const {
   successResponse,
   errorResponse,
@@ -31,6 +32,7 @@ const signin = async (req, res) => {
     const coach = await coachService.signIn(req.body);
     successResponse(res, "Coach logged in successfully", coach);
   } catch (error) {
+    fatal(error);
     errorResponse(res, error.message || "Coach signin failed", error);
   }
 };
@@ -40,6 +42,7 @@ const refreshToken = async (req, res) => {
     const tokens = await coachService.refreshToken(req.user.coachId);
     successResponse(res, "Token refreshed", { accessToken: tokens });
   } catch (error) {
+    fatal(error);
     errorResponse(
       res,
       error.message || "Coach signin failed",
@@ -58,6 +61,7 @@ const updateCoach = async (req, res) => {
     if (!updatedCoach) return errorResponse(res, "Coach not found", 404);
     successResponse(res, updatedCoach);
   } catch (error) {
+    fatal(error);
     errorResponse(res, error);
   }
 };
@@ -68,6 +72,7 @@ const deleteCoach = async (req, res) => {
     if (!deletedCoach) return errorResponse(res, "Coach not found", null, 404);
     successResponse(res, "Coach deleted successfully", null, 204);
   } catch (error) {
+    fatal(error);
     errorResponse(res, error);
   }
 };
@@ -87,6 +92,7 @@ const verifyTokenAndUpdateCoach = async (req, res) => {
 
     successResponse(res, "Coach verified successfully", updatedCoach);
   } catch (error) {
+    fatal(error);
     errorResponse(res, error.message, error);
   }
 };
@@ -109,6 +115,7 @@ const verifyOTP = async (req, res) => {
     const response = await coachService.verifyOTPCode(email, otp);
     successResponse(res, response.message, response);
   } catch (error) {
+    fatal(error);
     errorResponse(res, error.message, error);
   }
 };
@@ -119,6 +126,7 @@ const forgotPassword = async (req, res) => {
     const response = await coachService.forgotPassword(email);
     successResponse(res, response.message, response);
   } catch (error) {
+    fatal(error);
     errorResponse(res, error.message, error);
   }
 };
@@ -129,6 +137,7 @@ const forgotPasswordOTPVerify = async (req, res) => {
     const response = await coachService.forgotPasswordOTPVerify(email, otp);
     successResponse(res, response.message, response);
   } catch (error) {
+    fatal(error);
     errorResponse(res, error.message, error);
   }
 };
@@ -142,6 +151,7 @@ const resetPassword = async (req, res) => {
     );
     successResponse(res, response.message, response);
   } catch (error) {
+    fatal(error);
     errorResponse(res, error.message, error);
   }
 };
@@ -158,6 +168,7 @@ const handleOAuthSignIn = async (req, res) => {
 
     successResponse(res, "OAuth authentication successful", result);
   } catch (error) {
+    fatal(error);
     errorResponse(
       res,
       error.message || "OAuth authentication failed",
@@ -169,11 +180,30 @@ const handleOAuthSignIn = async (req, res) => {
 
 const getAllCoaches = async (req, res) => {
   try {
-    const coaches = await coachService.getAllCoaches();
+    let { page, limit, latitude, longitude } = req.query;
+
+    if (!latitude || !longitude) {
+      const user = await userService.getUserById(req.user.userId);
+      if (user) {
+        latitude = user.latitude;
+        longitude = user.longitude;
+      }
+    }
+    const coaches = await coachService.getAllCoaches({
+      page,
+      limit,
+      latitude,
+      longitude,
+    });
     successResponse(res, "Coaches fetched", coaches);
   } catch (error) {
-    errorResponse(res, error);
-  }
+    fatal(error);
+    errorResponse(
+      res,
+      error.message || "Get All Coaches Failed",
+      error,
+      error.statusCode || 401
+    );  }
 };
 
 const addReview = async (req, res) => {

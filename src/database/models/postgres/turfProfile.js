@@ -29,9 +29,17 @@ const TurfProfile = sequelize.define("TurfProfile", {
     type: DataTypes.STRING,
     allowNull: true,
   },
+  latitude: {
+    type: DataTypes.FLOAT,
+    allowNull: true,
+  },
+  longitude: {
+    type: DataTypes.FLOAT,
+    allowNull: true,
+  },
   location: {
-    type: DataTypes.STRING,
-    allowNull: false,
+    type: DataTypes.GEOMETRY("POINT"),
+    allowNull: true,
   },
   isVerified: {
     type: DataTypes.BOOLEAN,
@@ -92,6 +100,18 @@ const TurfProfile = sequelize.define("TurfProfile", {
       is: /^[0-9]+$/i,
     },
   },
+});
+
+TurfProfile.beforeCreate((turf) => {
+  if (turf.latitude && turf.longitude) {
+    turf.location = { type: "Point", coordinates: [turf.longitude, turf.latitude] };
+  }
+});
+
+TurfProfile.beforeUpdate((turf) => {
+  if (turf.latitude && turf.longitude) {
+    turf.location = { type: "Point", coordinates: [turf.longitude, turf.latitude] };
+  }
 });
 
 module.exports = TurfProfile;

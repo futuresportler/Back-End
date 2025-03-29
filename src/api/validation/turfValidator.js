@@ -16,11 +16,14 @@ const validateCreateTurf = [
     .withMessage("Password must be at least 6 characters long"),
   body("mobile").optional().isMobilePhone().withMessage("Invalid phone number"),
   body("profile_picture").optional().isURL().withMessage("Invalid URL"),
-  body("location")
-    .isString()
-    .withMessage("Location must be a string")
-    .notEmpty()
-    .withMessage("Location is required"),
+  body("latitude")
+    .optional()
+    .isFloat({ min: -90, max: 90 })
+    .withMessage("Latitude must be a valid coordinate between -90 and 90"),
+  body("longitude")
+    .optional()
+    .isFloat({ min: -180, max: 180 })
+    .withMessage("Longitude must be a valid coordinate between -180 and 180"),
   body("address")
     .isString()
     .withMessage("Address must be a string")
@@ -74,10 +77,14 @@ const validateUpdateTurf = [
     .withMessage("Password must be at least 6 characters long"),
   body("mobile").optional().isMobilePhone().withMessage("Invalid phone number"),
   body("profile_picture").optional().isURL().withMessage("Invalid URL"),
-  body("location")
+  body("latitude")
     .optional()
-    .isString()
-    .withMessage("Location must be a string"),
+    .isFloat({ min: -90, max: 90 })
+    .withMessage("Latitude must be a valid coordinate between -90 and 90"),
+  body("longitude")
+    .optional()
+    .isFloat({ min: -180, max: 180 })
+    .withMessage("Longitude must be a valid coordinate between -180 and 180"),
   body("address").optional().isString().withMessage("Address must be a string"),
   body("sports_supported")
     .optional()

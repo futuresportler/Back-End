@@ -18,6 +18,14 @@ const validateCreateUser = [
     .withMessage("Last name must be a string")
     .isLength({ min: 1 })
     .withMessage("Last name is required"),
+  body("latitude")
+    .optional()
+    .isFloat({ min: -90, max: 90 })
+    .withMessage("Latitude must be a valid coordinate between -90 and 90"),
+  body("longitude")
+    .optional()
+    .isFloat({ min: -180, max: 180 })
+    .withMessage("Longitude must be a valid coordinate between -180 and 180"),
 ];
 
 const validateUpdateUser = [
@@ -26,16 +34,21 @@ const validateUpdateUser = [
     .optional()
     .isLength({ min: 6 })
     .withMessage("Password must be at least 6 characters long"),
-  body("mobile")
-    .optional()
-    .isMobilePhone()
-    .withMessage("Invalid phone number"),
+  body("mobile").optional().isMobilePhone().withMessage("Invalid phone number"),
   body("profile_picture").optional().isURL().withMessage("Invalid URL"),
   body("isVerified").optional().isBoolean().withMessage("Must be a boolean"),
   body("status")
     .optional()
     .isIn(["active", "inactive", "banned"])
     .withMessage("Invalid status"),
+  body("latitude")
+    .optional()
+    .isFloat({ min: -90, max: 90 })
+    .withMessage("Latitude must be a valid coordinate between -90 and 90"),
+  body("longitude")
+    .optional()
+    .isFloat({ min: -180, max: 180 })
+    .withMessage("Longitude must be a valid coordinate between -180 and 180"),
 ];
 
 const validateRequest = (req, res, next) => {
@@ -47,11 +60,12 @@ const validateRequest = (req, res, next) => {
   next();
 };
 
-
 const validateOTPVerification = [
-  body("otp").isNumeric().isLength({ min: 6, max: 6 }).withMessage("OTP must be 6 digits"),
+  body("otp")
+    .isNumeric()
+    .isLength({ min: 6, max: 6 })
+    .withMessage("OTP must be 6 digits"),
 ];
-
 
 module.exports = {
   validateCreateUser,
