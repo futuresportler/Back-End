@@ -48,11 +48,41 @@ const User = sequelize.define(
       allowNull: true,
       unique: true,
     },
+    latitude: {
+      type: DataTypes.FLOAT,
+      allowNull: true,
+    },
+    longitude: {
+      type: DataTypes.FLOAT,
+      allowNull: true,
+    },
+    location: {
+      type: DataTypes.GEOMETRY("POINT"),
+      allowNull: true,
+    },
   },
   {
     tableName: "User",
     timestamps: true,
   }
 );
+
+User.beforeCreate((user) => {
+  if (user.latitude && user.longitude) {
+    user.location = {
+      type: "Point",
+      coordinates: [user.longitude, user.latitude],
+    };
+  }
+});
+
+User.beforeUpdate((user) => {
+  if (user.latitude && user.longitude) {
+    user.location = {
+      type: "Point",
+      coordinates: [user.longitude, user.latitude],
+    };
+  }
+});
 
 module.exports = User;

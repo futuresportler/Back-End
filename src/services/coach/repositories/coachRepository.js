@@ -1,4 +1,5 @@
 const db = require("../../../database/index"); // Ensure this properly imports Sequelize models
+const { Op, Sequelize } = require("sequelize");
 
 const findById = async (coachId) => {
   return await db.CoachProfile.findByPk(coachId);
@@ -29,8 +30,39 @@ const deleteCoach = async (coachId) => {
   return coach;
 };
 
-const findAll = async () => {
-  return await db.CoachProfile.findAll();
+const findAll = async ({ page = 1, limit = 10, latitude, longitude }) => {
+  const offset = (page - 1) * limit;
+
+  const whereCondition = {}; // Add any filters here
+
+  let order = [];
+
+  if (latitude && longitude) {
+    order = [
+      [
+        Sequelize.fn(
+          "ST_Distance",
+          Sequelize.col("location"),
+          Sequelize.fn("ST_SetSRID", Sequelize.fn("ST_MakePoint", longitude, latitude), 4326)
+        ),
+        "ASC",
+      ],
+    ];
+  }
+
+  const { rows, count } = await db.CoachProfile.findAndCountAll({
+    where: whereCondition,
+    order,
+    limit: parseInt(limit),
+    offset: parseInt(offset),
+  });
+
+  return {
+    totalPages: Math.ceil(count / limit),
+    currentPage: page,
+    totalCoaches: count,
+    coaches: rows,
+  };
 };
 
 module.exports = {

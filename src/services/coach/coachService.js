@@ -192,8 +192,8 @@ const createCoach = async (coachData) => {
   return await coachRepository.createCoach(coachData);
 };
 
-const getAllCoaches = async () => {
-  return await coachRepository.findAll();
+const getAllCoaches = async (input) => {
+  return await coachRepository.findAll(input);
 };
 
 const addReview = async (reviewData) => {

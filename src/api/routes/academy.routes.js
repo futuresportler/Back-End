@@ -32,4 +32,3 @@ router.post("/forgot-password", academyController.forgotPassword);
 router.post("/verify-forgot-password", academyController.forgotPasswordOTPVerify);
 router.post("/reset-password", authMiddleware, academyController.resetPassword);
 module.exports = router;
- 
