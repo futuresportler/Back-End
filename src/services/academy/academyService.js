@@ -37,7 +37,9 @@ const signUp = async (academyData) => {
     const academy = await academyRepository.findById(newacademy.academyId);
     if (academy && !academy.isVerified) {
       await academyRepository.deleteAcademy(academy.academyId);
-      warn(`academy with Email ${academy.email} deleted due to non-verification.`);
+      warn(
+        `academy with Email ${academy.email} deleted due to non-verification.`
+      );
     }
   }, 10 * 60 * 1000); // 2 minute in milliseconds
 
@@ -142,6 +144,15 @@ const resetPassword = async (academyId, password) => {
   return { message: "Password reset successfully!" };
 };
 
+const getAllAcademies = async ({
+  page = 1,
+  limit = 10,
+  latitude,
+  longitude,
+}) => {
+  return await academyRepository.findAll({ page, limit, latitude, longitude });
+};
+
 module.exports = {
   getAcademyById,
   getAcademyByEmail,
@@ -155,4 +166,5 @@ module.exports = {
   forgotPassword,
   forgotPasswordOTPVerify,
   resetPassword,
+  getAllAcademies,
 };

@@ -1,4 +1,5 @@
 const turfService = require("../../services/turf/index");
+const userService = require("../../services/user/index"); // Add missing import
 const {
   successResponse,
   errorResponse,
@@ -18,11 +19,46 @@ const getTurfById = async (req, res) => {
 
 const getAllTurfs = async (req, res) => {
   try {
-    const turfs = await turfService.getAllTurfs();
+    // Ensure we have default values that are numbers
+    const page = req.query.page ? parseInt(req.query.page, 10) : 1;
+    const limit = req.query.limit ? parseInt(req.query.limit, 10) : 10;
+    let latitude = req.query.latitude ? parseFloat(req.query.latitude) : null;
+    let longitude = req.query.longitude
+      ? parseFloat(req.query.longitude)
+      : null;
+
+    // If user is logged in, try to get their location
+    if (req.user && req.user.userId && (!latitude || !longitude)) {
+      try {
+        const user = await userService.getUserById(req.user.userId);
+        if (user && user.latitude && user.longitude) {
+          latitude = user.latitude;
+          longitude = user.longitude;
+        }
+      } catch (userError) {
+        // Just log the error but continue execution
+        console.warn("Failed to get user location:", userError.message);
+      }
+    }
+
+    // Create options object with guaranteed values
+    const options = {
+      page: page || 1, // Ensure we never pass undefined
+      limit: limit || 10,
+      latitude: latitude || null,
+      longitude: longitude || null,
+    };
+
+    const turfs = await turfService.getAllTurfs(options);
     successResponse(res, "All turfs fetched", turfs);
   } catch (error) {
     fatal(error);
-    errorResponse(res, error);
+    errorResponse(
+      res,
+      error.message || "Get All Turfs Failed",
+      error,
+      error.statusCode || 500
+    );
   }
 };
 
