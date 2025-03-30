@@ -68,8 +68,11 @@ const updateAcademy = async (req, res) => {
 
 const deleteAcademy = async (req, res) => {
   try {
-    const deletedAcademy = await AcademyService.deleteAcademy(req.user.academyId);
-    if (!deletedAcademy) return errorResponse(res, "Academy not found", null, 404);
+    const deletedAcademy = await AcademyService.deleteAcademy(
+      req.user.academyId
+    );
+    if (!deletedAcademy)
+      return errorResponse(res, "Academy not found", null, 404);
     successResponse(res, "Academy deleted successfully", null, 204);
   } catch (error) {
     fatal(error);
@@ -159,6 +162,38 @@ const resetPassword = async (req, res) => {
   }
 };
 
+const getAllAcademies = async (req, res) => {
+  try {
+    let { page, limit, latitude, longitude } = req.query;
+
+    // If user is logged in, we can potentially get their location
+    if (req.user && (!latitude || !longitude)) {
+      // Assuming there's a userService or similar way to get user data
+      const user = await userService.getUserById(req.user.userId);
+      if (user) {
+        latitude = user.latitude;
+        longitude = user.longitude;
+      }
+    }
+
+    const academies = await AcademyService.getAllAcademies({
+      page,
+      limit,
+      latitude,
+      longitude,
+    });
+    successResponse(res, "All academies fetched", academies);
+  } catch (error) {
+    fatal(error);
+    errorResponse(
+      res,
+      error.message || "Get All Academies Failed",
+      error,
+      error.statusCode || 500
+    );
+  }
+};
+
 module.exports = {
   getAcademyById,
   signup,
@@ -172,4 +207,5 @@ module.exports = {
   forgotPassword,
   forgotPasswordOTPVerify,
   resetPassword,
+  getAllAcademies, // Add this new export
 };

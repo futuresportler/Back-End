@@ -38,7 +38,7 @@ const TurfProfile = sequelize.define("TurfProfile", {
     allowNull: true,
   },
   location: {
-    type: DataTypes.GEOMETRY("POINT"),
+    type: DataTypes.JSON, // or DataTypes.STRING
     allowNull: true,
   },
   isVerified: {
@@ -104,13 +104,19 @@ const TurfProfile = sequelize.define("TurfProfile", {
 
 TurfProfile.beforeCreate((turf) => {
   if (turf.latitude && turf.longitude) {
-    turf.location = { type: "Point", coordinates: [turf.longitude, turf.latitude] };
+    turf.location = {
+      type: "Point",
+      coordinates: [turf.longitude, turf.latitude],
+    };
   }
 });
 
 TurfProfile.beforeUpdate((turf) => {
   if (turf.latitude && turf.longitude) {
-    turf.location = { type: "Point", coordinates: [turf.longitude, turf.latitude] };
+    turf.location = {
+      type: "Point",
+      coordinates: [turf.longitude, turf.latitude],
+    };
   }
 });
 

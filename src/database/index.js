@@ -25,14 +25,6 @@ Role.hasMany(User, { foreignKey: "role_id" });
 User.hasMany(UserAchievement, { foreignKey: "userId" });
 UserAchievement.belongsTo(User, { foreignKey: "userId" });
 
-// User & CoachProfile (One-to-One)
-// User.hasOne(CoachProfile, { foreignKey: "coachId" });
-// CoachProfile.belongsTo(User, { foreignKey: "coachId" });
-
-// User & AcademyProfile (One-to-One)
-// User.hasOne(AcademyProfile, { foreignKey: "academyId" });
-// AcademyProfile.belongsTo(User, { foreignKey: "academyId" });
-
 // Sport & AcademySports (One-to-Many)
 Sport.hasMany(AcademySport, { foreignKey: "sport_id" });
 AcademySport.belongsTo(Sport, { foreignKey: "sport_id" });
@@ -93,21 +85,16 @@ const syncDatabase = async () => {
   try {
     await sequelize.authenticate(); // Ensure DB connection is active
 
-    await Role.sync({ alter: true });
-    await Sport.sync({ alter: true });
-    await Certification.sync({ alter: true });
-    await User.sync({ alter: true });
-    await CoachProfile.sync({ alter: true });
-    await AcademyProfile.sync({ alter: true });
-    await TurfProfile.sync({ alter: true });
-
-    await Review.sync({ alter: true });
-    await CoachSport.sync({ alter: true });
-    await AcademySport.sync({ alter: true });
-    await AcademyCoach.sync({ alter: true });
-    await UserAchievement.sync({ alter: true });
-
-    console.log("✅ Database synced successfully!");
+    await sequelize.sync();
+  
+    // Final sync to apply all model definitions
+    if (process.env.NODE_ENV === "development") {
+      await sequelize.sync({ alter: true });
+      console.log("✅ Database tables updated!");
+    } else {
+      await sequelize.sync({ alter: true });
+      console.log("✅ Database synced successfully!");
+    }
   } catch (error) {
     console.error("❌ Error syncing database:", error);
   }
@@ -138,7 +125,6 @@ module.exports = {
 // to add geometry package to the db
 // sudo apt update
 // sudo apt install postgis postgresql-16-postgis-3
-
 
 // to restart db
 // sudo systemctl restart postgresql

@@ -57,7 +57,7 @@ const User = sequelize.define(
       allowNull: true,
     },
     location: {
-      type: DataTypes.GEOMETRY("POINT"),
+      type: DataTypes.JSON,
       allowNull: true,
     },
   },

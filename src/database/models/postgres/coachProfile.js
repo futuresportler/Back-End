@@ -74,7 +74,7 @@ const Coach = sequelize.define(
       allowNull: true,
     },
     location: {
-      type: DataTypes.GEOMETRY("POINT"),
+      type: DataTypes.JSON, // or DataTypes.STRING
       allowNull: true,
     },
     certification_ids: {
@@ -93,13 +93,19 @@ const Coach = sequelize.define(
 
 Coach.beforeCreate((coach) => {
   if (coach.latitude && coach.longitude) {
-    coach.location = { type: "Point", coordinates: [coach.longitude, coach.latitude] };
+    coach.location = {
+      type: "Point",
+      coordinates: [coach.longitude, coach.latitude],
+    };
   }
 });
 
 Coach.beforeUpdate((coach) => {
   if (coach.latitude && coach.longitude) {
-    coach.location = { type: "Point", coordinates: [coach.longitude, coach.latitude] };
+    coach.location = {
+      type: "Point",
+      coordinates: [coach.longitude, coach.latitude],
+    };
   }
 });
 
