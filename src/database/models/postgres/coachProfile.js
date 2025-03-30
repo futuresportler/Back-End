@@ -74,7 +74,8 @@ const Coach = sequelize.define(
       allowNull: true,
     },
     location: {
-      type: DataTypes.JSON, // or DataTypes.STRING
+      type: DataTypes.JSON, 
+
       allowNull: true,
     },
     certification_ids: {

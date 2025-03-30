@@ -39,6 +39,7 @@ const TurfProfile = sequelize.define("TurfProfile", {
   },
   location: {
     type: DataTypes.JSON, // or DataTypes.STRING
+
     allowNull: true,
   },
   isVerified: {
@@ -108,6 +109,7 @@ TurfProfile.beforeCreate((turf) => {
       type: "Point",
       coordinates: [turf.longitude, turf.latitude],
     };
+
   }
 });
 
