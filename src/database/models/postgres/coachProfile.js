@@ -65,8 +65,18 @@ const Coach = sequelize.define(
     availability: {
       type: DataTypes.JSON,
     },
+    latitude: {
+      type: DataTypes.FLOAT,
+      allowNull: true,
+    },
+    longitude: {
+      type: DataTypes.FLOAT,
+      allowNull: true,
+    },
     location: {
-      type: DataTypes.STRING,
+      type: DataTypes.JSON, 
+
+      allowNull: true,
     },
     certification_ids: {
       type: DataTypes.ARRAY(DataTypes.INTEGER),
@@ -81,5 +91,23 @@ const Coach = sequelize.define(
     timestamps: true,
   }
 );
+
+Coach.beforeCreate((coach) => {
+  if (coach.latitude && coach.longitude) {
+    coach.location = {
+      type: "Point",
+      coordinates: [coach.longitude, coach.latitude],
+    };
+  }
+});
+
+Coach.beforeUpdate((coach) => {
+  if (coach.latitude && coach.longitude) {
+    coach.location = {
+      type: "Point",
+      coordinates: [coach.longitude, coach.latitude],
+    };
+  }
+});
 
 module.exports = Coach;

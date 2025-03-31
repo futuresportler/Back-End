@@ -17,17 +17,38 @@ const validateCreateCoach = [
     .withMessage("Last name must be a string")
     .isLength({ min: 1 })
     .withMessage("Last name is required"),
-  body("mobile")
+  body("mobile").optional().isMobilePhone().withMessage("Invalid phone number"),
+  body("specialization")
+    .isString()
+    .withMessage("Specialization must be a string"),
+  body("experience_years")
     .optional()
-    .isMobilePhone()
-    .withMessage("Invalid phone number"),
-  body("specialization").isString().withMessage("Specialization must be a string"),
-  body("experience_years").optional().isInt().withMessage("Experience years must be an integer"),
-  body("biography").optional().isString().withMessage("Biography must be a string"),
-  body("hourly_rate").optional().isFloat().withMessage("Hourly rate must be a float"),
-  body("availability").optional().isJSON().withMessage("Availability must be a JSON object"),
-  body("location").isString().withMessage("Location must be a string"),
-  body("certification_ids").optional().isArray().withMessage("Certification IDs must be an array of integers"),
+    .isInt()
+    .withMessage("Experience years must be an integer"),
+  body("biography")
+    .optional()
+    .isString()
+    .withMessage("Biography must be a string"),
+  body("hourly_rate")
+    .optional()
+    .isFloat()
+    .withMessage("Hourly rate must be a float"),
+  body("availability")
+    .optional()
+    .isJSON()
+    .withMessage("Availability must be a JSON object"),
+  body("latitude")
+    .optional()
+    .isFloat({ min: -90, max: 90 })
+    .withMessage("Latitude must be a valid coordinate between -90 and 90"),
+  body("longitude")
+    .optional()
+    .isFloat({ min: -180, max: 180 })
+    .withMessage("Longitude must be a valid coordinate between -180 and 180"),
+  body("certification_ids")
+    .optional()
+    .isArray()
+    .withMessage("Certification IDs must be an array of integers"),
 ];
 
 const validateUpdateCoach = [
@@ -36,23 +57,45 @@ const validateUpdateCoach = [
     .optional()
     .isLength({ min: 6 })
     .withMessage("Password must be at least 6 characters long"),
-  body("mobile")
-    .optional()
-    .isMobilePhone()
-    .withMessage("Invalid phone number"),
+  body("mobile").optional().isMobilePhone().withMessage("Invalid phone number"),
   body("profile_picture").optional().isURL().withMessage("Invalid URL"),
   body("isVerified").optional().isBoolean().withMessage("Must be a boolean"),
   body("status")
     .optional()
     .isIn(["active", "inactive", "banned"])
     .withMessage("Invalid status"),
-  body("specialization").optional().isString().withMessage("Specialization must be a string"),
-  body("experience_years").optional().isInt().withMessage("Experience years must be an integer"),
-  body("biography").optional().isString().withMessage("Biography must be a string"),
-  body("hourly_rate").optional().isFloat().withMessage("Hourly rate must be a float"),
-  body("availability").optional().isJSON().withMessage("Availability must be a JSON object"),
-  body("location").optional().isString().withMessage("Location must be a string"),
-  body("certification_ids").optional().isArray().withMessage("Certification IDs must be an array of integers"),
+  body("specialization")
+    .optional()
+    .isString()
+    .withMessage("Specialization must be a string"),
+  body("experience_years")
+    .optional()
+    .isInt()
+    .withMessage("Experience years must be an integer"),
+  body("biography")
+    .optional()
+    .isString()
+    .withMessage("Biography must be a string"),
+  body("hourly_rate")
+    .optional()
+    .isFloat()
+    .withMessage("Hourly rate must be a float"),
+  body("availability")
+    .optional()
+    .isJSON()
+    .withMessage("Availability must be a JSON object"),
+  body("latitude")
+    .optional()
+    .isFloat({ min: -90, max: 90 })
+    .withMessage("Latitude must be a valid coordinate between -90 and 90"),
+  body("longitude")
+    .optional()
+    .isFloat({ min: -180, max: 180 })
+    .withMessage("Longitude must be a valid coordinate between -180 and 180"),
+  body("certification_ids")
+    .optional()
+    .isArray()
+    .withMessage("Certification IDs must be an array of integers"),
 ];
 
 const validateRequest = (req, res, next) => {
@@ -64,11 +107,12 @@ const validateRequest = (req, res, next) => {
   next();
 };
 
-
 const validateOTPVerification = [
-  body("otp").isNumeric().isLength({ min: 6, max: 6 }).withMessage("OTP must be 6 digits"),
+  body("otp")
+    .isNumeric()
+    .isLength({ min: 6, max: 6 })
+    .withMessage("OTP must be 6 digits"),
 ];
-
 
 module.exports = {
   validateCreateCoach,

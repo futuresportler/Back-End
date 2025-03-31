@@ -19,8 +19,8 @@ const getTurfByMobile = async (mobileNumber) => {
   return await turfRepository.findByMobile(mobileNumber);
 };
 
-const getAllTurfs = async () => {
-  return await turfRepository.findAll();
+const getAllTurfs = async (options) => {
+  return await turfRepository.findAll(options);
 };
 
 const signUp = async (turfData) => {
