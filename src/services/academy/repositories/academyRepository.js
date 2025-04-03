@@ -1,34 +1,70 @@
-const db = require("../../../database/index"); // Ensure this properly imports Sequelize models
+const { AcademyProfile, Supplier } = require("../../../database");
 
-const findById = async (academyId) => {
-  return await db.AcademyProfile.findByPk(academyId);
+const findAcademyProfileById = async (academyProfileId) => {
+  return await AcademyProfile.findByPk(academyProfileId, {
+    include: [
+      {
+        model: Supplier,
+        as: "supplier",
+        attributes: ["email", "mobile", "profilePicture", "location"],
+      },
+    ],
+  });
 };
 
-const findByEmail = async (email) => {
-  return await db.AcademyProfile.findOne({ where: { email } });
+const findAcademiesBySupplierId = async (supplierId) => {
+  return await AcademyProfile.findAll({
+    where: { supplierId },
+    include: ["supplier"],
+  });
 };
 
-const createAcademy = async (academyData) => {
-  return await db.AcademyProfile.create(academyData);
+const createAcademyProfile = async (profileData) => {
+  return await AcademyProfile.create(profileData);
 };
 
-const updateAcademy = async (academyId, updateData) => {
-  const academy = await db.AcademyProfile.findByPk(academyId);
-  if (!academy) return null;
-  return await academy.update(updateData);
+const updateAcademyProfile = async (academyProfileId, updateData) => {
+  const profile = await AcademyProfile.findByPk(academyProfileId);
+  if (!profile) return null;
+  return await profile.update(updateData);
 };
 
-const deleteAcademy = async (academyId) => {
-  const academy = await db.AcademyProfile.findByPk(academyId);
-  if (!academy) return null;
-  await academy.destroy();
-  return academy;
+const deleteAcademyProfile = async (academyProfileId) => {
+  const profile = await AcademyProfile.findByPk(academyProfileId);
+  if (!profile) return null;
+  await profile.destroy();
+  return profile;
+};
+
+const findAcademiesNearby = async (latitude, longitude, radius) => {
+  return await AcademyProfile.findAll({
+    include: [
+      {
+        model: Supplier,
+        as: "supplier",
+        where: sequelize.where(
+          sequelize.fn(
+            "ST_DWithin",
+            sequelize.col("supplier.location"),
+            sequelize.fn(
+              "ST_SetSRID",
+              sequelize.fn("ST_MakePoint", longitude, latitude),
+              4326
+            ),
+            radius
+          ),
+          true
+        ),
+      },
+    ],
+  });
 };
 
 module.exports = {
-  findById,
-  findByEmail,
-  createAcademy,
-  updateAcademy,
-  deleteAcademy,
+  findAcademyProfileById,
+  findAcademiesBySupplierId,
+  createAcademyProfile,
+  updateAcademyProfile,
+  deleteAcademyProfile,
+  findAcademiesNearby,
 };

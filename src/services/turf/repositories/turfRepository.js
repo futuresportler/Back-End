@@ -1,44 +1,70 @@
-const db = require("../../../database/index"); // Ensure this properly imports Sequelize models
+const { TurfProfile, Supplier } = require("../../../database");
 
-const findById = async (turfId) => {
-  return await db.TurfProfile.findByPk(turfId);
+const findTurfProfileById = async (turfProfileId) => {
+  return await TurfProfile.findByPk(turfProfileId, {
+    include: [
+      {
+        model: Supplier,
+        as: "supplier",
+        attributes: ["email", "mobile", "profilePicture", "location"],
+      },
+    ],
+  });
 };
 
-const findByEmail = async (email) => {
-  return await db.TurfProfile.findOne({ where: { email } });
+const findTurfsBySupplierId = async (supplierId) => {
+  return await TurfProfile.findAll({
+    where: { supplierId },
+    include: ["supplier"],
+  });
 };
 
-const findByMobile = async (mobileNumber) => {
-  return await db.TurfProfile.findOne({ where: { mobile: mobileNumber } });
+const createTurfProfile = async (profileData) => {
+  return await TurfProfile.create(profileData);
 };
 
-const createTurf = async (turfData) => {
-  return await db.TurfProfile.create(turfData);
+const updateTurfProfile = async (turfProfileId, updateData) => {
+  const profile = await TurfProfile.findByPk(turfProfileId);
+  if (!profile) return null;
+  return await profile.update(updateData);
 };
 
-const updateTurf = async (turfId, updateData) => {
-  const turf = await db.TurfProfile.findByPk(turfId);
-  if (!turf) return null;
-  return await turf.update(updateData);
+const deleteTurfProfile = async (turfProfileId) => {
+  const profile = await TurfProfile.findByPk(turfProfileId);
+  if (!profile) return null;
+  await profile.destroy();
+  return profile;
 };
 
-const deleteTurf = async (turfId) => {
-  const turf = await db.TurfProfile.findByPk(turfId);
-  if (!turf) return null;
-  await turf.destroy();
-  return turf;
-};
-
-const findAll = async () => {
-  return await db.TurfProfile.findAll();
+const findTurfsNearby = async (latitude, longitude, radius) => {
+  return await TurfProfile.findAll({
+    include: [
+      {
+        model: Supplier,
+        as: "supplier",
+        where: sequelize.where(
+          sequelize.fn(
+            "ST_DWithin",
+            sequelize.col("supplier.location"),
+            sequelize.fn(
+              "ST_SetSRID",
+              sequelize.fn("ST_MakePoint", longitude, latitude),
+              4326
+            ),
+            radius
+          ),
+          true
+        ),
+      },
+    ],
+  });
 };
 
 module.exports = {
-  findById,
-  findByEmail,
-  findByMobile,
-  createTurf,
-  updateTurf,
-  deleteTurf,
-  findAll,
+  findTurfProfileById,
+  findTurfsBySupplierId,
+  createTurfProfile,
+  updateTurfProfile,
+  deleteTurfProfile,
+  findTurfsNearby,
 };

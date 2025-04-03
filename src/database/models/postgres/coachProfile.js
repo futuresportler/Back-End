@@ -1,106 +1,36 @@
+// models/postgres/coachProfile.js
 const { DataTypes } = require("sequelize");
-const { sequelize } = require("../../../config/database");
 
-const Coach = sequelize.define(
-  "Coach",
-  {
-    coachId: {
+module.exports = (sequelize) => {
+  const CoachProfile = sequelize.define("CoachProfile", {
+    coachProfileId: {
       type: DataTypes.UUID,
       defaultValue: DataTypes.UUIDV4,
       primaryKey: true,
     },
-    first_name: {
-      type: DataTypes.STRING,
+    supplierId: {
+      type: DataTypes.UUID,
       allowNull: false,
+      references: {
+        model: 'Suppliers',
+        key: 'supplierId'
+      }
     },
-    last_name: {
+    firstName: {
       type: DataTypes.STRING,
-      allowNull: false,
+      allowNull: false
     },
-    email: {
+    lastName: {
       type: DataTypes.STRING,
-      allowNull: false,
-      unique: true,
+      allowNull: false
     },
-    password: {
-      type: DataTypes.STRING,
-      allowNull: true,
-    },
-    mobile: {
-      type: DataTypes.STRING,
-      allowNull: true,
-      unique: true,
-    },
-    profile_picture: {
-      type: DataTypes.STRING,
-      allowNull: true,
-    },
-    specialization: {
-      type: DataTypes.STRING,
-      allowNull: true,
-    },
-    experience: {
-      type: DataTypes.INTEGER,
-      allowNull: true,
-    },
-    isVerified: {
-      type: DataTypes.BOOLEAN,
-      defaultValue: false,
-    },
-    isOAuth: {
-      type: DataTypes.BOOLEAN,
-      defaultValue: false,
-    },
-    firebaseUID: {
-      type: DataTypes.STRING,
-      allowNull: true,
-      unique: true,
-    },
-    biography: {
-      type: DataTypes.TEXT,
-    },
-    hourly_rate: {
-      type: DataTypes.FLOAT,
-    },
-    availability: {
-      type: DataTypes.JSON,
-    },
-    latitude: {
-      type: DataTypes.FLOAT,
-      allowNull: true,
-    },
-    longitude: {
-      type: DataTypes.FLOAT,
-      allowNull: true,
-    },
-    location: {
-      type: DataTypes.GEOMETRY("POINT"),
-      allowNull: true,
-    },
-    certification_ids: {
-      type: DataTypes.ARRAY(DataTypes.INTEGER),
-    },
-    review_ids: {
-      type: DataTypes.ARRAY(DataTypes.INTEGER),
-      defaultValue: [],
-    },
-  },
-  {
-    tableName: "Coach",
-    timestamps: true,
-  }
-);
+    specialization: DataTypes.STRING,
+    experience: DataTypes.INTEGER,
+    hourlyRate: DataTypes.FLOAT,
+    biography: DataTypes.TEXT,
+    certificationIds: DataTypes.ARRAY(DataTypes.STRING),
+    availability: DataTypes.JSON
+  });
 
-Coach.beforeCreate((coach) => {
-  if (coach.latitude && coach.longitude) {
-    coach.location = { type: "Point", coordinates: [coach.longitude, coach.latitude] };
-  }
-});
-
-Coach.beforeUpdate((coach) => {
-  if (coach.latitude && coach.longitude) {
-    coach.location = { type: "Point", coordinates: [coach.longitude, coach.latitude] };
-  }
-});
-
-module.exports = Coach;
+  return CoachProfile;
+};
