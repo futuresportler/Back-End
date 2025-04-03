@@ -29,11 +29,11 @@ const updateAcademyProfile = async (academyProfileId, updateData) => {
   return await profile.update(updateData);
 };
 
-const deleteAcademyProfile = async (academyProfileId) => {
-  const profile = await AcademyProfile.findByPk(academyProfileId);
-  if (!profile) return null;
-  await profile.destroy();
-  return profile;
+const deleteAcademy = async (academyId) => {
+  const academy = await db.AcademyProfile.findByPk(academyId);
+  if (!academy) return null;
+  await academy.destroy();
+  return academy;
 };
 
 const findAcademiesNearby = async (latitude, longitude, radius) => {

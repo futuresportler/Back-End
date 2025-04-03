@@ -119,3 +119,12 @@ module.exports = {
   Certification,
   syncDatabase,
 };
+
+// $ psql -U postgres -W
+
+// to add geometry package to the db
+// sudo apt update
+// sudo apt install postgis postgresql-16-postgis-3
+
+// to restart db
+// sudo systemctl restart postgresql

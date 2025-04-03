@@ -63,17 +63,39 @@ const getNearbyAcademies = async (latitude, longitude, radius = 5000) => {
   );
 };
 
-const addAcademySport = async (academyProfileId, sportId) => {
-  const profile = await academyRepository.findAcademyProfileById(
-    academyProfileId
-  );
-  if (!profile) throw new Error("Academy profile not found");
+const forgotPassword = async (email) => {
+  const academy = await getAcademyByEmail(email);
+  if (!academy) {
+    const error = new Error("academy not found");
+    error.statusCode = 404;
+    throw error;
+  }
+  const otp = generateOTP();
+  await storeOTP(email, otp);
+  await sendOTPEmail(email, otp);
+  return { message: "OTP sent successfully!" };
+};
 
-  const updatedSports = [...(profile.sportsOffered || []), sportId];
+const forgotPasswordOTPVerify = async (email, otp) => {
+  const isValid = await verifyOTP(email, otp);
+  if (!isValid) throw new Error("Invalid or expired OTP");
 
-  return await academyRepository.updateAcademyProfile(academyProfileId, {
-    sportsOffered: updatedSports,
-  });
+  const academy = await getAcademyByEmail(email);
+  if (!academy) {
+    const error = new Error("academy not found");
+    error.statusCode = 404;
+    throw error;
+  }
+
+  await updateAcademy(academy.academyId, { isVerified: true });
+  const tokens = generateAcademyTokens(academy);
+  return { tokens };
+};
+
+const resetPassword = async (academyId, password) => {
+  const hashedPassword = await hashPassword(password);
+  await updateAcademy(academyId, { password: hashedPassword });
+  return { message: "Password reset successfully!" };
 };
 
 module.exports = {
