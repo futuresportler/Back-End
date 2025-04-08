@@ -1,79 +1,43 @@
 const express = require("express");
 const router = express.Router();
 const coachController = require("../controllers/coach.controller");
+const { authMiddleware } = require("../middlewares/auth.middleware");
 const {
-  authMiddleware,
-  refreshMiddleWare,
-} = require("../middlewares/auth.middleware");
-const {
-  validateCreateCoach,
-  validateUpdateCoach,
-  validateCoachId,
+  validateCoachProfile,
   validateRequest,
-  validateOTPRequest,
-  validateOTPVerification,
 } = require("../validation/coachValidator");
-const auth = require("../../config/firebase");
 
-//get all coaches list
-router.get("/all", authMiddleware, coachController.getAllCoaches);
-
-//coach actions
-router.get("/", validateRequest, authMiddleware, coachController.getCoachById);
+// Profile routes
+router.post(
+  "/",
+  authMiddleware,
+  validateCoachProfile,
+  validateRequest,
+  coachController.createProfile
+);
+router.get("/me", authMiddleware, coachController.getMyProfile);
+router.get("/:coachProfileId", coachController.getProfile);
 router.patch(
-  "/",
-  validateUpdateCoach,
-  validateRequest,
+  "/:coachProfileId",
   authMiddleware,
-  coachController.updateCoach
+  validateCoachProfile,
+  validateRequest,
+  coachController.updateProfile
 );
 router.delete(
-  "/",
-  validateRequest,
+  "/:coachProfileId",
   authMiddleware,
-  coachController.deleteCoach
+  coachController.deleteProfile
 );
 
-// Review routes
-router.post("/:coachId/reviews", authMiddleware, coachController.addReview);
-router.put(
-  "/:coachId/reviews/:reviewId",
-  authMiddleware,
-  coachController.updateReview
-);
-router.delete(
-  "/reviews/:reviewId",
-  authMiddleware,
-  coachController.deleteReview
-);
+// Search routes
+router.get("/nearby", coachController.getNearbyCoaches);
 
-//login actions
+// Certification routes
 router.post(
-  "/signup",
-  validateCreateCoach,
-  validateRequest,
-  coachController.signup
-);
-router.post("/signin", validateRequest, coachController.signin);
-
-//token actions
-router.post("/refresh-token", refreshMiddleWare, coachController.refreshToken);
-router.post("/verify-token", coachController.verifyTokenAndUpdateCoach);
-router.post("/request-otp", authMiddleware, coachController.requestOTP);
-router.post(
-  "/verify-otp",
+  "/:coachProfileId/certifications",
   authMiddleware,
-  validateOTPVerification,
-  validateRequest,
-  coachController.verifyOTP
+  coachController.addCertification
 );
-
-//forgot password
-router.post("/forgot-password", coachController.forgotPassword);
-router.post("/verify-forgot-password", coachController.forgotPasswordOTPVerify);
-router.post("/reset-password", authMiddleware, coachController.resetPassword);
-
-//OAuth authentication
-router.post("/oauth", coachController.handleOAuthSignIn);
 
 module.exports = router;

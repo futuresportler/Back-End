@@ -1,112 +1,66 @@
 const academyRepository = require("./repositories/academyRepository");
-const { generateAcademyTokens } = require("../../config/auth");
-const { hashPassword, comparePassword } = require("../../common/utils/hash");
-const { warn } = require("../../config/logging");
-const { generateOTP, storeOTP, verifyOTP } = require("../../config/otp");
-const { sendOTPEmail } = require("../../config/emailService");
+const { SupplierService } = require("../supplier/index");
 
-const getAcademyById = async (academyId) => {
-  return await academyRepository.findById(academyId);
-};
-
-const getAcademyByEmail = async (email) => {
-  return await academyRepository.findByEmail(email);
-};
-
-const signUp = async (academyData) => {
-  const { email, password, ...otherData } = academyData;
-
-  // Check if academy exists
-  const existingacademy = await academyRepository.findByEmail(email);
-  if (existingacademy) {
-    const error = new Error("academy already exists");
-    error.statusCode = 400;
-    error.message = "academy already exists";
-    throw error;
+const createAcademyProfile = async (supplierId, profileData) => {
+  const supplier = await SupplierService.getSupplierByModule(
+    supplierId,
+    "academy"
+  );
+  if (!supplier) {
+    throw new Error("Supplier not found or not configured for academy");
   }
-  // Hash password
-  const hashedPassword = await hashPassword(password);
-  // Create academy
-  const newacademy = await academyRepository.createAcademy({
-    email,
-    password: hashedPassword,
-    ...otherData,
+
+  return await academyRepository.createAcademyProfile({
+    ...profileData,
+    supplierId,
+    academyProfileId: uuidv4(),
   });
-
-  setTimeout(async () => {
-    const academy = await academyRepository.findById(newacademy.academyId);
-    if (academy && !academy.isVerified) {
-      await academyRepository.deleteAcademy(academy.academyId);
-      warn(
-        `academy with Email ${academy.email} deleted due to non-verification.`
-      );
-    }
-  }, 10 * 60 * 1000); // 2 minute in milliseconds
-
-  // Generate tokens
-  const tokens = generateAcademyTokens(newacademy);
-  return { tokens };
 };
 
-const signIn = async (data) => {
-  const { email, password: passwordRaw } = data;
-  // Find academy
-  const academy = await academyRepository.findByEmail(email);
-  if (!academy) {
-    const error = new Error("Invalid Credentials");
-    error.statusCode = 400;
-    error.message = "Invalid Credentials";
-    throw error;
+const getAcademyProfile = async (academyProfileId) => {
+  const profile = await academyRepository.findAcademyProfileById(
+    academyProfileId
+  );
+  if (!profile) throw new Error("Academy profile not found");
+  return profile;
+};
+
+const getAcademiesBySupplier = async (supplierId) => {
+  return await academyRepository.findAcademiesBySupplierId(supplierId);
+};
+
+const updateAcademyProfile = async (academyProfileId, updateData) => {
+  const updated = await academyRepository.updateAcademyProfile(
+    academyProfileId,
+    updateData
+  );
+  if (!updated) throw new Error("Academy profile not found");
+  return updated;
+};
+
+const deleteAcademyProfile = async (academyProfileId) => {
+  const deleted = await academyRepository.deleteAcademyProfile(
+    academyProfileId
+  );
+  if (!deleted) throw new Error("Academy profile not found");
+
+  // Check if supplier has other academies
+  const remainingAcademies = await academyRepository.findAcademiesBySupplierId(
+    deleted.supplierId
+  );
+  if (remainingAcademies.length === 0) {
+    await SupplierService.updateSupplierModule(deleted.supplierId, "none");
   }
-  // Compare passwords
-  const isMatch = await comparePassword(passwordRaw, academy.password);
-  if (!isMatch) throw new Error("Invalid credentials");
-
-  // Generate tokens
-  const tokens = generateAcademyTokens(academy);
-
-  return tokens;
+  return deleted;
 };
 
-const refreshToken = async (academyId) => {
-  const academy = await academyRepository.findById(academyId);
-  if (!academy) {
-    const error = new Error("academy not found");
-    error.statusCode = 404;
-    throw error;
-  }
-
-  const { accessToken, refreshToken } = generateAcademyTokens(academy);
-  return accessToken;
-};
-
-const updateAcademy = async (academyId, updateData) => {
-  return await academyRepository.updateAcademy(academyId, updateData);
-};
-
-const deleteAcademy = async (academyId) => {
-  return await academyRepository.deleteAcademy(academyId);
-};
-
-const requestOTP = async (email) => {
-  const otp = generateOTP();
-  await storeOTP(email, otp);
-  await sendOTPEmail(email, otp);
-  return { message: "OTP sent successfully!" };
-};
-
-const verifyOTPCode = async (email, otp) => {
-  const isValid = await verifyOTP(email, otp);
-  if (!isValid) throw new Error("Invalid or expired OTP");
-
-  const academy = await getAcademyByEmail(email);
-  if (!academy) {
-    const error = new Error("academy not found");
-    error.statusCode = 404;
-    throw error;
-  }
-  await updateAcademy(academy.academyId, { isVerified: true });
-  return { message: "OTP verified successfully!" };
+const getNearbyAcademies = async (latitude, longitude, radius = 5000) => {
+  if (!latitude || !longitude) throw new Error("Coordinates are required");
+  return await academyRepository.findAcademiesNearby(
+    latitude,
+    longitude,
+    radius
+  );
 };
 
 const forgotPassword = async (email) => {
@@ -144,27 +98,12 @@ const resetPassword = async (academyId, password) => {
   return { message: "Password reset successfully!" };
 };
 
-const getAllAcademies = async ({
-  page = 1,
-  limit = 10,
-  latitude,
-  longitude,
-}) => {
-  return await academyRepository.findAll({ page, limit, latitude, longitude });
-};
-
 module.exports = {
-  getAcademyById,
-  getAcademyByEmail,
-  signUp,
-  signIn,
-  refreshToken,
-  updateAcademy,
-  deleteAcademy,
-  requestOTP,
-  verifyOTPCode,
-  forgotPassword,
-  forgotPasswordOTPVerify,
-  resetPassword,
-  getAllAcademies,
+  createAcademyProfile,
+  getAcademyProfile,
+  getAcademiesBySupplier,
+  updateAcademyProfile,
+  deleteAcademyProfile,
+  getNearbyAcademies,
+  addAcademySport,
 };

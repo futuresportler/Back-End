@@ -1,123 +1,123 @@
-const { connectMongoDB, connectPostgres } = require("../config/database");
-
-const User = require("./models/postgres/user");
-const Role = require("./models/postgres/role");
-const Sport = require("./models/postgres/sport");
-const UserAchievement = require("./models/postgres/userAchievement");
-const CoachSport = require("./models/postgres/coachSport");
-const CoachProfile = require("./models/postgres/coachProfile");
-const Certification = require("./models/postgres/certification");
-const AcademySport = require("./models/postgres/academySport");
-const AcademyProfile = require("./models/postgres/academyProfile");
-const AcademyCoach = require("./models/postgres/academyCoach");
-const TurfProfile = require("./models/postgres/turfProfile");
-const Review = require("./models/postgres/review");
-
 const { sequelize } = require("../config/database");
+const { DataTypes } = require("sequelize");
 
-// 🔗 Define Associations
+// Import models
+const Supplier = require("./models/postgres/supplier");
+const CoachProfile = require("./models/postgres/coachProfile")(sequelize);
+const AcademyProfile = require("./models/postgres/academyProfile")(sequelize);
+const TurfProfile = require("./models/postgres/turfProfile")(sequelize);
+const Review = require("./models/postgres/review");
+const Sport = require("./models/postgres/sport");
+const Certification = require("./models/postgres/certification");
 
-// User & Role (One-to-Many)
-User.belongsTo(Role, { foreignKey: "role_id" });
-Role.hasMany(User, { foreignKey: "role_id" });
+// Define Associations
+const defineAssociations = () => {
+  // Supplier -> Profile Relationships
+  Supplier.hasOne(CoachProfile, {
+    foreignKey: "supplierId",
+    as: "coachProfile",
+  });
+  CoachProfile.belongsTo(Supplier, {
+    foreignKey: "supplierId",
+    as: "supplier",
+  });
 
-// User & UserAchievement (One-to-Many)
-User.hasMany(UserAchievement, { foreignKey: "userId" });
-UserAchievement.belongsTo(User, { foreignKey: "userId" });
+  Supplier.hasMany(AcademyProfile, {
+    foreignKey: "supplierId",
+    as: "academyProfiles",
+  });
+  AcademyProfile.belongsTo(Supplier, {
+    foreignKey: "supplierId",
+    as: "supplier",
+  });
 
-// Sport & AcademySports (One-to-Many)
-Sport.hasMany(AcademySport, { foreignKey: "sport_id" });
-AcademySport.belongsTo(Sport, { foreignKey: "sport_id" });
+  Supplier.hasMany(TurfProfile, {
+    foreignKey: "supplierId",
+    as: "turfProfiles",
+  });
+  TurfProfile.belongsTo(Supplier, {
+    foreignKey: "supplierId",
+    as: "supplier",
+  });
 
-// AcademyProfile & AcademySports (One-to-Many)
-AcademyProfile.hasMany(AcademySport, { foreignKey: "academyId" });
-AcademySport.belongsTo(AcademyProfile, { foreignKey: "academyId" });
+  // Review System
+  Review.belongsTo(Supplier, {
+    foreignKey: "reviewerId",
+    as: "reviewer",
+  });
+  Supplier.hasMany(Review, {
+    foreignKey: "reviewerId",
+    as: "authoredReviews",
+  });
 
-// CoachProfile & CoachSports (One-to-Many)
-CoachProfile.hasMany(CoachSport, { foreignKey: "coachId" });
-CoachSport.belongsTo(CoachProfile, { foreignKey: "coachId" });
+  // Entity-specific reviews
+  CoachProfile.hasMany(Review, {
+    foreignKey: "entityId",
+    constraints: false,
+    scope: { entityType: "coach" },
+    as: "reviews",
+  });
 
-// Sport & CoachSports (One-to-Many)
-Sport.hasMany(CoachSport, { foreignKey: "sport_id" });
-CoachSport.belongsTo(Sport, { foreignKey: "sport_id" });
+  AcademyProfile.hasMany(Review, {
+    foreignKey: "entityId",
+    constraints: false,
+    scope: { entityType: "academy" },
+    as: "reviews",
+  });
 
-// CoachProfile & AcademyProfile (Many-to-Many via AcademyCoach)
-CoachProfile.belongsToMany(AcademyProfile, {
-  through: AcademyCoach,
-  foreignKey: "coachId",
-});
-AcademyProfile.belongsToMany(CoachProfile, {
-  through: AcademyCoach,
-  foreignKey: "academyId",
-});
+  TurfProfile.hasMany(Review, {
+    foreignKey: "entityId",
+    constraints: false,
+    scope: { entityType: "turf" },
+    as: "reviews",
+  });
 
-// Define explicit AcademyCoach associations
-AcademyCoach.belongsTo(CoachProfile, { foreignKey: "coachId" });
-AcademyCoach.belongsTo(AcademyProfile, { foreignKey: "academyId" });
-CoachProfile.hasMany(AcademyCoach, { foreignKey: "coachId" });
-AcademyProfile.hasMany(AcademyCoach, { foreignKey: "academyId" });
+  // Sports and Certifications
+  CoachProfile.belongsToMany(Sport, {
+    through: "CoachSports",
+    foreignKey: "coachProfileId",
+    as: "sports",
+  });
 
-// Reviews associations
-User.hasMany(Review, { foreignKey: "reviewer_id", as: "authoredReviews" });
-Review.belongsTo(User, { foreignKey: "reviewer_id", as: "reviewer" });
+  AcademyProfile.belongsToMany(Sport, {
+    through: "AcademySports",
+    foreignKey: "academyProfileId",
+    as: "sports",
+  });
 
-// Coach can have many reviews
-CoachProfile.hasMany(Review, {
-  foreignKey: "entity_id",
-  constraints: false,
-  scope: {
-    entity_type: "Coach",
-  },
-  as: "reviews",
-});
+  CoachProfile.belongsToMany(Certification, {
+    through: "CoachCertifications",
+    foreignKey: "coachProfileId",
+    as: "certifications",
+  });
+};
 
-// Turf can have many reviews
-TurfProfile.hasMany(Review, {
-  foreignKey: "entity_id",
-  constraints: false,
-  scope: {
-    entity_type: "Turf",
-  },
-  as: "reviews",
-});
-
+// Database Sync Function
 const syncDatabase = async () => {
   try {
-    await sequelize.authenticate(); // Ensure DB connection is active
+    await sequelize.authenticate();
+    console.log("✅ Database connection established");
 
-    await sequelize.sync();
-  
-    // Final sync to apply all model definitions
-    if (process.env.NODE_ENV === "development") {
-      await sequelize.sync({ alter: true });
-      console.log("✅ Database tables updated!");
-    } else {
-      await sequelize.sync({ alter: true });
-      console.log("✅ Database synced successfully!");
-    }
+    defineAssociations();
+
+    await sequelize.sync({ alter: true });
+    console.log("✅ Database synchronized successfully");
   } catch (error) {
-    console.error("❌ Error syncing database:", error);
+    console.error("❌ Database synchronization failed:", error);
+    process.exit(1);
   }
 };
 
-syncDatabase();
-
 module.exports = {
   sequelize,
-  User,
-  Role,
-  Sport,
-  UserAchievement,
-  CoachSport,
+  Supplier,
   CoachProfile,
-  Certification,
-  AcademySport,
   AcademyProfile,
-  AcademyCoach,
   TurfProfile,
   Review,
-  connectMongoDB,
-  connectPostgres,
+  Sport,
+  Certification,
+  syncDatabase,
 };
 
 // $ psql -U postgres -W

@@ -1,288 +1,88 @@
-const turfService = require("../../services/turf/index");
-const userService = require("../../services/user/index"); // Add missing import
+const { turfService } = require("../../services/turf");
 const {
   successResponse,
   errorResponse,
 } = require("../../common/utils/response");
-const { fatal } = require("../../config/logging");
 
-const getTurfById = async (req, res) => {
+const createProfile = async (req, res) => {
   try {
-    const turf = await turfService.getTurfById(req.user.turfId);
-    if (!turf) return errorResponse(res, "Turf not found", 404);
-    successResponse(res, "Turf fetched", turf);
-  } catch (error) {
-    fatal(error);
-    errorResponse(res, error);
-  }
-};
-
-const getAllTurfs = async (req, res) => {
-  try {
-    // Ensure we have default values that are numbers
-    const page = req.query.page ? parseInt(req.query.page, 10) : 1;
-    const limit = req.query.limit ? parseInt(req.query.limit, 10) : 10;
-    let latitude = req.query.latitude ? parseFloat(req.query.latitude) : null;
-    let longitude = req.query.longitude
-      ? parseFloat(req.query.longitude)
-      : null;
-
-    // If user is logged in, try to get their location
-    if (req.user && req.user.userId && (!latitude || !longitude)) {
-      try {
-        const user = await userService.getUserById(req.user.userId);
-        if (user && user.latitude && user.longitude) {
-          latitude = user.latitude;
-          longitude = user.longitude;
-        }
-      } catch (userError) {
-        // Just log the error but continue execution
-        console.warn("Failed to get user location:", userError.message);
-      }
-    }
-
-    // Create options object with guaranteed values
-    const options = {
-      page: page || 1, // Ensure we never pass undefined
-      limit: limit || 10,
-      latitude: latitude || null,
-      longitude: longitude || null,
-    };
-
-    const turfs = await turfService.getAllTurfs(options);
-    successResponse(res, "All turfs fetched", turfs);
-  } catch (error) {
-    fatal(error);
-    errorResponse(
-      res,
-      error.message || "Get All Turfs Failed",
-      error,
-      error.statusCode || 500
+    const profile = await turfService.createTurfProfile(
+      req.user.supplierId,
+      req.body
     );
+    successResponse(res, "Turf profile created", profile, 201);
+  } catch (error) {
+    errorResponse(res, error.message, error);
   }
 };
 
-const signup = async (req, res) => {
+const getMyProfiles = async (req, res) => {
   try {
-    const newTurf = await turfService.signUp(req.body);
-    successResponse(res, "Turf created", newTurf, 201);
+    const profiles = await turfService.getTurfsBySupplier(req.user.supplierId);
+    successResponse(res, "Turf profiles fetched", profiles);
   } catch (error) {
-    fatal(error);
-    errorResponse(res, error.message || "Turf signup failed", error);
+    errorResponse(res, error.message, error);
   }
 };
 
-const signin = async (req, res) => {
+const getProfile = async (req, res) => {
   try {
-    const turf = await turfService.signIn(req.body);
-    successResponse(res, "Turf logged in successfully", turf);
+    const profile = await turfService.getTurfProfile(req.params.turfProfileId);
+    successResponse(res, "Turf profile fetched", profile);
   } catch (error) {
-    fatal(error);
-    errorResponse(res, error.message || "Turf signin failed", error);
+    errorResponse(res, error.message, error);
   }
 };
 
-const refreshToken = async (req, res) => {
+const updateProfile = async (req, res) => {
   try {
-    const tokens = await turfService.refreshToken(req.user.turfId);
-    successResponse(res, "Token refreshed", { accessToken: tokens });
-  } catch (error) {
-    fatal(error);
-    errorResponse(
-      res,
-      error.message || "Token refresh failed",
-      error,
-      error.statusCode
+    const updated = await turfService.updateTurfProfile(
+      req.params.turfProfileId,
+      req.body
     );
-  }
-};
-
-const updateTurf = async (req, res) => {
-  try {
-    const updatedTurf = await turfService.updateTurf(req.user.turfId, req.body);
-    if (!updatedTurf) return errorResponse(res, "Turf not found", 404);
-    successResponse(res, "Turf updated", updatedTurf);
+    successResponse(res, "Profile updated", updated);
   } catch (error) {
-    fatal(error);
-    errorResponse(res, error);
-  }
-};
-
-const deleteTurf = async (req, res) => {
-  try {
-    const deletedTurf = await turfService.deleteTurf(req.user.turfId);
-    if (!deletedTurf) return errorResponse(res, "Turf not found", null, 404);
-    successResponse(res, "Turf deleted successfully", null, 204);
-  } catch (error) {
-    fatal(error);
-    errorResponse(res, error);
-  }
-};
-
-const requestOTP = async (req, res) => {
-  try {
-    const email = req.user.email;
-    const response = await turfService.requestOTP(email);
-    successResponse(res, response.message, response);
-  } catch (error) {
-    fatal(error);
     errorResponse(res, error.message, error);
   }
 };
 
-const verifyOTP = async (req, res) => {
+const deleteProfile = async (req, res) => {
   try {
-    const { otp } = req.body;
-    const email = req.user.email;
-    const response = await turfService.verifyOTPCode(email, otp);
-    successResponse(res, response.message, response);
+    await turfService.deleteTurfProfile(req.params.turfProfileId);
+    successResponse(res, "Profile deleted", null, 204);
   } catch (error) {
-    fatal(error);
     errorResponse(res, error.message, error);
   }
 };
 
-const forgotPassword = async (req, res) => {
+const getNearbyTurfs = async (req, res) => {
   try {
-    const { email } = req.body;
-    const response = await turfService.forgotPassword(email);
-    successResponse(res, response.message, response);
+    const { latitude, longitude, radius } = req.query;
+    const turfs = await turfService.getNearbyTurfs(latitude, longitude, radius);
+    successResponse(res, "Nearby turfs fetched", turfs);
   } catch (error) {
-    fatal(error);
     errorResponse(res, error.message, error);
   }
 };
 
-const forgotPasswordOTPVerify = async (req, res) => {
+const addImage = async (req, res) => {
   try {
-    const { otp, email } = req.body;
-    const response = await turfService.forgotPasswordOTPVerify(email, otp);
-    successResponse(res, response.message, response);
-  } catch (error) {
-    fatal(error);
-    errorResponse(res, error.message, error);
-  }
-};
-
-const resetPassword = async (req, res) => {
-  try {
-    const { password } = req.body;
-    const response = await turfService.resetPassword(req.user.turfId, password);
-    successResponse(res, response.message, response);
-  } catch (error) {
-    fatal(error);
-    errorResponse(res, error.message, error);
-  }
-};
-
-const addComment = async (req, res) => {
-  try {
-    const { turfId } = req.params;
-    const userId = req.user.userId;
-    const commentData = {
-      ...req.body,
-      reviewer_id: userId,
-      entity_id: turfId,
-      entity_type: "Turf",
-    };
-
-    const newComment = await turfService.addComment(commentData);
-    successResponse(res, "Comment added successfully", newComment, 201);
-  } catch (error) {
-    fatal(error);
-    errorResponse(res, error.message || "Failed to add comment", error);
-  }
-};
-
-const updateComment = async (req, res) => {
-  try {
-    const { turfId, reviewId } = req.params;
-    const userId = req.user.userId;
-
-    const updatedComment = await turfService.updateComment(reviewId, {
-      ...req.body,
-      reviewer_id: userId,
-      entity_id: turfId,
-      entity_type: "Turf",
-    });
-
-    successResponse(res, "Comment updated successfully", updatedComment);
-  } catch (error) {
-    fatal(error);
-    errorResponse(
-      res,
-      error.message || "Failed to update comment",
-      error,
-      error.statusCode || 500
+    const updated = await turfService.addTurfImage(
+      req.params.turfProfileId,
+      req.body.imageUrl
     );
-  }
-};
-
-const deleteComment = async (req, res) => {
-  try {
-    const { reviewId } = req.params;
-    const userId = req.user.userId;
-
-    const result = await turfService.deleteComment(reviewId, userId);
-    successResponse(res, result.message);
+    successResponse(res, "Image added", updated);
   } catch (error) {
-    fatal(error);
-    errorResponse(
-      res,
-      error.message || "Failed to delete comment",
-      error,
-      error.statusCode || 500
-    );
-  }
-};
-
-const bookTurf = async (req, res) => {
-  try {
-    const { turfId } = req.params;
-    const userId = req.user.userId;
-
-    // Include user ID and turf ID in the booking data
-    const bookingData = {
-      ...req.body,
-      userId,
-      turfId,
-    };
-
-    const result = await turfService.bookTurf(bookingData);
-    successResponse(res, "Booking request received", result);
-  } catch (error) {
-    fatal(error);
-    errorResponse(res, error.message || "Failed to book turf", error);
-  }
-};
-
-const getTurfCalendar = async (req, res) => {
-  try {
-    const { turfId } = req.params;
-    const result = await turfService.getTurfCalendar(turfId);
-    successResponse(res, "Turf calendar retrieved", result);
-  } catch (error) {
-    fatal(error);
-    errorResponse(res, error.message || "Failed to get turf calendar", error);
+    errorResponse(res, error.message, error);
   }
 };
 
 module.exports = {
-  getTurfById,
-  getAllTurfs,
-  signup,
-  signin,
-  refreshToken,
-  updateTurf,
-  deleteTurf,
-  requestOTP,
-  verifyOTP,
-  forgotPassword,
-  forgotPasswordOTPVerify,
-  resetPassword,
-  addComment,
-  updateComment,
-  deleteComment,
-  bookTurf,
-  getTurfCalendar,
+  createProfile,
+  getMyProfiles,
+  getProfile,
+  updateProfile,
+  deleteProfile,
+  getNearbyTurfs,
+  addImage,
 };

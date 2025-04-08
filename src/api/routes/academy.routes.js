@@ -1,74 +1,43 @@
 const express = require("express");
 const router = express.Router();
 const academyController = require("../controllers/academy.controller");
+const { authMiddleware } = require("../middlewares/auth.middleware");
 const {
-  authMiddleware,
-  refreshMiddleWare,
-} = require("../middlewares/auth.middleware");
-const {
-  validateCreateAcademy,
-  validateUpdateAcademy,
-  validateAcademyId,
+  validateAcademyProfile,
   validateRequest,
-  validateOTPRequest,
-  validateOTPVerification,
 } = require("../validation/academyValidator");
-const auth = require("../../config/firebase");
 
-//academy actions
-router.get(
+// Profile routes
+router.post(
   "/",
-  validateRequest,
   authMiddleware,
-  academyController.getAcademyById
+  validateAcademyProfile,
+  validateRequest,
+  academyController.createProfile
 );
+router.get("/my-academies", authMiddleware, academyController.getMyProfiles);
+router.get("/:academyProfileId", academyController.getProfile);
 router.patch(
-  "/",
-  validateUpdateAcademy,
-  validateRequest,
+  "/:academyProfileId",
   authMiddleware,
-  academyController.updateAcademy
+  validateAcademyProfile,
+  validateRequest,
+  academyController.updateProfile
 );
 router.delete(
-  "/",
-  validateRequest,
+  "/:academyProfileId",
   authMiddleware,
-  academyController.deleteAcademy
+  academyController.deleteProfile
 );
 
-// Get all academies list (public)
-router.get("/all", academyController.getAllAcademies);
+// Search routes
+router.get("/nearby", academyController.getNearbyAcademies);
 
-//login actions
+// Sport routes
 router.post(
-  "/signup",
-  validateCreateAcademy,
-  validateRequest,
-  academyController.signup
-);
-router.post("/signin", validateRequest, academyController.signin);
-
-//token actions
-router.post(
-  "/refresh-token",
-  refreshMiddleWare,
-  academyController.refreshToken
-);
-// router.post("/verify-token", academyController.verifyTokenAndUpdateAcademy);
-router.post("/request-otp", authMiddleware, academyController.requestOTP);
-router.post(
-  "/verify-otp",
+  "/:academyProfileId/sports",
   authMiddleware,
-  validateOTPVerification,
-  validateRequest,
-  academyController.verifyOTP
+  academyController.addSport
 );
 
-//forgot password
-router.post("/forgot-password", academyController.forgotPassword);
-router.post(
-  "/verify-forgot-password",
-  academyController.forgotPasswordOTPVerify
-);
-router.post("/reset-password", authMiddleware, academyController.resetPassword);
 module.exports = router;
