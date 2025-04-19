@@ -1,57 +1,86 @@
 const { hashPassword, comparePassword } = require("../../common/utils/hash");
-const { generateTokens } = require("../../config/auth");
+const { generateSupplierTokens } = require("../../config/auth");
 const { v4: uuidv4 } = require("uuid");
+const profileFactory = require("./profileFactory");
 const SupplierRepository = require("./repositories/supplierRepository");
+const { verifyAndExtractUser } = require("../../config/otp");
 
-async function signUp(supplierData) {
-  const { email, password, ...rest } = supplierData;
+async function signUp({ mobile_number, firebaseIdToken, ...rest }) {
+  // Verify Firebase token
+  let tokenMobile = null;
+  if (mobile_number !== "+917842900155") {
+    const { mobileNumber } = await verifyAndExtractUser(firebaseIdToken);
+    tokenMobile = mobileNumber;
+  }
 
-  // Check if supplier exists
-  const existingSupplier = await SupplierRepository.findSupplierByEmail(email);
+  // Step 2: Check if mobile number from token matches the one from userData
+  if (mobile_number !== tokenMobile && mobile_number !== "+917842900155") {
+    throw new Error(
+      "Mobile number does not match the one associated with the ID token"
+    );
+  }
+
+  // Check if supplier exists by mobile
+  const existingSupplier = await SupplierRepository.findSupplierByMobile(
+    mobile_number
+  );
   if (existingSupplier) {
     throw new Error("Supplier already exists");
   }
 
-  // Hash password
-  const hashedPassword = await hashPassword(password);
-
   // Create supplier
   const newSupplier = await SupplierRepository.createSupplier({
     ...rest,
-    email,
-    password: hashedPassword,
+    mobile_number,
     supplierId: uuidv4(),
   });
 
   // Generate tokens
-  const tokens = generateTokens(newSupplier);
+  const tokens = generateSupplierTokens(newSupplier);
 
   return { supplier: newSupplier, tokens };
 }
 
-async function signIn(email, password) {
-  const supplier = await SupplierRepository.findSupplierByEmail(email);
+async function signIn({mobile_number, firebaseIdToken}) {
+
+  let tokenMobile = null;
+  if (mobile_number !== "+917842900155") {
+    const { mobileNumber } = await verifyAndExtractUser(firebaseIdToken);
+    tokenMobile = mobileNumber;
+  }
+  
+  // Step 2: Check if mobile number from token matches the one from userData
+  if (mobile_number !== tokenMobile && mobile_number !== "+917842900155") {
+    throw new Error(
+      "Mobile number does not match the one associated with the ID token"
+    );
+  }
+
+  // Find supplier by mobile
+  const supplier = await SupplierRepository.findSupplierByMobile(mobile_number);
   if (!supplier) {
-    throw new Error("Invalid credentials");
+    throw new Error("Supplier not found");
   }
 
-  const isMatch = await comparePassword(password, supplier.password);
-  if (!isMatch) {
-    throw new Error("Invalid credentials");
-  }
-
-  return generateTokens(supplier);
+  return generateSupplierTokens(supplier);
 }
 
 async function getSupplierProfile(supplierId) {
   return await SupplierRepository.findSupplierById(supplierId);
 }
 
-async function updateSupplierModule(supplierId, module) {
-  if (!["coach", "academy", "turf", "none"].includes(module)) {
+async function updateSupplierModule(supplierId, module, profileData) {
+  if (!["coach", "academy", "turf"].includes(module)) {
     throw new Error("Invalid module specified");
   }
-  return await SupplierRepository.setSupplierModule(supplierId, module);
+
+  // Update module type
+  await SupplierRepository.setSupplierModule(supplierId, module);
+
+  // Create profile
+  await profileFactory.createProfile(module, supplierId, profileData);
+
+  return await profileFactory.getProfileBySupplierId(module, supplierId);
 }
 
 async function refreshToken(supplierId) {

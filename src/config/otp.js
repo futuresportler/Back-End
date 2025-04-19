@@ -17,10 +17,7 @@ const verifyOTP = async (email, otp) => {
 
 async function verifyAndExtractUser(idToken) {
   try {
-    // const decodedToken = await auth.verifyIdToken(idToken);
-    const decodedUser = {
-      phone_number: "+911231231111",
-    };
+    const decodedUser = await auth.verifyIdToken(idToken);
     return {
       mobileNumber: decodedUser.phone_number || null,
     };

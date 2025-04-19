@@ -11,8 +11,6 @@ const {
 router.post(
   "/",
   authMiddleware,
-  validateCoachProfile,
-  validateRequest,
   coachController.createProfile
 );
 router.get("/me", authMiddleware, coachController.getMyProfile);
@@ -20,8 +18,6 @@ router.get("/:coachProfileId", coachController.getProfile);
 router.patch(
   "/:coachProfileId",
   authMiddleware,
-  validateCoachProfile,
-  validateRequest,
   coachController.updateProfile
 );
 router.delete(
