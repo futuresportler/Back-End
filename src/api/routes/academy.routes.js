@@ -11,8 +11,6 @@ const {
 router.post(
   "/",
   authMiddleware,
-  validateAcademyProfile,
-  validateRequest,
   academyController.createProfile
 );
 router.get("/my-academies", authMiddleware, academyController.getMyProfiles);
@@ -20,8 +18,6 @@ router.get("/:academyProfileId", academyController.getProfile);
 router.patch(
   "/:academyProfileId",
   authMiddleware,
-  validateAcademyProfile,
-  validateRequest,
   academyController.updateProfile
 );
 router.delete(

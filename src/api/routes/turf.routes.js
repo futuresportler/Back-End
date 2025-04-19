@@ -11,8 +11,6 @@ const {
 router.post(
   "/",
   authMiddleware,
-  validateTurfProfile,
-  validateRequest,
   turfController.createProfile
 );
 router.get("/my-turfs", authMiddleware, turfController.getMyProfiles);
@@ -20,8 +18,6 @@ router.get("/:turfProfileId", turfController.getProfile);
 router.patch(
   "/:turfProfileId",
   authMiddleware,
-  validateTurfProfile,
-  validateRequest,
   turfController.updateProfile
 );
 router.delete("/:turfProfileId", authMiddleware, turfController.deleteProfile);

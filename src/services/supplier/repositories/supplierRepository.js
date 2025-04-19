@@ -26,6 +26,13 @@ async function findSupplierByEmail(email) {
   });
 }
 
+async function findSupplierByMobile(mobile_number) {
+  return await Supplier.findOne({
+    where: { mobile_number },
+    include: ["coachProfile", "academyProfiles", "turfProfiles"],
+  });
+}
+
 async function updateSupplier(supplierId, updateData) {
   const supplier = await Supplier.findByPk(supplierId);
   if (!supplier) return null;
@@ -39,8 +46,21 @@ async function deleteSupplier(supplierId) {
   return supplier;
 }
 
+// Add this to supplierRepository.js
 async function setSupplierModule(supplierId, module) {
-  return await updateSupplier(supplierId, { module });
+  const supplier = await Supplier.findByPk(supplierId);
+  if (!supplier) throw new Error("Supplier not found");
+
+  // Get current modules array or empty array if null
+  const currentModules = supplier.module || [];
+  
+  // Add module if not already present
+  if (!currentModules.includes(module)) {
+    currentModules.push(module);
+    return await supplier.update({ module: currentModules });
+  }
+
+  return supplier; // Return unchanged if module already exists
 }
 
 async function getSupplierWithProfile(supplierId, module) {
@@ -59,6 +79,7 @@ module.exports = {
   createSupplier,
   findSupplierById,
   findSupplierByEmail,
+  findSupplierByMobile,
   updateSupplier,
   deleteSupplier,
   setSupplierModule,

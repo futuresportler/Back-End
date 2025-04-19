@@ -20,7 +20,6 @@ module.exports = (sequelize) => {
       type: DataTypes.STRING,
       allowNull: false
     },
-    sportType: DataTypes.STRING,
     description: DataTypes.TEXT,
     facilities: DataTypes.JSON,
     sportsOffered: DataTypes.ARRAY(DataTypes.STRING),

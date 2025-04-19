@@ -4,7 +4,7 @@ const helmet = require("helmet");
 const cors = require("cors");
 const { info } = require("./src/config/logging");
 const routes = require("./src/api/index");
-const {connectMongoDB, connectPostgres} = require("./src/database/index");
+const {connectMongoDB, connectPostgres, syncDatabase} = require("./src/database/index");
 const app = express();
 
 // Middleware
@@ -19,7 +19,8 @@ app.use("/api", routes);
 
 // Server
 const PORT = process.env.PORT || 5000;
-app.listen(PORT, () => {
+app.listen(PORT, async () => {
   connectPostgres();
+  await syncDatabase()
   info(`Server running on port ${PORT}`);
 });

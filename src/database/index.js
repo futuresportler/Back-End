@@ -1,14 +1,14 @@
-const { sequelize } = require("../config/database");
+const { sequelize, connectPostgres, connectMongoDB } = require("../config/database");
 const { DataTypes } = require("sequelize");
 
 // Import models
-const Supplier = require("./models/postgres/supplier");
+const Supplier = require("./models/postgres/supplier")(sequelize);
 const CoachProfile = require("./models/postgres/coachProfile")(sequelize);
 const AcademyProfile = require("./models/postgres/academyProfile")(sequelize);
 const TurfProfile = require("./models/postgres/turfProfile")(sequelize);
-const Review = require("./models/postgres/review");
-const Sport = require("./models/postgres/sport");
-const Certification = require("./models/postgres/certification");
+// const Review = require("./models/postgres/review");
+// const Sport = require("./models/postgres/sport");
+// const Certification = require("./models/postgres/certification");
 
 // Define Associations
 const defineAssociations = () => {
@@ -39,64 +39,13 @@ const defineAssociations = () => {
     foreignKey: "supplierId",
     as: "supplier",
   });
-
-  // Review System
-  Review.belongsTo(Supplier, {
-    foreignKey: "reviewerId",
-    as: "reviewer",
-  });
-  Supplier.hasMany(Review, {
-    foreignKey: "reviewerId",
-    as: "authoredReviews",
-  });
-
-  // Entity-specific reviews
-  CoachProfile.hasMany(Review, {
-    foreignKey: "entityId",
-    constraints: false,
-    scope: { entityType: "coach" },
-    as: "reviews",
-  });
-
-  AcademyProfile.hasMany(Review, {
-    foreignKey: "entityId",
-    constraints: false,
-    scope: { entityType: "academy" },
-    as: "reviews",
-  });
-
-  TurfProfile.hasMany(Review, {
-    foreignKey: "entityId",
-    constraints: false,
-    scope: { entityType: "turf" },
-    as: "reviews",
-  });
-
-  // Sports and Certifications
-  CoachProfile.belongsToMany(Sport, {
-    through: "CoachSports",
-    foreignKey: "coachProfileId",
-    as: "sports",
-  });
-
-  AcademyProfile.belongsToMany(Sport, {
-    through: "AcademySports",
-    foreignKey: "academyProfileId",
-    as: "sports",
-  });
-
-  CoachProfile.belongsToMany(Certification, {
-    through: "CoachCertifications",
-    foreignKey: "coachProfileId",
-    as: "certifications",
-  });
 };
 
 // Database Sync Function
 const syncDatabase = async () => {
   try {
-    await sequelize.authenticate();
-    console.log("✅ Database connection established");
+    await sequelize.authenticate();    
+    await sequelize.query('CREATE EXTENSION IF NOT EXISTS postgis');
 
     defineAssociations();
 
@@ -110,13 +59,12 @@ const syncDatabase = async () => {
 
 module.exports = {
   sequelize,
+  connectPostgres,
+  connectMongoDB,
   Supplier,
   CoachProfile,
   AcademyProfile,
   TurfProfile,
-  Review,
-  Sport,
-  Certification,
   syncDatabase,
 };
 

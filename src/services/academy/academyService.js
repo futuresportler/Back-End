@@ -105,5 +105,4 @@ module.exports = {
   updateAcademyProfile,
   deleteAcademyProfile,
   getNearbyAcademies,
-  addAcademySport,
 };

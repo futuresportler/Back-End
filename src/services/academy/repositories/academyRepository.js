@@ -65,6 +65,5 @@ module.exports = {
   findAcademiesBySupplierId,
   createAcademyProfile,
   updateAcademyProfile,
-  deleteAcademyProfile,
   findAcademiesNearby,
 };
