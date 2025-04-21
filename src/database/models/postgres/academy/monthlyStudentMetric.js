@@ -1,3 +1,6 @@
+//models/postgres/academy/monthlyStudentMetric.js
+const { DataTypes } = require("sequelize");
+
 module.exports = (sequelize) => {
     return sequelize.define(
       "MonthlyStudentMetric",

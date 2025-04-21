@@ -4,19 +4,29 @@ module.exports = (sequelize) => {
   return sequelize.define(
     "AcademyProfile",
     {
+      // Primary Key
       academyId: {
         type: DataTypes.UUID,
         defaultValue: DataTypes.UUIDV4,
         primaryKey: true,
+        allowNull: false,
       },
+
+      // Basic Info
       name: {
         type: DataTypes.STRING,
         allowNull: false,
       },
-      sports: {
-        type: DataTypes.ARRAY(DataTypes.STRING),
+      description: {
+        type: DataTypes.TEXT,
         allowNull: false,
       },
+      foundedYear: {
+        type: DataTypes.INTEGER,
+        allowNull: false,
+      },
+
+      // Related to Supplier
       supplierId: {
         type: DataTypes.UUID,
         allowNull: false,
@@ -26,42 +36,115 @@ module.exports = (sequelize) => {
         },
         onDelete: "CASCADE",
       },
+      managerId: {
+        type: DataTypes.UUID,
+        allowNull: false,
+        references: {
+          model: "Suppliers",
+          key: "supplierId",
+        },
+      },
+      // Sports & Facilities
+      sports: {
+        type: DataTypes.ARRAY(DataTypes.STRING),
+        allowNull: false,
+      },
+      facilities: {
+        type: DataTypes.ARRAY(DataTypes.STRING),
+        allowNull: true,
+      },
+      achievements: {
+        type: DataTypes.ARRAY(DataTypes.STRING),
+        allowNull: true,
+      },
+
+      // Age Groups & Class Types
+      ageGroups: {
+        type: DataTypes.JSON,
+        allowNull: false,
+        // Example: [{ "infants": true, "children": false, teens: true, adults: false }]
+      },
+      classTypes: {
+        type: DataTypes.JSON,
+        allowNull: false,
+        // Example: [{ "one-on-one": false, "group-classes": true}]
+      },
+
+      // Location Info
       location: {
         type: DataTypes.GEOMETRY("POINT"),
         allowNull: false,
       },
+      city: {
+        type: DataTypes.STRING,
+        allowNull: false,
+      },
+      address: {
+        type: DataTypes.TEXT,
+        allowNull: false,
+      },
+
+      // Contact Info
+      phone: {
+        type: DataTypes.STRING,
+        allowNull: false,
+      },
+      email: {
+        type: DataTypes.STRING,
+        allowNull: false,
+      },
+      website: {
+        type: DataTypes.STRING,
+        allowNull: true,
+      },
+      socialMediaLinks: {
+        type: DataTypes.JSON,
+        allowNull: true,
+      },
+
+      // Media
+      photos: {
+        type: DataTypes.ARRAY(DataTypes.STRING),
+        allowNull: true,
+      },
+      videos: {
+        type: DataTypes.ARRAY(DataTypes.STRING),
+        allowNull: true,
+      },
+
+      // Operational Details
+      operatingHours: {
+        type: DataTypes.JSON,
+        allowNull: true,
+      },
       totalStudents: {
         type: DataTypes.INTEGER,
         defaultValue: 0,
+        allowNull: false,
       },
       totalPrograms: {
         type: DataTypes.INTEGER,
         defaultValue: 0,
+        allowNull: false,
       },
-      description: DataTypes.TEXT,
-      city: DataTypes.STRING,
-      address: DataTypes.TEXT,
-      phone: DataTypes.STRING,
-      email: DataTypes.STRING,
-      website: DataTypes.STRING,
-      operatingHours: DataTypes.JSON,
-      foundedYear: DataTypes.INTEGER,
-      facilities: DataTypes.ARRAY(DataTypes.STRING),
-      achievements: DataTypes.ARRAY(DataTypes.STRING),
-      photos: DataTypes.ARRAY(DataTypes.STRING),
-      videos: DataTypes.ARRAY(DataTypes.STRING),
-      socialMediaLinks: DataTypes.JSON,
+
+      // Ratings & Reviews
       rating: {
         type: DataTypes.DECIMAL(3, 2),
         defaultValue: 0.0,
+        allowNull: false,
       },
       reviewsCount: {
         type: DataTypes.INTEGER,
         defaultValue: 0,
+        allowNull: false,
       },
+
+      // Verification
       isVerified: {
         type: DataTypes.BOOLEAN,
         defaultValue: false,
+        allowNull: false,
       },
     },
     {

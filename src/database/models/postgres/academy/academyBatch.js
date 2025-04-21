@@ -10,14 +10,47 @@ module.exports = (sequelize) => {
         defaultValue: DataTypes.UUIDV4,
         primaryKey: true,
       },
-      batchName: DataTypes.STRING,
-      startDate: DataTypes.DATEONLY,
-      endDate: DataTypes.DATEONLY,
+      batchName: {
+        type: DataTypes.STRING,
+        allowNull: false,
+      },
+      startTime: DataTypes.TIME,
+      endTime: DataTypes.TIME,
+      daysOfWeek: {
+        type: DataTypes.ARRAY(DataTypes.STRING),
+        allowNull: false,
+        // Example: ["Monday", "Wednesday", "Friday"]
+      },
+      ageGroup: {
+        type: DataTypes.STRING,
+        allowNull: false,
+        // Example: "Children", "Teens", "Adults"
+      },
       totalStudents: {
         type: DataTypes.INTEGER,
         defaultValue: 0,
       },
-      sportId: DataTypes.UUID, // References Sport table
+      maxStudents: {
+        type: DataTypes.INTEGER,
+        allowNull: false,
+      },
+      fee: {
+        type: DataTypes.FLOAT,
+        allowNull: false,
+      },
+      sport: DataTypes.STRING,
+      status: {
+        type: DataTypes.ENUM("active", "inactive", "completed"),
+        defaultValue: "active",
+      },
+      startDate: DataTypes.DATEONLY,
+      endDate: DataTypes.DATEONLY,
+      description: DataTypes.TEXT,
+      level: {
+        type: DataTypes.STRING,
+        // Example: "Beginner", "Intermediate", "Advanced"
+      },
+      location: DataTypes.STRING,
     },
     { timestamps: true }
   );

@@ -21,10 +21,10 @@ async function updateProfile(module, profileId, data) {
   }
 }
 
-async function getProfileBySupplierId(module, supplierId) {
+async function getProfileBySupplierId(module, supplierId, options = {}) {
   switch (module) {
     case "coach": return await CoachRepo.getCoachProfileBySupplierId(supplierId);
-    case "academy": return await AcademyRepo.getAcademyProfileBySupplierId(supplierId);
+    case "academy": return await AcademyRepo.getAcademyProfileBySupplierId(supplierId, options);
     case "turf": return await TurfRepo.getTurfProfileBySupplierId(supplierId);
     default: throw new Error("Invalid module");
   }

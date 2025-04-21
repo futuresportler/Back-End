@@ -76,6 +76,26 @@ module.exports = (sequelize) => {
         type: DataTypes.ENUM("active", "inactive", "suspended"),
         defaultValue: "active",
       },
+      gstNumber: {
+        type: DataTypes.STRING,
+        allowNull: true,
+      },
+      bankAccountNumber: {
+        type: DataTypes.STRING,
+        allowNull: true,
+      },
+      accountHolderName: {
+        type: DataTypes.STRING,
+        allowNull: true,
+      },
+      ifscCode: {
+        type: DataTypes.STRING,
+        allowNull: true,
+      },
+      upiId: {
+        type: DataTypes.STRING,
+        allowNull: true,
+      },
     },
     {
       timestamps: true,
