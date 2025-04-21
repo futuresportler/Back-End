@@ -1,5 +1,5 @@
 // models/postgres/academyProgram.js
-const { DataTypes } = require("sequelize");
+const { DataTypes } = require("sequelize")
 
 module.exports = (sequelize) => {
   return sequelize.define(
@@ -13,6 +13,8 @@ module.exports = (sequelize) => {
       programName: DataTypes.STRING,
       description: DataTypes.TEXT,
       fee: DataTypes.DECIMAL(10, 2),
+      feeComponents: DataTypes.JSON,
+      sport: DataTypes.STRING,
       ageGroup: DataTypes.STRING,
       duration: DataTypes.STRING,
       coachId: {
@@ -27,9 +29,17 @@ module.exports = (sequelize) => {
         type: DataTypes.INTEGER,
         defaultValue: 0,
       },
+      enrolledStudents: {
+        type: DataTypes.ARRAY(DataTypes.UUID),
+        defaultValue: [],
+      },
       features: DataTypes.ARRAY(DataTypes.STRING),
       paymentDueDate: DataTypes.DATEONLY,
+      status: {
+        type: DataTypes.ENUM("active", "inactive", "completed"),
+        defaultValue: "active",
+      },
     },
-    { timestamps: true }
-  );
-};
+    { timestamps: true },
+  )
+}

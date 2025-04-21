@@ -20,9 +20,7 @@ const signup = async (req, res) => {
 
 const signin = async (req, res) => {
   try {
-    const tokens = await SupplierService.signIn(
-      req.body
-    );
+    const tokens = await SupplierService.signIn(req.body);
     successResponse(res, "Login successful", { tokens });
   } catch (error) {
     errorResponse(res, error.message, error);
@@ -33,17 +31,6 @@ const refreshToken = async (req, res) => {
   try {
     const tokens = await SupplierService.refreshToken(req.user.supplierId);
     successResponse(res, "Token refreshed", { tokens });
-  } catch (error) {
-    errorResponse(res, error.message, error);
-  }
-};
-
-const getSupplierProfile = async (req, res) => {
-  try {
-    const supplier = await SupplierService.getSupplierProfile(
-      req.user.supplierId
-    );
-    successResponse(res, "Supplier profile fetched", supplier);
   } catch (error) {
     errorResponse(res, error.message, error);
   }
@@ -83,12 +70,15 @@ const setSupplierModule = async (req, res) => {
   }
 };
 
-const getSupplierModule = async (req, res) => {
+const getSupplierProfile = async (req, res) => {
   try {
+    console.log("Module query", req.query);
     const supplier = await SupplierService.getSupplierProfile(
-      req.user.supplierId
+      req.user.supplierId,
+      req.query.module,
+      req.body.options
     );
-    successResponse(res, "Module fetched", { module: supplier.module });
+    successResponse(res, "Module fetched", supplier);
   } catch (error) {
     errorResponse(res, error.message, error);
   }
@@ -104,5 +94,4 @@ module.exports = {
   updateSupplierProfile,
   deleteSupplier,
   setSupplierModule,
-  getSupplierModule,
 };

@@ -3,6 +3,7 @@ const { generateSupplierTokens } = require("../../config/auth");
 const { v4: uuidv4 } = require("uuid");
 const profileFactory = require("./profileFactory");
 const SupplierRepository = require("./repositories/supplierRepository");
+const AcademyProfileRepository = require("./repositories/academyProfileRepository");
 const { verifyAndExtractUser } = require("../../config/otp");
 
 async function signUp({ mobile_number, firebaseIdToken, ...rest }) {
@@ -41,14 +42,13 @@ async function signUp({ mobile_number, firebaseIdToken, ...rest }) {
   return { supplier: newSupplier, tokens };
 }
 
-async function signIn({mobile_number, firebaseIdToken}) {
-
+async function signIn({ mobile_number, firebaseIdToken }) {
   let tokenMobile = null;
   if (mobile_number !== "+917842900155") {
     const { mobileNumber } = await verifyAndExtractUser(firebaseIdToken);
     tokenMobile = mobileNumber;
   }
-  
+
   // Step 2: Check if mobile number from token matches the one from userData
   if (mobile_number !== tokenMobile && mobile_number !== "+917842900155") {
     throw new Error(
@@ -65,7 +65,14 @@ async function signIn({mobile_number, firebaseIdToken}) {
   return generateSupplierTokens(supplier);
 }
 
-async function getSupplierProfile(supplierId) {
+async function getSupplierProfile(supplierId, module, options) {
+  if (module) {
+    return await profileFactory.getProfileBySupplierId(
+      module,
+      supplierId,
+      options
+    );
+  }
   return await SupplierRepository.findSupplierById(supplierId);
 }
 
@@ -88,7 +95,7 @@ async function refreshToken(supplierId) {
   if (!supplier) {
     throw new Error("Supplier not found");
   }
-  return generateTokens(supplier);
+  return generateSupplierTokens(supplier);
 }
 
 async function requestOTP(email) {
