@@ -51,6 +51,11 @@ module.exports = (sequelize) => {
         // Example: "Beginner", "Intermediate", "Advanced"
       },
       location: DataTypes.STRING,
+      enrolledStudents: {
+        type: DataTypes.ARRAY(DataTypes.UUID),
+        defaultValue: [],
+        // Example: ["studentId1", "studentId2"]
+      },
     },
     { timestamps: true }
   );
