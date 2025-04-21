@@ -29,6 +29,7 @@ router.patch("/batches/:batchId", authMiddleware, academyController.updateBatch)
 router.delete("/batches/:batchId", authMiddleware, academyController.deleteBatch)
 router.get("/batches/:batchId/students", authMiddleware, academyController.getBatchStudents)
 router.post("/batches/:batchId/students", authMiddleware, academyController.enrollStudentInBatch)
+router.delete("/batches/:batchId/students/:studentId", authMiddleware, academyController.unEnrollStudentFromBatch)
 
 // Program routes
 router.post("/programs", authMiddleware, academyController.createProgram)

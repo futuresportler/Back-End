@@ -69,7 +69,7 @@ const getStudentById = async (studentId) => {
 
 const createStudent = async (studentData) => {
   // Determine enrollment source based on provided IDs
-  let enrollmentSource = "manual"
+  let enrollmentSource = "null"
   if (studentData.batchId && studentData.programId) {
     enrollmentSource = "both"
   } else if (studentData.batchId) {
@@ -114,7 +114,7 @@ const updateStudent = async (studentId, updateData) => {
     } else if (newProgramId) {
       updateData.enrollmentSource = "program"
     } else {
-      updateData.enrollmentSource = "manual"
+      updateData.enrollmentSource = "null"
     }
 
     // Handle batch enrollment changes
@@ -228,15 +228,44 @@ const enrollStudentInBatch = async (batchId, studentData) => {
         transaction,
       )
     }
-
     // Enroll student in batch
     await academyBatchRepository.enrollStudent(batchId, student.studentId, transaction)
-
+    console.log("Student enrolled in batch:", student.studentId)
     await transaction.commit()
     return student
   } catch (error) {
     await transaction.rollback()
     throw error
+  }
+}
+
+const unEnrollStudentFromBatch = async (batchId, studentId) => {
+  const transaction = await sequelize.transaction();
+
+  try {
+    // Get student first to check if they're enrolled in this batch
+    const student = await academyRepository.getStudentById(studentId);
+    if (!student) throw new Error("Student not found");
+    if (student.batchId !== batchId) throw new Error("Student not enrolled in this batch");
+
+    // Update student record
+    const updatedStudent = await academyRepository.updateStudent(
+      studentId,
+      {
+        batchId: null,
+        enrollmentSource: student.programId ? "program" : "null"
+      },
+      transaction
+    );
+
+    // Remove from batch enrollment
+    await academyBatchRepository.unenrollStudent(batchId, studentId, transaction);
+
+    await transaction.commit();
+    return updatedStudent;
+  } catch (error) {
+    await transaction.rollback();
+    throw error;
   }
 }
 
@@ -407,6 +436,7 @@ module.exports = {
   deleteBatch,
   getBatchStudents,
   enrollStudentInBatch,
+  unEnrollStudentFromBatch,
   getAvailableBatches,
   // Program-related exports
   createProgram,

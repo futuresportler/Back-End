@@ -15,7 +15,7 @@ module.exports = (sequelize) => {
         defaultValue: "manual",
       },
       enrollmentSource: {
-        type: DataTypes.ENUM("batch", "program", "both"),
+        type: DataTypes.ENUM("batch", "program", "both", "null"),
         defaultValue: "batch",
       },
       batchId: {

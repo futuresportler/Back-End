@@ -110,8 +110,8 @@ const updateStudent = async (studentId, updateData, transaction = null) => {
 const getStudentById = async (studentId) => {
   return await AcademyStudent.findByPk(studentId, {
     include: [
-      { model: AcademyBatch, as: "batch", attributes: ["batchId", "name"] },
-      { model: AcademyProgram, as: "program", attributes: ["programId", "name"] },
+      { model: AcademyBatch, as: "batch", attributes: ["batchId", "batchName"] },
+      { model: AcademyProgram, as: "program", attributes: ["programId", "programName"] },
     ],
   })
 }

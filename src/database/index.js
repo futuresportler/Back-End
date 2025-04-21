@@ -121,10 +121,32 @@ const defineAssociations = () => {
   
   // Program Relationships
   AcademyProgram.hasMany(AcademyFee, { foreignKey: "programId" })
-
+  
+  AcademyStudent.belongsTo(AcademyProgram, {
+    foreignKey: "programId",
+    as: "program",
+    allowNull: true, // This makes the relationship optional
+  });
+  
+  AcademyProgram.hasMany(AcademyStudent, {
+    foreignKey: "programId",
+    as: "students",
+  });
+  
   // Batch Relationships
   AcademyBatch.hasMany(AcademyFee, { foreignKey: "batchId" })
 
+  AcademyStudent.belongsTo(AcademyBatch, {
+    foreignKey: "batchId",
+    as: "batch",
+    allowNull: true, // This makes the relationship optional
+  });
+  
+  AcademyBatch.hasMany(AcademyStudent, {
+    foreignKey: "batchId",
+    as: "students",
+  });
+  
   // Fee Relationships
   AcademyFee.belongsTo(AcademyProfile, { foreignKey: "academyId" })
   AcademyFee.belongsTo(AcademyProgram, { foreignKey: "programId" })
