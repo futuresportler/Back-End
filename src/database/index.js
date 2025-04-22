@@ -118,21 +118,21 @@ const defineAssociations = () => {
   AcademyProfile.hasMany(AcademyFee, { foreignKey: "academyId" })
   AcademyProfile.hasMany(AcademyCoach, { foreignKey: "academyId" })
   AcademyProfile.hasMany(AcademyStudent, { foreignKey: "academyId" })
-  
+
   // Program Relationships
   AcademyProgram.hasMany(AcademyFee, { foreignKey: "programId" })
-  
+
   AcademyStudent.belongsTo(AcademyProgram, {
     foreignKey: "programId",
     as: "program",
     allowNull: true, // This makes the relationship optional
-  });
-  
+  })
+
   AcademyProgram.hasMany(AcademyStudent, {
     foreignKey: "programId",
     as: "students",
-  });
-  
+  })
+
   // Batch Relationships
   AcademyBatch.hasMany(AcademyFee, { foreignKey: "batchId" })
 
@@ -140,13 +140,13 @@ const defineAssociations = () => {
     foreignKey: "batchId",
     as: "batch",
     allowNull: true, // This makes the relationship optional
-  });
-  
+  })
+
   AcademyBatch.hasMany(AcademyStudent, {
     foreignKey: "batchId",
     as: "students",
-  });
-  
+  })
+
   // Fee Relationships
   AcademyFee.belongsTo(AcademyProfile, { foreignKey: "academyId" })
   AcademyFee.belongsTo(AcademyProgram, { foreignKey: "programId" })
@@ -275,7 +275,15 @@ const defineAssociations = () => {
 const syncDatabase = async () => {
   try {
     await sequelize.authenticate()
-    await sequelize.query("CREATE EXTENSION IF NOT EXISTS postgis")
+
+    // Try to create PostGIS extension, but continue if it fails
+    try {
+      await sequelize.query("CREATE EXTENSION IF NOT EXISTS postgis")
+      console.log("✅ PostGIS extension enabled")
+    } catch (error) {
+      console.warn("⚠️ PostGIS extension not available. Spatial features will be limited.")
+      console.warn("If you need spatial features, install PostGIS on your PostgreSQL server.")
+    }
 
     defineAssociations()
 

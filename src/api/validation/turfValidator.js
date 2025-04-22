@@ -1,129 +1,111 @@
-const { body, param } = require("express-validator");
+const { body, param, query } = require("express-validator");
 
-const validateCreateTurf = [
+const validateTurfProfile = [
   body("name")
     .isString()
     .withMessage("Name must be a string")
     .notEmpty()
     .withMessage("Name is required"),
-  body("email")
+  body("city")
+    .isString()
+    .withMessage("City must be a string")
+    .notEmpty()
+    .withMessage("City is required"),
+  body("fullAddress")
+    .isString()
+    .withMessage("Full address must be a string")
+    .notEmpty()
+    .withMessage("Full address is required"),
+  body("description")
+    .optional()
+    .isString()
+    .withMessage("Description must be a string"),
+  body("contactPhone")
+    .isString()
+    .withMessage("Contact phone must be a string")
+    .notEmpty()
+    .withMessage("Contact phone is required"),
+  body("contactEmail")
     .isEmail()
     .withMessage("Invalid email format")
     .notEmpty()
-    .withMessage("Email is required"),
-  body("password")
-    .isLength({ min: 6 })
-    .withMessage("Password must be at least 6 characters long"),
-  body("mobile").optional().isMobilePhone().withMessage("Invalid phone number"),
-  body("profile_picture").optional().isURL().withMessage("Invalid URL"),
-  body("latitude")
+    .withMessage("Contact email is required"),
+  body("turfType")
+    .isIn(["indoor", "outdoor", "hybrid"])
+    .withMessage("Turf type must be indoor, outdoor, or hybrid"),
+  body("sportsAvailable")
+    .isArray()
+    .withMessage("Sports available must be an array")
+    .notEmpty()
+    .withMessage("Sports available is required"),
+  body("facilities")
     .optional()
+    .isArray()
+    .withMessage("Facilities must be an array"),
+  body("latitude")
     .isFloat({ min: -90, max: 90 })
     .withMessage("Latitude must be a valid coordinate between -90 and 90"),
   body("longitude")
-    .optional()
     .isFloat({ min: -180, max: 180 })
     .withMessage("Longitude must be a valid coordinate between -180 and 180"),
-  body("address")
+  body("openingTime")
     .isString()
-    .withMessage("Address must be a string")
+    .withMessage("Opening time must be a string")
     .notEmpty()
-    .withMessage("Address is required"),
-  body("sports_supported")
-    .isArray()
-    .withMessage("Sports supported must be an array")
+    .withMessage("Opening time is required"),
+  body("closingTime")
+    .isString()
+    .withMessage("Closing time must be a string")
     .notEmpty()
-    .withMessage("Sports supported is required"),
-  body("hourly_rate")
+    .withMessage("Closing time is required"),
+  body("hourlyRate")
     .isFloat({ min: 0 })
     .withMessage("Hourly rate must be a positive number")
     .notEmpty()
     .withMessage("Hourly rate is required"),
-  body("facilities")
-    .optional()
-    .isArray()
-    .withMessage("Facilities must be an array"),
-  body("availability")
-    .optional()
-    .isJSON()
-    .withMessage("Availability must be a JSON object"),
-  body("images").optional().isArray().withMessage("Images must be an array"),
-  body("description")
-    .optional()
-    .isString()
-    .withMessage("Description must be a string"),
-  body("establishment_year")
-    .optional()
-    .isInt({ min: 1800, max: new Date().getFullYear() })
-    .withMessage(
-      `Establishment year must be an integer between 1800 and ${new Date().getFullYear()}`
-    ),
-  body("contact_email")
-    .optional()
-    .isEmail()
-    .withMessage("Invalid contact email format"),
-  body("contact_phone")
-    .optional()
-    .matches(/^[0-9]+$/)
-    .withMessage("Contact phone must contain only numbers"),
-];
-
-const validateUpdateTurf = [
-  body("name").optional().isString().withMessage("Name must be a string"),
-  body("email").optional().isEmail().withMessage("Invalid email format"),
-  body("password")
-    .optional()
-    .isLength({ min: 6 })
-    .withMessage("Password must be at least 6 characters long"),
-  body("mobile").optional().isMobilePhone().withMessage("Invalid phone number"),
-  body("profile_picture").optional().isURL().withMessage("Invalid URL"),
-  body("latitude")
-    .optional()
-    .isFloat({ min: -90, max: 90 })
-    .withMessage("Latitude must be a valid coordinate between -90 and 90"),
-  body("longitude")
-    .optional()
-    .isFloat({ min: -180, max: 180 })
-    .withMessage("Longitude must be a valid coordinate between -180 and 180"),
-  body("address").optional().isString().withMessage("Address must be a string"),
-  body("sports_supported")
-    .optional()
-    .isArray()
-    .withMessage("Sports supported must be an array"),
-  body("hourly_rate")
+  body("halfDayRate")
     .optional()
     .isFloat({ min: 0 })
-    .withMessage("Hourly rate must be a positive number"),
-  body("facilities")
+    .withMessage("Half day rate must be a positive number"),
+  body("fullDayRate")
     .optional()
-    .isArray()
-    .withMessage("Facilities must be an array"),
-  body("availability")
-    .optional()
-    .isJSON()
-    .withMessage("Availability must be a JSON object"),
+    .isFloat({ min: 0 })
+    .withMessage("Full day rate must be a positive number"),
   body("images").optional().isArray().withMessage("Images must be an array"),
-  body("description")
+  body("mainImage")
     .optional()
     .isString()
-    .withMessage("Description must be a string"),
-  body("establishment_year")
-    .optional()
-    .isInt({ min: 1800, max: new Date().getFullYear() })
-    .withMessage(
-      `Establishment year must be an integer between 1800 and ${new Date().getFullYear()}`
-    ),
-  body("contact_email")
-    .optional()
-    .isEmail()
-    .withMessage("Invalid contact email format"),
-  body("contact_phone")
-    .optional()
-    .matches(/^[0-9]+$/)
-    .withMessage("Contact phone must contain only numbers"),
+    .withMessage("Main image must be a string"),
 ];
 
-const validateCommentCreate = [
+const validateNearbyQuery = [
+  query("latitude")
+    .isFloat({ min: -90, max: 90 })
+    .withMessage("Latitude must be a valid coordinate between -90 and 90"),
+  query("longitude")
+    .isFloat({ min: -180, max: 180 })
+    .withMessage("Longitude must be a valid coordinate between -180 and 180"),
+  query("radius")
+    .optional()
+    .isFloat({ min: 0 })
+    .withMessage("Radius must be a positive number"),
+];
+
+const validateImageUpload = [
+  body("imageUrl").isURL().withMessage("Image URL must be a valid URL"),
+  body("isMainImage")
+    .optional()
+    .isBoolean()
+    .withMessage("isMainImage must be a boolean"),
+];
+
+const validateBookingRequestAction = [
+  body("action")
+    .isIn(["accept", "decline"])
+    .withMessage("Action must be either 'accept' or 'decline'"),
+];
+
+const validateReview = [
   body("rating")
     .isInt({ min: 1, max: 5 })
     .withMessage("Rating must be between 1 and 5"),
@@ -132,26 +114,6 @@ const validateCommentCreate = [
     .withMessage("Comment must be a string")
     .notEmpty()
     .withMessage("Comment is required"),
-];
-
-const validateCommentUpdate = [
-  body("rating")
-    .optional()
-    .isInt({ min: 1, max: 5 })
-    .withMessage("Rating must be between 1 and 5"),
-  body("comment")
-    .optional()
-    .isString()
-    .withMessage("Comment must be a string")
-    .notEmpty()
-    .withMessage("Comment cannot be empty"),
-];
-
-const validateOTPVerification = [
-  body("otp")
-    .isNumeric()
-    .isLength({ min: 6, max: 6 })
-    .withMessage("OTP must be 6 digits"),
 ];
 
 const validateRequest = (req, res, next) => {
@@ -164,10 +126,10 @@ const validateRequest = (req, res, next) => {
 };
 
 module.exports = {
-  validateCreateTurf,
-  validateUpdateTurf,
-  validateCommentCreate,
-  validateCommentUpdate,
-  validateOTPVerification,
+  validateTurfProfile,
+  validateNearbyQuery,
+  validateImageUpload,
+  validateBookingRequestAction,
+  validateReview,
   validateRequest,
 };

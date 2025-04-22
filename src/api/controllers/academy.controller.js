@@ -390,3 +390,21 @@ module.exports = {
   recordPayment,
   getOverdueFees,
 };
+
+// When creating a new student and enrolling them in a batch, use the existing enrollStudentInBatch function:
+// Example usage in a route handler:
+
+// To create a new student and enroll them in a batch:
+// POST /api/academies/batches/:batchId/students
+// req.body should contain student details like name, email, phone, etc.
+// The function will:
+// 1. Create a new student if studentId is not provided
+// 2. Update an existing student if studentId is provided
+// 3. Enroll the student in the specified batch
+// 4. Handle transactions to ensure data consistency
+
+// If you need to create a student without enrolling them in a batch, use:
+// const student = await AcademyService.createStudent({
+//   ...studentData,
+//   academyId: req.params.academyId
+// })
