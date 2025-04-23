@@ -1,5 +1,5 @@
 // models/postgres/turfProfile.js (Main Turf Table)
-const { DataTypes } = require("sequelize");
+const { DataTypes } = require("sequelize")
 
 module.exports = (sequelize) => {
   return sequelize.define(
@@ -23,12 +23,78 @@ module.exports = (sequelize) => {
         },
         onDelete: "CASCADE",
       },
+      city: {
+        type: DataTypes.STRING,
+        allowNull: false,
+      },
+      fullAddress: {
+        type: DataTypes.TEXT,
+        allowNull: false,
+      },
+      description: {
+        type: DataTypes.TEXT,
+        allowNull: true,
+      },
+      contactPhone: {
+        type: DataTypes.STRING,
+        allowNull: false,
+      },
+      contactEmail: {
+        type: DataTypes.STRING,
+        allowNull: false,
+      },
+      turfType: {
+        type: DataTypes.ENUM("indoor", "outdoor", "hybrid"),
+        defaultValue: "outdoor",
+      },
+      sportsAvailable: {
+        type: DataTypes.ARRAY(DataTypes.STRING),
+        defaultValue: [],
+      },
+      facilities: {
+        type: DataTypes.ARRAY(DataTypes.STRING),
+        defaultValue: [],
+      },
       location: {
         type: DataTypes.GEOMETRY("POINT"),
         allowNull: false,
       },
-      openingTime: DataTypes.TIME,
-      closingTime: DataTypes.TIME,
+      openingTime: {
+        type: DataTypes.TIME,
+        allowNull: false,
+      },
+      closingTime: {
+        type: DataTypes.TIME,
+        allowNull: false,
+      },
+      hourlyRate: {
+        type: DataTypes.DECIMAL(10, 2),
+        allowNull: false,
+      },
+      halfDayRate: {
+        type: DataTypes.DECIMAL(10, 2),
+        allowNull: true,
+      },
+      fullDayRate: {
+        type: DataTypes.DECIMAL(10, 2),
+        allowNull: true,
+      },
+      images: {
+        type: DataTypes.ARRAY(DataTypes.STRING),
+        defaultValue: [],
+      },
+      mainImage: {
+        type: DataTypes.STRING,
+        allowNull: true,
+      },
+      rating: {
+        type: DataTypes.DECIMAL(2, 1),
+        defaultValue: 0.0,
+      },
+      totalReviews: {
+        type: DataTypes.INTEGER,
+        defaultValue: 0,
+      },
       status: {
         type: DataTypes.ENUM("active", "maintenance", "closed"),
         defaultValue: "active",
@@ -37,6 +103,6 @@ module.exports = (sequelize) => {
     {
       timestamps: true,
       paranoid: true,
-    }
-  );
-};
+    },
+  )
+}
