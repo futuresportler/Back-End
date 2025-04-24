@@ -1,5 +1,5 @@
 // models/postgres/coachPayment.js
-const { DataTypes } = require("sequelize");
+const { DataTypes } = require("sequelize")
 
 module.exports = (sequelize) => {
   return sequelize.define(
@@ -10,7 +10,31 @@ module.exports = (sequelize) => {
         defaultValue: DataTypes.UUIDV4,
         primaryKey: true,
       },
-      amount: DataTypes.DECIMAL(10,2),
+      coachId: {
+        type: DataTypes.UUID,
+        allowNull: false,
+        references: {
+          model: "CoachProfiles",
+          key: "coachId",
+        },
+      },
+      userId: {
+        type: DataTypes.UUID,
+        allowNull: false,
+        references: {
+          model: "User", // Changed from "Users" to "User"
+          key: "userId",
+        },
+      },
+      slotId: {
+        type: DataTypes.UUID,
+        allowNull: false,
+        references: {
+          model: "CoachSlots",
+          key: "slotId",
+        },
+      },
+      amount: DataTypes.DECIMAL(10, 2),
       paymentMethod: DataTypes.STRING,
       transactionId: DataTypes.STRING,
       status: {
@@ -18,6 +42,6 @@ module.exports = (sequelize) => {
         defaultValue: "pending",
       },
     },
-    { timestamps: true }
-  );
-};
+    { timestamps: true },
+  )
+}

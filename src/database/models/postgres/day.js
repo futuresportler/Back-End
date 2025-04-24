@@ -1,5 +1,5 @@
 // models/postgres/day.js
-const { DataTypes } = require("sequelize");
+const { DataTypes } = require("sequelize")
 
 module.exports = (sequelize) => {
   return sequelize.define(
@@ -13,17 +13,17 @@ module.exports = (sequelize) => {
       date: {
         type: DataTypes.DATEONLY,
         unique: true,
-        allowNull: false
+        allowNull: false,
       },
       dayNumber: {
         type: DataTypes.INTEGER,
-        validate: { min: 1, max: 31 }
+        validate: { min: 1, max: 31 },
       },
       monthId: {
         type: DataTypes.UUID,
         allowNull: false,
-      }
+      },
     },
-    { timestamps: false }
-  );
-};
+    { timestamps: false },
+  )
+}

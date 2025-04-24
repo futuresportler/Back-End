@@ -13,12 +13,12 @@ router.delete("/:academyProfileId", authMiddleware, academyController.deleteProf
 router.get("/nearby", academyController.getNearbyAcademies)
 
 // Student routes
-// router.get("/students", authMiddleware, academyController.getAllStudents)
-// router.get("/:academyId/students", authMiddleware, academyController.getAcademyStudents)
-// router.get("/students/:studentId", authMiddleware, academyController.getStudent)
-// router.post("/students", authMiddleware, academyController.createStudent)
-// router.patch("/students/:studentId", authMiddleware, academyController.updateStudent)
-// router.delete("/students/:studentId", authMiddleware, academyController.deleteStudent)
+router.get("/students", authMiddleware, academyController.getAllStudents)
+router.get("/:academyId/students", authMiddleware, academyController.getAcademyStudents)
+router.get("/students/:studentId", authMiddleware, academyController.getStudent)
+router.post("/students", authMiddleware, academyController.createStudent)
+router.patch("/students/:studentId", authMiddleware, academyController.updateStudent)
+router.delete("/students/:studentId", authMiddleware, academyController.deleteStudent)
 
 // Batch routes
 router.post("/batches", authMiddleware, academyController.createBatch)

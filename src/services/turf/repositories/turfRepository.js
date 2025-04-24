@@ -1,4 +1,14 @@
-const { TurfProfile, Supplier, sequelize, TurfReview, User, TurfSlot, SlotRequest } = require("../../../database")
+const {
+  TurfProfile,
+  Supplier,
+  sequelize,
+  TurfReview,
+  User,
+  TurfSlot,
+  SlotRequest,
+  TurfGround,
+  Day,
+} = require("../../../database")
 const { Op } = require("sequelize")
 
 const findTurfProfileById = async (turfProfileId) => {
@@ -79,11 +89,13 @@ const getTurfQuickInfo = async (turfId) => {
 }
 
 const getUpcomingBookings = async (turfId, limit = 5) => {
+  const today = new Date()
+
   return await TurfSlot.findAll({
     where: {
       turfId,
       status: "booked",
-      startTime: { [Op.gte]: new Date() },
+      date: { [Op.gte]: today.toISOString().split("T")[0] },
     },
     include: [
       {
@@ -91,28 +103,48 @@ const getUpcomingBookings = async (turfId, limit = 5) => {
         as: "user",
         attributes: ["name", "email", "profilePicture"],
       },
+      {
+        model: TurfGround,
+        as: "ground",
+        attributes: ["name", "sportType"],
+      },
+      {
+        model: Day,
+        as: "day",
+        attributes: ["name"],
+      },
     ],
-    order: [["startTime", "ASC"]],
+    order: [
+      ["date", "ASC"],
+      ["startTime", "ASC"],
+    ],
     limit,
   })
 }
 
 const getTodaySchedule = async (turfId) => {
   const today = new Date()
-  const startOfDay = new Date(today.setHours(0, 0, 0, 0))
-  const endOfDay = new Date(today.setHours(23, 59, 59, 999))
+  const formattedDate = today.toISOString().split("T")[0]
 
   return await TurfSlot.findAll({
     where: {
       turfId,
-      startTime: {
-        [Op.between]: [startOfDay, endOfDay],
-      },
+      date: formattedDate,
     },
     include: [
       {
         model: User,
         as: "user",
+        attributes: ["name"],
+      },
+      {
+        model: TurfGround,
+        as: "ground",
+        attributes: ["name", "sportType"],
+      },
+      {
+        model: Day,
+        as: "day",
         attributes: ["name"],
       },
     ],
@@ -131,6 +163,11 @@ const getBookingRequests = async (turfId, limit = 5) => {
         model: User,
         as: "user",
         attributes: ["name", "email", "profilePicture"],
+      },
+      {
+        model: TurfGround,
+        as: "ground",
+        attributes: ["name", "sportType"],
       },
     ],
     order: [["createdAt", "DESC"]],
@@ -177,6 +214,67 @@ const addTurfReview = async (reviewData) => {
   return review
 }
 
+// Ground-related repository methods
+const createTurfGround = async (groundData) => {
+  return await TurfGround.create(groundData)
+}
+
+const findGroundsByTurfId = async (turfId) => {
+  return await TurfGround.findAll({
+    where: { turfId },
+    include: [
+      {
+        model: TurfProfile,
+        as: "turfProfile",
+        attributes: ["name"],
+      },
+    ],
+  })
+}
+
+const findGroundById = async (groundId) => {
+  return await TurfGround.findByPk(groundId, {
+    include: [
+      {
+        model: TurfProfile,
+        as: "turfProfile",
+        attributes: ["name", "openingTime", "closingTime"],
+      },
+    ],
+  })
+}
+
+const updateTurfGround = async (groundId, updateData) => {
+  const ground = await TurfGround.findByPk(groundId)
+  if (!ground) return null
+  return await ground.update(updateData)
+}
+
+const deleteTurfGround = async (groundId) => {
+  const ground = await TurfGround.findByPk(groundId)
+  if (!ground) return null
+  await ground.destroy()
+  return ground
+}
+
+// Slot-related repository methods
+const findSlotsByGroundAndDate = async (groundId, date) => {
+  return await TurfSlot.findAll({
+    where: {
+      groundId,
+      date,
+    },
+    include: [
+      {
+        model: Day,
+        as: "day",
+        attributes: ["name"],
+      },
+    ],
+    order: [["startTime", "ASC"]],
+  })
+}
+
 module.exports = {
   findTurfProfileById,
   findTurfsBySupplierId,
@@ -191,4 +289,12 @@ module.exports = {
   getCustomerReviews,
   updateBookingRequestStatus,
   addTurfReview,
+  // Ground-related methods
+  createTurfGround,
+  findGroundsByTurfId,
+  findGroundById,
+  updateTurfGround,
+  deleteTurfGround,
+  // Slot-related methods
+  findSlotsByGroundAndDate,
 }

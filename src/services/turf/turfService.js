@@ -1,6 +1,7 @@
 const turfRepository = require("./repositories/turfRepository")
 const { SupplierService } = require("../supplier/index")
 const { v4: uuidv4 } = require("uuid")
+const slotGenerationService = require("./slotGenerationService")
 
 const createTurfProfile = async (supplierId, profileData) => {
   const supplier = await SupplierService.getSupplierByModule(supplierId, "turf")
@@ -148,6 +149,46 @@ const addReview = async (turfId, userId, reviewData) => {
   return review
 }
 
+// New methods for ground management
+const createTurfGround = async (turfId, groundData) => {
+  const turf = await turfRepository.findTurfProfileById(turfId)
+  if (!turf) throw new Error("Turf profile not found")
+
+  const ground = await turfRepository.createTurfGround({
+    ...groundData,
+    turfId,
+    groundId: uuidv4(),
+    status: "active",
+  })
+
+  // Generate initial slots for the next 15 days
+  await slotGenerationService.generateInitialSlots(ground.groundId)
+
+  return ground
+}
+
+const getTurfGrounds = async (turfId) => {
+  return await turfRepository.findGroundsByTurfId(turfId)
+}
+
+const getTurfGround = async (groundId) => {
+  const ground = await turfRepository.findGroundById(groundId)
+  if (!ground) throw new Error("Ground not found")
+  return ground
+}
+
+const updateTurfGround = async (groundId, updateData) => {
+  const updated = await turfRepository.updateTurfGround(groundId, updateData)
+  if (!updated) throw new Error("Ground not found")
+  return updated
+}
+
+const deleteTurfGround = async (groundId) => {
+  const deleted = await turfRepository.deleteTurfGround(groundId)
+  if (!deleted) throw new Error("Ground not found")
+  return deleted
+}
+
 module.exports = {
   createTurfProfile,
   getTurfProfile,
@@ -159,4 +200,10 @@ module.exports = {
   getTurfDashboard,
   handleBookingRequest,
   addReview,
+  // Ground management methods
+  createTurfGround,
+  getTurfGrounds,
+  getTurfGround,
+  updateTurfGround,
+  deleteTurfGround,
 }
