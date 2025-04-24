@@ -1,5 +1,5 @@
 // models/postgres/coachProfile.js (Main Coach Table)
-const { DataTypes } = require("sequelize");
+const { DataTypes } = require("sequelize")
 
 module.exports = (sequelize) => {
   return sequelize.define(
@@ -18,26 +18,55 @@ module.exports = (sequelize) => {
           key: "supplierId",
         },
         onDelete: "CASCADE",
+        unique: true, // Ensure one-to-one relationship with Supplier
       },
       bio: DataTypes.TEXT,
       hourlyRate: DataTypes.DECIMAL(10, 2),
-      certificationId: {
-        type: DataTypes.UUID, // References Certification table
+      sportId: {
+        type: DataTypes.UUID,
         allowNull: false,
       },
-      sportId: {
-        type: DataTypes.UUID, // References Sport table
-        allowNull: false,
+      specialization: {
+        type: DataTypes.STRING,
+        allowNull: true,
       },
       experienceYears: DataTypes.INTEGER,
+      qualifications: {
+        type: DataTypes.ARRAY(DataTypes.STRING),
+        defaultValue: [],
+      },
+      certifications: {
+        type: DataTypes.ARRAY(DataTypes.JSON),
+        defaultValue: [],
+      },
+      achievements: {
+        type: DataTypes.ARRAY(DataTypes.STRING),
+        defaultValue: [],
+      },
       rating: {
         type: DataTypes.DECIMAL(3, 2),
         defaultValue: 0.0,
+      },
+      totalReviews: {
+        type: DataTypes.INTEGER,
+        defaultValue: 0,
+      },
+      totalStudents: {
+        type: DataTypes.INTEGER,
+        defaultValue: 0,
+      },
+      isVerified: {
+        type: DataTypes.BOOLEAN,
+        defaultValue: false,
+      },
+      status: {
+        type: DataTypes.ENUM("active", "inactive", "suspended"),
+        defaultValue: "active",
       },
     },
     {
       timestamps: true,
       paranoid: true,
-    }
-  );
-};
+    },
+  )
+}
