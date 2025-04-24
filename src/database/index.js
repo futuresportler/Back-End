@@ -187,19 +187,29 @@ const defineAssociations = () => {
     foreignKey: "turfId",
     as: "grounds",
   })
-  // TurfProfile.hasMany(DailyTurfMetric, {
-  //   foreignKey: "turfId",
-  // })
+  TurfGround.belongsTo(TurfProfile, {
+    foreignKey: "turfId",
+    as: "turf",
+  })
 
   // Ground Relationships
-  // TurfGround.hasMany(TurfGroundSlot, {
-  //   foreignKey: "groundId",
-  //   as: "slots",
-  // })
-  // TurfGround.hasMany(TurfReview, {
-  //   foreignKey: "groundId",
-  //   as: "reviews",
-  // })
+  TurfGround.hasMany(TurfSlot, {
+    foreignKey: "groundId",
+    as: "slots",
+  })
+  TurfSlot.belongsTo(TurfGround, {
+    foreignKey: "groundId",
+    as: "ground",
+  })
+
+  TurfGround.hasMany(TurfReview, {
+    foreignKey: "groundId",
+    as: "reviews",
+  })
+  TurfReview.belongsTo(TurfGround, {
+    foreignKey: "groundId",
+    as: "ground",
+  })
 
   // Slot Relationships
   TurfSlot.belongsTo(Day, {
