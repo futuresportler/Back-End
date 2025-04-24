@@ -22,7 +22,7 @@ module.exports = (sequelize) => {
         type: DataTypes.UUID,
         allowNull: false,
         references: {
-          model: "User", // Changed from "Users" to "User"
+          model: "User", // Changed from "User" to "User"
           key: "userId",
         },
       },

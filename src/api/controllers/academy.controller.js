@@ -276,7 +276,7 @@ const getProgramStudents = async (req, res) => {
   }
 }
 
-const enrollStudent = async (req, res) => {
+const enrollStudentInProgram = async (req, res) => {
   try {
     const student = await AcademyService.enrollStudentInProgram(req.params.programId, req.body)
     successResponse(res, "Student enrolled successfully", student, 201)
@@ -284,6 +284,18 @@ const enrollStudent = async (req, res) => {
     errorResponse(res, error.message, error)
   }
 }
+
+const unEnrollStudentFromProgram = async (req, res) => {
+  try {
+    const student = await AcademyService.unEnrollStudentFromProgram(
+      req.params.programId,
+      req.params.studentId
+    );
+    successResponse(res, "Student unenrolled successfully", student);
+  } catch (error) {
+    errorResponse(res, error.message, error);
+  }
+};
 
 // Fee-related controllers
 const createFee = async (req, res) => {
@@ -390,7 +402,8 @@ module.exports = {
   updateProgram,
   deleteProgram,
   getProgramStudents,
-  enrollStudent,
+  enrollStudentInProgram,
+  unEnrollStudentFromProgram,
   // Fee-related exports
   createFee,
   getFee,

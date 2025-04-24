@@ -38,8 +38,8 @@ router.get("/:academyId/programs", academyController.getAcademyPrograms)
 router.patch("/programs/:programId", authMiddleware, academyController.updateProgram)
 router.delete("/programs/:programId", authMiddleware, academyController.deleteProgram)
 router.get("/programs/:programId/students", authMiddleware, academyController.getProgramStudents)
-router.post("/programs/:programId/students", authMiddleware, academyController.enrollStudent)
-
+router.post("/programs/:programId/students", authMiddleware, academyController.enrollStudentInProgram)
+router.delete("/programs/:programId/students/:studentId", authMiddleware, academyController.unEnrollStudentFromProgram)
 // Fee routes
 router.post("/fees", authMiddleware, academyController.createFee)
 router.get("/fees/:feeId", authMiddleware, academyController.getFee)
