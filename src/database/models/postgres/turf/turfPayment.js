@@ -1,5 +1,5 @@
 // models/postgres/turfPayment.js
-const { DataTypes } = require("sequelize");
+const { DataTypes } = require("sequelize")
 
 module.exports = (sequelize) => {
   return sequelize.define(
@@ -10,7 +10,23 @@ module.exports = (sequelize) => {
         defaultValue: DataTypes.UUIDV4,
         primaryKey: true,
       },
-      amount: DataTypes.DECIMAL(10,2),
+      userId: {
+        type: DataTypes.UUID,
+        allowNull: false,
+        references: {
+          model: "User", // Changed from "Users" to "User"
+          key: "userId",
+        },
+      },
+      requestId: {
+        type: DataTypes.UUID,
+        allowNull: false,
+        references: {
+          model: "SlotRequests",
+          key: "requestId",
+        },
+      },
+      amount: DataTypes.DECIMAL(10, 2),
       paymentMethod: DataTypes.STRING,
       transactionId: DataTypes.STRING,
       status: {
@@ -18,6 +34,6 @@ module.exports = (sequelize) => {
         defaultValue: "pending",
       },
     },
-    { timestamps: true }
-  );
-};
+    { timestamps: true },
+  )
+}

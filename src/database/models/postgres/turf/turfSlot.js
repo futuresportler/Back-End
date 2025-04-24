@@ -1,4 +1,4 @@
-// Add groundId to TurfSlot model
+// models/postgres/turf/turfSlot.js
 const { DataTypes } = require("sequelize")
 
 module.exports = (sequelize) => {
@@ -27,19 +27,23 @@ module.exports = (sequelize) => {
         },
       },
       dayId: {
-        type: DataTypes.INTEGER,
+        type: DataTypes.UUID,
         allowNull: false,
         references: {
           model: "Days",
-          key: "id",
+          key: "dayId", // Changed from "id" to "dayId"
         },
       },
       startTime: {
-        type: DataTypes.DATE,
+        type: DataTypes.TIME,
         allowNull: false,
       },
       endTime: {
-        type: DataTypes.DATE,
+        type: DataTypes.TIME,
+        allowNull: false,
+      },
+      date: {
+        type: DataTypes.DATEONLY,
         allowNull: false,
       },
       price: {
@@ -54,7 +58,7 @@ module.exports = (sequelize) => {
         type: DataTypes.UUID,
         allowNull: true,
         references: {
-          model: "Users",
+          model: "User", // Changed from "Users" to "User"
           key: "userId",
         },
       },

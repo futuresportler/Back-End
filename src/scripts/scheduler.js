@@ -1,6 +1,7 @@
 const cron = require("node-cron")
 const { info, error } = require("../config/logging")
 const generateMonthlyFees = require("./generateMonthlyFees")
+const { generateTomorrowSlots } = require("../services/turf/slotGenerationService")
 
 /**
  * Initialize all scheduled tasks
@@ -22,6 +23,18 @@ function initScheduledTasks() {
       }
     } catch (err) {
       error(`Error in scheduled fee generation: ${err.message}`)
+      error(err.stack)
+    }
+  })
+
+  // Schedule daily slot generation for all turf grounds (runs at 12:00 AM every day)
+  cron.schedule("0 0 * * *", async () => {
+    try {
+      info("Starting scheduled turf slot generation for tomorrow")
+      const slots = await generateTomorrowSlots()
+      info(`Slot generation completed: Generated ${slots.length} slots`)
+    } catch (err) {
+      error(`Error in scheduled slot generation: ${err.message}`)
       error(err.stack)
     }
   })

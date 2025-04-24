@@ -1,5 +1,5 @@
 // models/postgres/coachReview.js
-const { DataTypes } = require("sequelize")
+const { DataTypes, Op } = require("sequelize")
 
 module.exports = (sequelize) => {
   return sequelize.define(
@@ -23,7 +23,7 @@ module.exports = (sequelize) => {
         type: DataTypes.UUID,
         allowNull: false,
         references: {
-          model: "Users",
+          model: "User", // Changed from "Users" to "User" to match the actual table name
           key: "userId",
         },
       },
@@ -73,7 +73,7 @@ module.exports = (sequelize) => {
           unique: true,
           where: {
             paymentId: {
-              [sequelize.Op.ne]: null,
+              [Op.ne]: null,
             },
           },
         },
