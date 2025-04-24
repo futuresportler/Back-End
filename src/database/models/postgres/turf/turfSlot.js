@@ -31,7 +31,7 @@ module.exports = (sequelize) => {
         allowNull: false,
         references: {
           model: "Days",
-          key: "dayId", // Changed from "id" to "dayId"
+          key: "dayId", // Changed from "dayId" to "dayId"
         },
       },
       startTime: {
@@ -58,7 +58,7 @@ module.exports = (sequelize) => {
         type: DataTypes.UUID,
         allowNull: true,
         references: {
-          model: "User", // Changed from "Users" to "User"
+          model: "User", // Changed from "User" to "User"
           key: "userId",
         },
       },

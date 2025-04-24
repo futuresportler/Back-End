@@ -1,7 +1,7 @@
 const mongoose = require("mongoose");
 const { Sequelize } = require("sequelize");
 
-const sequelize = new Sequelize("my_new_db", "postgres", "root", {
+const sequelize = new Sequelize("sportTable", "postgres", "1422", {
   host: "localhost",
   dialect: "postgres",
   logging: false,

@@ -351,6 +351,36 @@ const enrollStudentInProgram = async (programId, studentData) => {
   }
 }
 
+const unEnrollStudentFromProgram = async (programId, studentId) => {
+  const transaction = await sequelize.transaction();
+
+  try {
+    // Get student first to check if they're enrolled in this batch
+    const student = await academyRepository.getStudentById(studentId);
+    if (!student) throw new Error("Student not found");
+    if (student.programId !== programId) throw new Error("Student not enrolled in this program");
+
+    // Update student record
+    const updatedStudent = await academyRepository.updateStudent(
+      studentId,
+      {
+        programId: null,
+        enrollmentSource: student.batchId ? "batch" : "null"
+      },
+      transaction
+    );
+
+    // Remove from batch enrollment
+    await academyProgramRepository.unenrollStudent(programId, studentId, transaction);
+
+    await transaction.commit();
+    return updatedStudent;
+  } catch (error) {
+    await transaction.rollback();
+    throw error;
+  }
+}
+
 // Fee-related services
 const createFee = async (feeData) => {
   // Calculate total amount if not provided
@@ -446,6 +476,7 @@ module.exports = {
   deleteProgram,
   getEnrolledStudents,
   enrollStudentInProgram,
+  unEnrollStudentFromProgram,
   // Fee-related exports
   createFee,
   getFeeById,
