@@ -1,11 +1,11 @@
-// models/postgres/coachStudent.js
+// models/postgres/coach/monthlyStudentProgress.js
 const { DataTypes } = require("sequelize")
 
 module.exports = (sequelize) => {
   return sequelize.define(
-    "CoachStudent",
+    "MonthlyStudentProgress",
     {
-      id: {
+      progressId: {
         type: DataTypes.UUID,
         defaultValue: DataTypes.UUIDV4,
         primaryKey: true,
@@ -28,23 +28,15 @@ module.exports = (sequelize) => {
         },
         onDelete: "CASCADE",
       },
-      enrollmentDate: {
-        type: DataTypes.DATEONLY,
-        defaultValue: DataTypes.NOW,
+      monthId: {
+        type: DataTypes.UUID,
+        allowNull: false,
+        references: {
+          model: "Months",
+          key: "monthId",
+        },
       },
-      status: {
-        type: DataTypes.ENUM("active", "completed", "paused"),
-        defaultValue: "active",
-      },
-      source: {
-        type: DataTypes.STRING,
-        allowNull: true,
-      },
-      goals: {
-        type: DataTypes.TEXT,
-        allowNull: true,
-      },
-      progress: {
+      performance: {
         type: DataTypes.JSON,
         defaultValue: {},
       },
@@ -56,6 +48,10 @@ module.exports = (sequelize) => {
         type: DataTypes.JSON,
         defaultValue: {},
       },
+      attendanceSummary: {
+        type: DataTypes.JSON,
+        defaultValue: {},
+      },
       totalSessions: {
         type: DataTypes.INTEGER,
         defaultValue: 0,
@@ -63,6 +59,18 @@ module.exports = (sequelize) => {
       completedSessions: {
         type: DataTypes.INTEGER,
         defaultValue: 0,
+      },
+      missedSessions: {
+        type: DataTypes.INTEGER,
+        defaultValue: 0,
+      },
+      goalsAchieved: {
+        type: DataTypes.ARRAY(DataTypes.STRING),
+        defaultValue: [],
+      },
+      newGoals: {
+        type: DataTypes.ARRAY(DataTypes.STRING),
+        defaultValue: [],
       },
       notes: {
         type: DataTypes.TEXT,
@@ -73,7 +81,7 @@ module.exports = (sequelize) => {
       timestamps: true,
       indexes: [
         {
-          fields: ["coachId", "userId"],
+          fields: ["coachId", "userId", "monthId"],
           unique: true,
         },
       ],
