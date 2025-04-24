@@ -1,4 +1,4 @@
-// models/postgres/turfGround.js
+// models/postgres/turf/turfGround.js
 const { DataTypes } = require("sequelize")
 
 module.exports = (sequelize) => {
@@ -17,25 +17,26 @@ module.exports = (sequelize) => {
           model: "TurfProfiles",
           key: "turfId",
         },
-        onDelete: "CASCADE",
       },
-      groundName: {
+      name: {
         type: DataTypes.STRING,
         allowNull: false,
       },
       sportType: {
         type: DataTypes.STRING,
         allowNull: false,
-        comment: "The specific sport this ground is designed for",
       },
       surfaceType: {
         type: DataTypes.ENUM("natural", "artificial", "hybrid"),
         defaultValue: "artificial",
       },
-      capacity: DataTypes.INTEGER,
       dimensions: {
-        type: DataTypes.STRING,
-        comment: "Dimensions of the ground (e.g., '100x60m')",
+        type: DataTypes.JSON, // { length: number, width: number, unit: string }
+        defaultValue: { length: 0, width: 0, unit: "meters" },
+      },
+      capacity: {
+        type: DataTypes.INTEGER,
+        defaultValue: 0,
       },
       hourlyRate: {
         type: DataTypes.DECIMAL(10, 2),
@@ -49,26 +50,25 @@ module.exports = (sequelize) => {
         type: DataTypes.DECIMAL(10, 2),
         allowNull: true,
       },
-      images: {
-        type: DataTypes.ARRAY(DataTypes.STRING),
-        defaultValue: [],
-      },
       mainImage: {
         type: DataTypes.STRING,
         allowNull: true,
       },
+      images: {
+        type: DataTypes.ARRAY(DataTypes.STRING),
+        defaultValue: [],
+      },
       amenities: {
         type: DataTypes.ARRAY(DataTypes.STRING),
         defaultValue: [],
-        comment: "Specific amenities for this ground (e.g., 'floodlights', 'scoreboard')",
-      },
-      status: {
-        type: DataTypes.ENUM("active", "maintenance", "closed"),
-        defaultValue: "active",
       },
       description: {
         type: DataTypes.TEXT,
         allowNull: true,
+      },
+      status: {
+        type: DataTypes.ENUM("active", "inactive", "maintenance"),
+        defaultValue: "active",
       },
     },
     { timestamps: true },

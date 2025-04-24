@@ -17,16 +17,14 @@ module.exports = (sequelize) => {
           model: "CoachProfiles",
           key: "coachId",
         },
-        onDelete: "CASCADE",
       },
       userId: {
         type: DataTypes.UUID,
         allowNull: false,
         references: {
-          model: "Users",
+          model: "User", // Changed from "Users" to "User"
           key: "userId",
         },
-        onDelete: "CASCADE",
       },
       monthId: {
         type: DataTypes.UUID,
@@ -36,33 +34,20 @@ module.exports = (sequelize) => {
           key: "monthId",
         },
       },
-      performance: {
+      // Progress metrics
+      attendanceRate: {
+        type: DataTypes.DECIMAL(5, 2),
+        defaultValue: 0,
+        validate: { min: 0, max: 100 },
+      },
+      skillProgress: {
         type: DataTypes.JSON,
         defaultValue: {},
       },
-      feedback: {
-        type: DataTypes.ARRAY(DataTypes.JSON),
-        defaultValue: [],
-      },
-      grades: {
-        type: DataTypes.JSON,
-        defaultValue: {},
-      },
-      attendanceSummary: {
-        type: DataTypes.JSON,
-        defaultValue: {},
-      },
-      totalSessions: {
+      performanceRating: {
         type: DataTypes.INTEGER,
-        defaultValue: 0,
-      },
-      completedSessions: {
-        type: DataTypes.INTEGER,
-        defaultValue: 0,
-      },
-      missedSessions: {
-        type: DataTypes.INTEGER,
-        defaultValue: 0,
+        validate: { min: 1, max: 10 },
+        allowNull: true,
       },
       goalsAchieved: {
         type: DataTypes.ARRAY(DataTypes.STRING),
@@ -72,19 +57,25 @@ module.exports = (sequelize) => {
         type: DataTypes.ARRAY(DataTypes.STRING),
         defaultValue: [],
       },
-      notes: {
+      coachFeedback: {
+        type: DataTypes.TEXT,
+        allowNull: true,
+      },
+      studentFeedback: {
+        type: DataTypes.TEXT,
+        allowNull: true,
+      },
+      // Summary
+      summary: {
+        type: DataTypes.TEXT,
+        allowNull: true,
+      },
+      // Recommendations
+      recommendations: {
         type: DataTypes.TEXT,
         allowNull: true,
       },
     },
-    {
-      timestamps: true,
-      indexes: [
-        {
-          fields: ["coachId", "userId", "monthId"],
-          unique: true,
-        },
-      ],
-    },
+    { timestamps: true },
   )
 }

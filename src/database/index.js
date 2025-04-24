@@ -376,7 +376,7 @@ const syncDatabase = async () => {
 
     defineAssociations()
 
-    await sequelize.sync({ alter: true })
+    await sequelize.sync({ force: true })
     console.log("✅ Database synchronized successfully")
   } catch (error) {
     console.error("❌ Database synchronization failed:", error)

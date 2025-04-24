@@ -1,6 +1,15 @@
-const errorHandler = (err, req, res, next) => {
-  const statusCode = err.statusCode || 500;
-  res.status(statusCode).json({ error: err.message || "Server Error" });
-};
+const { errorResponse } = require("../../common/utils/response")
+const logger = require("../../config/logging")
 
-module.exports = errorHandler;
+const errorMiddleware = (err, req, res, next) => {
+  logger.error(`Error: ${err.message}`)
+  logger.error(err.stack)
+
+  // Default to 500 internal server error
+  const statusCode = err.statusCode || 500
+  const message = err.message || "Internal Server Error"
+
+  errorResponse(res, message, err, statusCode)
+}
+
+module.exports = errorMiddleware

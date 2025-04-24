@@ -1,4 +1,4 @@
-const { DataTypes } = require("sequelize");
+const { DataTypes } = require("sequelize")
 
 module.exports = (sequelize) => {
   const User = sequelize.define(
@@ -62,26 +62,26 @@ module.exports = (sequelize) => {
       tableName: "User",
       timestamps: true,
       paranoid: true,
-    }
-  );
+    },
+  )
 
   User.beforeCreate((user) => {
     if (user.latitude && user.longitude) {
       user.location = {
         type: "Point",
         coordinates: [user.longitude, user.latitude],
-      };
+      }
     }
-  });
+  })
 
   User.beforeUpdate((user) => {
     if (user.latitude && user.longitude) {
       user.location = {
         type: "Point",
         coordinates: [user.longitude, user.latitude],
-      };
+      }
     }
-  });
+  })
 
-  return User;
-};
+  return User
+}
