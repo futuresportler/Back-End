@@ -116,47 +116,6 @@ const getStudentById = async (studentId) => {
   })
 }
 
-const getAllStudents = async (filters = {}) => {
-  const { name, sport, status, page = 1, limit = 20 } = filters
-
-  const where = {}
-
-  if (name) {
-    where.name = { [sequelize.Op.iLike]: `%${name}%` }
-  }
-
-  if (sport) {
-    where.sport = sport
-  }
-
-  if (status) {
-    where.status = status
-  }
-
-  const offset = (page - 1) * limit
-
-  const { count, rows } = await AcademyStudent.findAndCountAll({
-    where,
-    limit: Number.parseInt(limit),
-    offset: Number.parseInt(offset),
-    include: [
-      { model: AcademyBatch, as: "batch", attributes: ["batchId", "name"] },
-      { model: AcademyProgram, as: "program", attributes: ["programId", "name"] },
-    ],
-    order: [["createdAt", "DESC"]],
-  })
-
-  return {
-    students: rows,
-    pagination: {
-      total: count,
-      page: Number.parseInt(page),
-      limit: Number.parseInt(limit),
-      pages: Math.ceil(count / limit),
-    },
-  }
-}
-
 const getStudentsByAcademy = async (academyId, filters = {}) => {
   const { name, sport, status, batchId, programId, page = 1, limit = 20 } = filters
 
@@ -231,7 +190,6 @@ module.exports = {
   createStudent,
   updateStudent,
   getStudentById,
-  getAllStudents,
   getStudentsByAcademy,
   getStudentsByProgram,
   deleteStudent,

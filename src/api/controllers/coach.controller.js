@@ -1,20 +1,8 @@
-const { coachService } = require("../../services/coach");
+const coachService = require("../../services/coach");
 const {
   successResponse,
   errorResponse,
 } = require("../../common/utils/response");
-
-const createProfile = async (req, res) => {
-  try {
-    const profile = await coachService.createCoachProfile(
-      req.user.supplierId,
-      req.body
-    );
-    successResponse(res, "Coach profile created", profile, 201);
-  } catch (error) {
-    errorResponse(res, error.message, error);
-  }
-};
 
 const getMyProfile = async (req, res) => {
   try {
@@ -84,7 +72,6 @@ const addCertification = async (req, res) => {
 };
 
 module.exports = {
-  createProfile,
   getMyProfile,
   getProfile,
   updateProfile,

@@ -8,12 +8,10 @@ const { validateAcademyProfile, validateRequest } = require("../validation/acade
 router.get("/:academyProfileId", academyController.getProfile)
 router.patch("/:academyProfileId", authMiddleware, academyController.updateProfile)
 router.delete("/:academyProfileId", authMiddleware, academyController.deleteProfile)
-
 // Search routes
 router.get("/nearby", academyController.getNearbyAcademies)
 
 // Student routes
-router.get("/students", authMiddleware, academyController.getAllStudents)
 router.get("/:academyId/students", authMiddleware, academyController.getAcademyStudents)
 router.get("/students/:studentId", authMiddleware, academyController.getStudent)
 router.post("/students", authMiddleware, academyController.createStudent)
@@ -40,6 +38,7 @@ router.delete("/programs/:programId", authMiddleware, academyController.deletePr
 router.get("/programs/:programId/students", authMiddleware, academyController.getProgramStudents)
 router.post("/programs/:programId/students", authMiddleware, academyController.enrollStudentInProgram)
 router.delete("/programs/:programId/students/:studentId", authMiddleware, academyController.unEnrollStudentFromProgram)
+
 // Fee routes
 router.post("/fees", authMiddleware, academyController.createFee)
 router.get("/fees/:feeId", authMiddleware, academyController.getFee)

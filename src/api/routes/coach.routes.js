@@ -8,11 +8,7 @@ const {
 } = require("../validation/coachValidator");
 
 // Profile routes
-router.post(
-  "/",
-  authMiddleware,
-  coachController.createProfile
-);
+router.get("/nearby", coachController.getNearbyCoaches);
 router.get("/me", authMiddleware, coachController.getMyProfile);
 router.get("/:coachProfileId", coachController.getProfile);
 router.patch(
@@ -25,9 +21,6 @@ router.delete(
   authMiddleware,
   coachController.deleteProfile
 );
-
-// Search routes
-router.get("/nearby", coachController.getNearbyCoaches);
 
 // Certification routes
 router.post(

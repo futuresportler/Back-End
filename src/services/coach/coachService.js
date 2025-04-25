@@ -3,26 +3,6 @@ const { sequelize } = require("../../config/database")
 const coachRepository = require("./repositories/coachRepository")
 const { SupplierService } = require("../supplier/index")
 
-const createCoachProfile = async (supplierId, profileData) => {
-  // Verify supplier exists and has coach module
-  const supplier = await SupplierService.getSupplierByModule(supplierId, "coach")
-  if (!supplier) {
-    throw new Error("Supplier not found or not configured as coach")
-  }
-
-  // Check if profile already exists
-  const existingProfile = await coachRepository.findCoachBySupplierId(supplierId)
-  if (existingProfile) {
-    throw new Error("Coach profile already exists")
-  }
-
-  // Create profile
-  return await coachRepository.createCoachProfile({
-    ...profileData,
-    supplierId,
-  })
-}
-
 const getCoachProfile = async (coachProfileId) => {
   const profile = await coachRepository.findCoachProfileById(coachProfileId)
   if (!profile) {
@@ -256,7 +236,6 @@ const updateStudentMonthlyProgress = async (coachId, userId, monthId, progressDa
 }
 
 module.exports = {
-  createCoachProfile,
   getCoachProfile,
   getCoachBySupplier,
   updateCoachProfile,

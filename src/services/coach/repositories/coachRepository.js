@@ -1,11 +1,11 @@
-const { CoachProfile, Supplier } = require("../../../database");
+const { CoachProfile, Supplier, sequelize } = require("../../../database");
 
 const findCoachProfileById = async (coachProfileId) => {
   return await CoachProfile.findByPk(coachProfileId, {
     include: [{
       model: Supplier,
       as: 'supplier',
-      attributes: ['email', 'mobile', 'profilePicture', 'location']
+      attributes: ['email', 'mobile_number', 'profilePicture', 'location']
     }]
   });
 };
