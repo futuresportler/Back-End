@@ -84,15 +84,6 @@ const getAllAcademies = async (req, res) => {
 }
 
 // Student-related controllers
-const getAllStudents = async (req, res) => {
-  try {
-    const students = await AcademyService.getAllStudents(req.query)
-    successResponse(res, "All students fetched", students)
-  } catch (error) {
-    errorResponse(res, error.message, error)
-  }
-}
-
 const getAcademyStudents = async (req, res) => {
   try {
     const students = await AcademyService.getStudentsByAcademy(req.params.academyId, req.query)
@@ -379,7 +370,6 @@ module.exports = {
   getNearbyAcademies,
   getAllAcademies,
   // Student-related exports
-  getAllStudents,
   getAcademyStudents,
   getStudent,
   createStudent,

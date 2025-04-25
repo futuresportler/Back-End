@@ -53,10 +53,6 @@ const getNearbyAcademies = async (latitude, longitude, radius = 5000) => {
 }
 
 // Student-related services
-const getAllStudents = async (filters = {}) => {
-  return await academyRepository.getAllStudents(filters)
-}
-
 const getStudentsByAcademy = async (academyId, filters = {}) => {
   return await academyRepository.getStudentsByAcademy(academyId, filters)
 }
@@ -452,7 +448,6 @@ module.exports = {
   deleteAcademyProfile,
   getNearbyAcademies,
   // Student-related exports
-  getAllStudents,
   getStudentsByAcademy,
   getStudentById,
   createStudent,
