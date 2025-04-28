@@ -9,6 +9,7 @@ const coachRoutes = require("./routes/coach.routes")
 const turfRoutes = require("./routes/turf.routes")
 const supplierRoutes = require("./routes/supplier.routes")
 const groundRoutes = require("./routes/ground.routes")
+const chatbotRoutes = require("./routes/chatbot.routes");
 
 // Import middleware
 const errorMiddleware = require("./middlewares/error.middleware")
@@ -21,7 +22,7 @@ router.use("/coaches", coachRoutes)
 router.use("/turfs", turfRoutes)
 router.use("/suppliers", supplierRoutes)
 router.use("/", groundRoutes) // Mount ground routes at the root level
-
+router.use("/", chatbotRoutes); 
 // Error handling middleware
 if (errorMiddleware && typeof errorMiddleware === "function") {
   router.use(errorMiddleware)
