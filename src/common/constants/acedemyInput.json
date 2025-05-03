@@ -1,0 +1,86 @@
+{
+    "basic_info": {
+      "academy_name": "Premier Cricket Academy",
+      "city": "Mumbai",
+      "full_address": "123 Sports Complex, Mumbai, Maharashtra",
+      "contact_email": "info@premiercricket.com",
+      "social_media_links": {
+        "facebook": "https://facebook.com/premiercricket",
+        "twitter": "https://twitter.com/premiercricket",
+        "instagram": "https://instagram.com/premiercricket",
+        "youtube": "https://youtube.com/premiercricket"
+      },
+      "academy_description": "A premier academy dedicated to nurturing cricket talent with world-class facilities.",
+      "year_of_establishment": 2025,
+      "contact_phone": "+91 9876543210",
+      "website": "www.premiercricket.com"
+    },
+    "sports_details": {
+      "sports_available": ["Cricket", "Athletics"],      
+      "champions_achievements": ["National U-19 Cricket Champions 2024"],
+      "facilities": ["Indoor Cricket Nets", "Outdoor Cricket Ground", "Athletics Track"],
+      "age_groups": ["6-12 years (Children)", "12-22 years (Teens/Young Adults)"],
+      "class_types": ["One-on-One Training", "Group Classes"],
+      "academy_photos": ["facility1.jpg", "facility2.jpg", "ground.jpg"],
+      "academy_video": {
+        "url": "tour_video.mp4",
+        "geolocation": "19.0760° N, 72.8777° E"
+      }
+    },
+    "coaches": [
+      {
+        "coach_name": "Rahul Sharma",
+        "years_of_experience": 8,
+        "specialization": "Cricket Batting",
+        "certifications": ["BCCI Level 3", "NCA Certified"]
+      },
+      {
+        "coach_name": "Priya Singh",
+        "years_of_experience": 6,
+        "specialization": "Athletics",
+        "certifications": ["IAAF Level 2"]
+      }
+    ],
+    "batches": [
+      {
+        "batch_name": "Advanced Morning Batch",
+        "age_group": "12-22 years (Teens/Young Adults)",
+        "monthly_fee": 3500,
+        "timing": "Mon-Fri, 6:00 AM - 8:00 AM",
+        "capacity": 25
+      },
+      {
+        "batch_name": "Junior Evening Batch",
+        "age_group": "6-12 years (Children)",
+        "monthly_fee": 2500,
+        "timing": "Mon-Fri, 4:00 PM - 6:00 PM",
+        "capacity": 20
+      }
+    ],
+    "manager_info": {
+      "owner": {
+        "name": "Vikram Patel",
+        "phone": "+91 9123456789",
+        "email": "vikram@premiercricket.com",
+        "id_type": "Aadhar Card",
+        "id_number": "1234 5678 9012"
+      },
+      "manager": {
+        "name": "Anjali Mehta",
+        "phone": "+91 9988776655",
+        "email": "anjali@premiercricket.com",
+        "id_type": "Aadhar Card",
+        "id_number": "9876 5432 1098"
+      },
+      "owner_is_manager": false
+    },
+    "payment_info": {
+      "gst_number": "22ABCDE1234F5Z7",
+      "payment_details": {
+        "bank_account_number": "123456789012",
+        "account_holder_name": "Premier Cricket Academy",
+        "ifsc_code": "SBIN0000456",
+        "upi_id": "premiercricket@axisbank"
+      }
+    }
+  }
