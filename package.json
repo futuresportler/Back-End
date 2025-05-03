@@ -21,6 +21,7 @@
     "express-validator": "^7.0.1",
     "firebase-admin": "^13.2.0",
     "fs": "^0.0.1-security",
+    "groq-sdk": "^0.20.1",
     "helmet": "^6.1.5",
     "joi": "^17.13.3",
     "jsonwebtoken": "^9.0.0",
