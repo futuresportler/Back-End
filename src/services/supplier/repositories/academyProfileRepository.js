@@ -2,6 +2,7 @@ const {
   AcademyProfile,
   AcademyCoach,
   AcademyBatch,
+  AcademyProgram,
   AcademyStudent,
   AcademyFee,
 } = require("../../../database");
@@ -68,7 +69,7 @@ async function createAcademyProfile(data) {
     website: basic_info.website,
     socialMediaLinks: basic_info.social_media_links,
     location,
-
+    addedByAdmin: basic_info.added_by_admin,
     // sports_details → academyProfile fields
     sports: sports_details.sports_available,
     achievements: sports_details.champions_achievements,

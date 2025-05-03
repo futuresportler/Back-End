@@ -1,6 +1,20 @@
 const { verifyToken, verifyRefresh } = require("../../config/auth")
 const { errorResponse } = require("../../common/utils/response")
 
+const adminAuthMiddleware = async (req, res, next) => {
+  try {
+    const token = req.headers.authorization?.split(" ")[1];
+    if (!token) throw new Error("Authorization required");
+
+    const decoded = verifyToken(token);
+    req.user = { email: decoded.email };
+    next();
+  } catch (error) {
+    errorResponse(res, "Invalid token", null, 401);
+  }
+};
+
+
 const authenticate = (req, res, next) => {
   try {
     const authHeader = req.headers.authorization
@@ -57,9 +71,9 @@ const refreshMiddleWare = (req, res, next) => {
 const authMiddleware = authenticate
 
 module.exports = {
+  adminAuthMiddleware,
   authenticate,
   authorize,
   refreshMiddleWare,
-  // For backward compatibility
   authMiddleware,
 }

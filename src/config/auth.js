@@ -70,6 +70,16 @@ const generateTurfTokens = (turf) => {
   return { accessToken, refreshToken };
 };
 
+const generateAdminPortalToken = (email) => {
+  const payload = { email };
+
+  const accessToken = jwt.sign(payload, process.env.JWT_SECRET, {
+    expiresIn: "30d",
+  });
+
+  return accessToken;
+};
+
 const verifyToken = (token) => jwt.verify(token, process.env.JWT_SECRET);
 const verifyRefresh = (token) => jwt.verify(token, process.env.REFRESH_SECRET);
 
@@ -79,6 +89,7 @@ module.exports = {
   generateCoachTokens,
   generateAcademyTokens,
   generateTurfTokens,
+  generateAdminPortalToken,
   verifyToken,
   verifyRefresh,
 };

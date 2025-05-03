@@ -95,6 +95,14 @@ module.exports = (sequelize) => {
         type: DataTypes.INTEGER,
         defaultValue: 0,
       },
+      isVerified: {
+        type: DataTypes.BOOLEAN,
+        defaultValue: false,
+      },
+      addedByAdmin: {
+        type: DataTypes.BOOLEAN,
+        defaultValue: false,
+      },
       status: {
         type: DataTypes.ENUM("active", "maintenance", "closed"),
         defaultValue: "active",

@@ -20,6 +20,10 @@ module.exports = (sequelize) => {
         onDelete: "CASCADE",
         unique: true, // Ensure one-to-one relationship with Supplier
       },
+      name: {
+        type: DataTypes.STRING,
+        allowNull: false,
+      },
       bio: DataTypes.TEXT,
       hourlyRate: DataTypes.DECIMAL(10, 2),
       sportId: {
@@ -56,6 +60,10 @@ module.exports = (sequelize) => {
         defaultValue: 0,
       },
       isVerified: {
+        type: DataTypes.BOOLEAN,
+        defaultValue: false,
+      },
+      addedByAdmin: {
         type: DataTypes.BOOLEAN,
         defaultValue: false,
       },

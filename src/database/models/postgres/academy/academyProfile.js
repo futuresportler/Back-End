@@ -19,11 +19,11 @@ module.exports = (sequelize) => {
       },
       description: {
         type: DataTypes.TEXT,
-        allowNull: false,
+        allowNull: true,
       },
       foundedYear: {
         type: DataTypes.INTEGER,
-        allowNull: false,
+        allowNull: true,
       },
 
       // Related to Supplier
@@ -38,7 +38,7 @@ module.exports = (sequelize) => {
       },
       managerId: {
         type: DataTypes.UUID,
-        allowNull: false,
+        allowNull: true,
         references: {
           model: "Suppliers",
           key: "supplierId",
@@ -47,7 +47,7 @@ module.exports = (sequelize) => {
       // Sports & Facilities
       sports: {
         type: DataTypes.ARRAY(DataTypes.STRING),
-        allowNull: false,
+        allowNull: true,
       },
       facilities: {
         type: DataTypes.ARRAY(DataTypes.STRING),
@@ -145,6 +145,10 @@ module.exports = (sequelize) => {
         type: DataTypes.BOOLEAN,
         defaultValue: false,
         allowNull: false,
+      },
+      addedByAdmin: {
+        type: DataTypes.BOOLEAN,
+        defaultValue: false,
       },
     },
     {

@@ -9,6 +9,7 @@ const Year = require("./models/postgres/year")(sequelize)
 
 const User = require("./models/postgres/user")(sequelize)
 const Supplier = require("./models/postgres/supplier")(sequelize)
+const AuditLog = require("./models/postgres/auditLog")(sequelize)
 
 const CoachProfile = require("./models/postgres/coach/coachProfile")(sequelize)
 const CoachSlot = require("./models/postgres/coach/coachSlot")(sequelize)
@@ -389,6 +390,8 @@ module.exports = {
   connectPostgres,
   connectMongoDB,
   Supplier,
+  User,
+  AuditLog,
   CoachProfile,
   AcademyProfile,
   TurfProfile,
