@@ -16,7 +16,7 @@ module.exports = {
   },
 
   cache: {
-    redisURL: process.env.REDIS_URL || "redis://localhost:6379",
+    redisURL: process.env.REDIS_URL || "http://future-sportler-cache-rzs8oz.serverless.eun1.cache.amazonaws.com:6379",
   },
 
   logging: {
