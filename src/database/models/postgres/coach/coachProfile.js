@@ -18,19 +18,62 @@ module.exports = (sequelize) => {
           key: "supplierId",
         },
         onDelete: "CASCADE",
-        unique: true, // Ensure one-to-one relationship with Supplier
+        // Ensure one-to-one relationship with Supplier
       },
       bio: DataTypes.TEXT,
-      hourlyRate: DataTypes.DECIMAL(10, 2),
-      sportId: {
-        type: DataTypes.UUID,
-        allowNull: false,
-      },
-      specialization: {
+      city: {
         type: DataTypes.STRING,
         allowNull: true,
       },
+      hourlyRate: DataTypes.DECIMAL(10, 2),
+      minHourlyRate: DataTypes.DECIMAL(10, 2),
       experienceYears: DataTypes.INTEGER,
+      // New fields
+      sportsCoached: {
+        type: DataTypes.ARRAY(DataTypes.STRING),
+        defaultValue: [],
+      },
+      maximumLevelPlayed: {
+        type: DataTypes.STRING,
+        allowNull: true,
+      },
+      ageGroups: {
+        type: DataTypes.JSON,
+        defaultValue: {
+          "0-6": false,
+          "6-12": false,
+          "12-22": false,
+        },
+      },
+      classType: {
+        type: DataTypes.JSON,
+        defaultValue: {
+          "1-1": false,
+          group: false,
+        },
+      },
+      references: {
+        type: DataTypes.ARRAY(DataTypes.JSON),
+        defaultValue: [],
+      },
+      mediaLinks: {
+        type: DataTypes.JSON,
+        defaultValue: {
+          instagram: "",
+          facebook: "",
+          twitter: "",
+          youtube: "",
+          linkedin: "",
+        },
+      },
+      photos: {
+        type: DataTypes.ARRAY(DataTypes.STRING),
+        defaultValue: [],
+      },
+      videos: {
+        type: DataTypes.ARRAY(DataTypes.STRING),
+        defaultValue: [],
+      },
       qualifications: {
         type: DataTypes.ARRAY(DataTypes.STRING),
         defaultValue: [],

@@ -28,6 +28,15 @@ module.exports = (sequelize) => {
         },
         onDelete: "CASCADE",
       },
+      batchId: {
+        type: DataTypes.UUID,
+        allowNull: true,
+        references: {
+          model: "CoachBatches",
+          key: "batchId",
+        },
+        onDelete: "SET NULL",
+      },
       enrollmentDate: {
         type: DataTypes.DATEONLY,
         defaultValue: DataTypes.NOW,
@@ -75,6 +84,9 @@ module.exports = (sequelize) => {
         {
           fields: ["coachId", "userId"],
           unique: true,
+        },
+        {
+          fields: ["batchId"],
         },
       ],
     },

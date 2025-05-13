@@ -11,7 +11,7 @@ const User = require("./models/postgres/user")(sequelize)
 const Supplier = require("./models/postgres/supplier")(sequelize)
 
 const CoachProfile = require("./models/postgres/coach/coachProfile")(sequelize)
-const CoachSlot = require("./models/postgres/coach/coachSlot")(sequelize)
+const CoachBatch = require("./models/postgres/coach/coachBatch")(sequelize)
 const CoachPayment = require("./models/postgres/coach/coachPayment")(sequelize)
 const CoachReview = require("./models/postgres/coach/coachReview")(sequelize)
 const CoachMetric = require("./models/postgres/coach/coachMetric")(sequelize)
@@ -252,10 +252,7 @@ const defineAssociations = () => {
   TurfMetric.belongsTo(Month, { foreignKey: "monthId" })
 
   // CoachProfile Associations
-  CoachProfile.hasMany(CoachSlot, {
-    foreignKey: "coachId",
-    as: "slots",
-  })
+
   CoachProfile.hasMany(CoachPayment, {
     foreignKey: "coachId",
   })
@@ -268,6 +265,40 @@ const defineAssociations = () => {
   CoachProfile.hasMany(MonthlyCoachMetric, {
     foreignKey: "coachId",
     as: "monthlyMetrics",
+  })
+
+  // CoachBatch associations
+  CoachProfile.hasMany(CoachBatch, {
+    foreignKey: "coachId",
+    as: "batches",
+  })
+  CoachBatch.belongsTo(CoachProfile, {
+    foreignKey: "coachId",
+    as: "coach",
+  })
+
+  // Update CoachStudent associations to include batch
+  CoachStudent.belongsTo(CoachBatch, {
+    foreignKey: "batchId",
+    as: "batch",
+    allowNull: true,
+  })
+
+  CoachBatch.hasMany(CoachStudent, {
+    foreignKey: "batchId",
+    as: "students",
+  })
+
+  // Update CoachPayment associations to include batch
+  CoachPayment.belongsTo(CoachBatch, {
+    foreignKey: "batchId",
+    as: "batch",
+    allowNull: true,
+  })
+
+  CoachBatch.hasMany(CoachPayment, {
+    foreignKey: "batchId",
+    as: "payments",
   })
 
   // Monthly Coach Metrics
@@ -319,21 +350,6 @@ const defineAssociations = () => {
     as: "coaches",
   })
 
-  // Slot Relationships
-  CoachSlot.belongsTo(CoachProfile, {
-    foreignKey: "coachId",
-    as: "coach",
-  })
-
-  CoachSlot.belongsTo(Day, {
-    foreignKey: "dayId",
-    as: "day",
-  })
-
-  CoachSlot.hasMany(CoachPayment, {
-    foreignKey: "slotId",
-    as: "payments",
-  })
 
   // Review Validation
   CoachReview.belongsTo(CoachProfile, {
@@ -390,11 +406,11 @@ module.exports = {
   connectMongoDB,
   Supplier,
   CoachProfile,
+  CoachBatch,
   AcademyProfile,
   TurfProfile,
 
   // Coach exports
-  CoachSlot,
   CoachPayment,
   CoachReview,
   CoachMetric,

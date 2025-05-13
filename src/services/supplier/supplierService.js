@@ -4,6 +4,7 @@ const { v4: uuidv4 } = require("uuid")
 const profileFactory = require("./profileFactory")
 const SupplierRepository = require("./repositories/supplierRepository")
 const AcademyProfileRepository = require("./repositories/academyProfileRepository")
+const CoachProfileRepository = require("./repositories/coachProfileRepository")
 const { verifyAndExtractUser } = require("../../config/otp")
 
 async function signUp({ mobile_number, firebaseIdToken, ...rest }) {
@@ -98,11 +99,32 @@ async function requestOTP(email) {
 }
 
 async function updateSupplierProfile(supplierId, updateData) {
-  return await SupplierRepository.updateSupplier(supplierId, updateData)
+  const updatedSupplier = await SupplierRepository.updateSupplier(supplierId, updateData)
+
+  // Check if supplier has coach module
+  if (updatedSupplier.module && updatedSupplier.module.includes("coach")) {
+    // Check if coach profile exists
+    const existingCoachProfile = await CoachProfileRepository.getCoachProfileBySupplierId(supplierId)
+
+    if (!existingCoachProfile) {
+      // Create coach profile if it doesn't exist
+      await profileFactory.createProfile("coach", supplierId, {city: updateData.city})
+    } else if (updateData.city) {
+      // Update coach profile's city field if supplier's city is updated
+      await CoachProfileRepository.updateCoachProfile(existingCoachProfile.coachId, {
+        city: updateData.city,
+      })
+    }
+  }
+  return updatedSupplier
 }
 
 async function getSupplierByModule(supplierId, module) {
   return await SupplierRepository.getSupplierWithProfile(supplierId, module)
+}
+
+async function deleteSupplier(supplierId) {
+  return await SupplierRepository.deleteSupplier(supplierId)
 }
 
 module.exports = {
@@ -114,4 +136,5 @@ module.exports = {
   requestOTP,
   updateSupplierProfile,
   getSupplierByModule,
+  deleteSupplier,
 }

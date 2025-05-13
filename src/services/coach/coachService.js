@@ -59,57 +59,6 @@ const addCoachCertification = async (coachProfileId, certificationData) => {
   })
 }
 
-// Weekly slot management
-const createWeeklySlots = async (coachId, slotData) => {
-  const coach = await coachRepository.findCoachProfileById(coachId)
-  if (!coach) {
-    throw new Error("Coach profile not found")
-  }
-
-  // Validate slot data
-  if (slotData.startTime >= slotData.endTime) {
-    throw new Error("End time must be after start time")
-  }
-
-  // Create the weekly slot
-  return await coachRepository.createCoachSlot({
-    ...slotData,
-    coachId,
-    isRecurring: true,
-  })
-}
-
-const getCoachWeeklySchedule = async (coachId) => {
-  const coach = await coachRepository.findCoachProfileById(coachId)
-  if (!coach) {
-    throw new Error("Coach profile not found")
-  }
-
-  return await coachRepository.findCoachWeeklySlots(coachId)
-}
-
-const updateWeeklySlot = async (slotId, updateData) => {
-  const slot = await coachRepository.findCoachSlotById(slotId)
-  if (!slot) {
-    throw new Error("Slot not found")
-  }
-
-  if (updateData.startTime && updateData.endTime && updateData.startTime >= updateData.endTime) {
-    throw new Error("End time must be after start time")
-  }
-
-  return await coachRepository.updateCoachSlot(slotId, updateData)
-}
-
-const deleteWeeklySlot = async (slotId) => {
-  const slot = await coachRepository.findCoachSlotById(slotId)
-  if (!slot) {
-    throw new Error("Slot not found")
-  }
-
-  return await coachRepository.deleteCoachSlot(slotId)
-}
-
 // Student management
 const addStudent = async (coachId, userId, studentData) => {
   const coach = await coachRepository.findCoachProfileById(coachId)
@@ -235,6 +184,125 @@ const updateStudentMonthlyProgress = async (coachId, userId, monthId, progressDa
   return progress
 }
 
+// Batch management
+const createBatch = async (coachId, batchData) => {
+  const coach = await coachRepository.findCoachProfileById(coachId)
+  if (!coach) {
+    throw new Error("Coach profile not found")
+  }
+
+  // Validate batch data
+  if (batchData.startTime >= batchData.endTime) {
+    throw new Error("End time must be after start time")
+  }
+
+  // Create the batch
+  return await coachRepository.createCoachBatch({
+    ...batchData,
+    coachId,
+  })
+}
+
+const getBatchById = async (batchId) => {
+  const batch = await coachRepository.findCoachBatchById(batchId)
+  if (!batch) {
+    throw new Error("Batch not found")
+  }
+  return batch
+}
+
+const getCoachBatches = async (coachId) => {
+  const coach = await coachRepository.findCoachProfileById(coachId)
+  if (!coach) {
+    throw new Error("Coach profile not found")
+  }
+
+  return await coachRepository.findCoachBatches(coachId)
+}
+
+const updateBatch = async (batchId, updateData) => {
+  const batch = await coachRepository.findCoachBatchById(batchId)
+  if (!batch) {
+    throw new Error("Batch not found")
+  }
+
+  if (updateData.startTime && updateData.endTime && updateData.startTime >= updateData.endTime) {
+    throw new Error("End time must be after start time")
+  }
+
+  return await coachRepository.updateCoachBatch(batchId, updateData)
+}
+
+const deleteBatch = async (batchId) => {
+  const batch = await coachRepository.findCoachBatchById(batchId)
+  if (!batch) {
+    throw new Error("Batch not found")
+  }
+
+  return await coachRepository.deleteCoachBatch(batchId)
+}
+
+// Batch student management
+const getBatchStudents = async (batchId) => {
+  const batch = await coachRepository.findCoachBatchById(batchId)
+  if (!batch) {
+    throw new Error("Batch not found")
+  }
+
+  return await coachRepository.findStudentsByBatch(batchId)
+}
+
+const addStudentToBatch = async (batchId, userId, studentData = {}) => {
+  const batch = await coachRepository.findCoachBatchById(batchId)
+  if (!batch) {
+    throw new Error("Batch not found")
+  }
+
+  return await coachRepository.addStudentToBatch(batchId, userId, batch.coachId, studentData)
+}
+
+const removeStudentFromBatch = async (batchId, userId) => {
+  const batch = await coachRepository.findCoachBatchById(batchId)
+  if (!batch) {
+    throw new Error("Batch not found")
+  }
+
+  return await coachRepository.removeStudentFromBatch(batchId, userId)
+}
+
+// Batch payment management
+const createBatchPayment = async (batchId, userId, paymentData) => {
+  const batch = await coachRepository.findCoachBatchById(batchId)
+  if (!batch) {
+    throw new Error("Batch not found")
+  }
+
+  // Check if student is in the batch
+  const student = await coachRepository.findStudentsByBatch(batchId)
+  const isStudentInBatch = student.some((s) => s.userId === userId)
+
+  if (!isStudentInBatch) {
+    throw new Error("Student is not enrolled in this batch")
+  }
+
+  return await coachRepository.createBatchPayment({
+    ...paymentData,
+    batchId,
+    userId,
+    coachId: batch.coachId,
+    paymentType: batch.feeType === "monthly" ? "monthly" : "session",
+  })
+}
+
+const getBatchPayments = async (batchId) => {
+  const batch = await coachRepository.findCoachBatchById(batchId)
+  if (!batch) {
+    throw new Error("Batch not found")
+  }
+
+  return await coachRepository.findBatchPayments(batchId)
+}
+
 module.exports = {
   getCoachProfile,
   getCoachBySupplier,
@@ -242,12 +310,6 @@ module.exports = {
   deleteCoachProfile,
   getNearbyCoaches,
   addCoachCertification,
-
-  // Weekly slot management
-  createWeeklySlots,
-  getCoachWeeklySchedule,
-  updateWeeklySlot,
-  deleteWeeklySlot,
 
   // Student management
   addStudent,
@@ -259,4 +321,20 @@ module.exports = {
   updateMonthlyMetrics,
   getStudentMonthlyProgress,
   updateStudentMonthlyProgress,
+
+  // Add the new batch functions
+  createBatch,
+  getBatchById,
+  getCoachBatches,
+  updateBatch,
+  deleteBatch,
+
+  // Add the new batch student functions
+  getBatchStudents,
+  addStudentToBatch,
+  removeStudentFromBatch,
+
+  // Add the new batch payment functions
+  createBatchPayment,
+  getBatchPayments,
 }
