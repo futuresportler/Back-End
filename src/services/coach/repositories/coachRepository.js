@@ -144,8 +144,8 @@ const addStudentToBatch = async (batchId, userId, coachId, studentData = {}) => 
   }
 
   // Update batch current students count
-  await batch.update({
-    currentStudents: sequelize.literal("currentStudents + 1"),
+  await updateCoachBatch(batchId, {
+    currentStudents: batch.currentStudents + 1,
   })
 
   return student
@@ -164,8 +164,8 @@ const removeStudentFromBatch = async (batchId, userId) => {
   // Update batch current students count
   const batch = await CoachBatch.findByPk(batchId)
   if (batch) {
-    await batch.update({
-      currentStudents: sequelize.literal("currentStudents - 1"),
+    await updateCoachBatch(batchId, {
+      currentStudents: batch.currentStudents - 1,
     })
   }
 
