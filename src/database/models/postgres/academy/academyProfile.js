@@ -38,7 +38,7 @@ module.exports = (sequelize) => {
       },
       managerId: {
         type: DataTypes.UUID,
-        allowNull: false,
+        allowNull: true,
         references: {
           model: "Suppliers",
           key: "supplierId",
@@ -147,7 +147,7 @@ module.exports = (sequelize) => {
       },
       trailBookable: {
         type: DataTypes.BOOLEAN,
-        defaultValue: false,
+        defaultValue: false,  
         allowNull: false,
       },
       cctv: {
@@ -159,6 +159,13 @@ module.exports = (sequelize) => {
       isVerified: {
         type: DataTypes.BOOLEAN,
         defaultValue: false,
+        allowNull: false,
+      },
+
+      // Priority for sorting
+      priority: {
+        type: DataTypes.JSON,
+        defaultValue: { value: 0, reason: "standard" },
         allowNull: false,
       },
     },

@@ -1,5 +1,5 @@
 // models/postgres/coachProfile.js (Main Coach Table)
-const { DataTypes } = require("sequelize")
+const { DataTypes } = require("sequelize");
 
 module.exports = (sequelize) => {
   return sequelize.define(
@@ -106,10 +106,16 @@ module.exports = (sequelize) => {
         type: DataTypes.ENUM("active", "inactive", "suspended"),
         defaultValue: "active",
       },
+      // Priority for sorting
+      priority: {
+        type: DataTypes.JSON,
+        defaultValue: { value: 0, reason: "standard" },
+        allowNull: false,
+      },
     },
     {
       timestamps: true,
       paranoid: true,
-    },
-  )
-}
+    }
+  );
+};

@@ -71,6 +71,53 @@ const addCertification = async (req, res) => {
   }
 };
 
+const getAllCoaches = async (req, res) => {
+  try {
+    const {
+      city,
+      sport,
+      rating,
+      ageGroup,
+      classType,
+      minPrice,
+      maxPrice,
+      experience,
+      page = 1,
+      limit = 20,
+      latitude,
+      longitude,
+      radius,
+      sortBy = "priority",
+    } = req.query;
+
+    const filters = {
+      page: Number.parseInt(page),
+      limit: Number.parseInt(limit),
+      sortBy,
+    };
+
+    // Add filters if they exist
+    if (city) filters.city = city;
+    if (sport) filters.sport = sport;
+    if (rating) filters.minRating = Number.parseFloat(rating);
+    if (ageGroup) filters.ageGroup = ageGroup;
+    if (classType) filters.classType = classType;
+    if (minPrice) filters.minPrice = Number.parseFloat(minPrice);
+    if (maxPrice) filters.maxPrice = Number.parseFloat(maxPrice);
+    if (experience) filters.minExperience = Number.parseInt(experience);
+    if (latitude && longitude) {
+      filters.latitude = Number.parseFloat(latitude);
+      filters.longitude = Number.parseFloat(longitude);
+      filters.radius = radius ? Number.parseFloat(radius) : 5000; // Default 5km
+    }
+
+    const coaches = await coachService.searchCoaches(filters);
+    successResponse(res, "Coaches fetched successfully", coaches);
+  } catch (error) {
+    errorResponse(res, error.message || "Failed to fetch coaches", error);
+  }
+};
+
 // Batch controllers
 const createBatch = async (req, res) => {
   try {
@@ -180,6 +227,17 @@ const getBatchPayments = async (req, res) => {
   }
 };
 
+const searchCoaches = async (req, res) => {
+  try {
+    const filters = req.query;
+    const result = await coachService.searchCoaches(filters);
+    return successResponse(res, "Coaches fetched successfully", result);
+  } catch (error) {
+    console.error("Error in searchCoaches:", error);
+    return errorResponse(res, error.message);
+  }
+};
+
 module.exports = {
   getMyProfile,
   getProfile,
@@ -187,6 +245,7 @@ module.exports = {
   deleteProfile,
   getNearbyCoaches,
   addCertification,
+  getAllCoaches,
 
   // Add the new batch controller functions
   createBatch,
@@ -203,4 +262,5 @@ module.exports = {
   // Add the new batch payment controller functions
   createBatchPayment,
   getBatchPayments,
+  searchCoaches,
 };
