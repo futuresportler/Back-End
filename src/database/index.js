@@ -57,6 +57,8 @@ const TurfPayment = require("./models/postgres/turf/turfPayment")(sequelize);
 const SlotRequest = require("./models/postgres/turf/slotRequest")(sequelize);
 const TurfMetric = require("./models/postgres/turf/turfMetric")(sequelize);
 
+// Session models will be initialized dynamically in the session service
+
 // Define Associations
 const defineAssociations = () => {
   // Supplier -> Profile Relationships (One-to-One for Coach)

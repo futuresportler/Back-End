@@ -3,33 +3,26 @@ const router = express.Router();
 
 // Import routes
 const userRoutes = require("./routes/user.routes");
-const adminRoutes = require("./routes/admin.routes");
-const academyRoutes = require("./routes/academy.routes");
-const coachRoutes = require("./routes/coach.routes");
-const turfRoutes = require("./routes/turf.routes");
 const supplierRoutes = require("./routes/supplier.routes");
+const coachRoutes = require("./routes/coach.routes");
+const academyRoutes = require("./routes/academy.routes");
+const turfRoutes = require("./routes/turf.routes");
 const groundRoutes = require("./routes/ground.routes");
-const chatbotRoutes = require("./routes/chatbot.routes");
 const searchRoutes = require("./routes/search.routes");
-
-// Import middleware
-const errorMiddleware = require("./middlewares/error.middleware");
+const adminRoutes = require("./routes/admin.routes");
+const chatbotRoutes = require("./routes/chatbot.routes");
+const sessionRoutes = require("./routes/session.routes");
 
 // Mount routes
 router.use("/users", userRoutes);
-router.use("/admin", adminRoutes);
-router.use("/academies", academyRoutes);
-router.use("/coaches", coachRoutes);
-router.use("/turfs", turfRoutes);
 router.use("/suppliers", supplierRoutes);
-router.use("/", groundRoutes); // Mount ground routes at the root level
-router.use("/", chatbotRoutes);
+router.use("/coaches", coachRoutes);
+router.use("/academies", academyRoutes);
+router.use("/turfs", turfRoutes);
+router.use("/grounds", groundRoutes);
 router.use("/search", searchRoutes);
-// Error handling middleware
-if (errorMiddleware && typeof errorMiddleware === "function") {
-  router.use(errorMiddleware);
-} else {
-  console.warn("Warning: errorMiddleware is not a function, skipping...");
-}
+router.use("/admin", adminRoutes);
+router.use("/chatbot", chatbotRoutes);
+router.use("/sessions", sessionRoutes);
 
 module.exports = router;
