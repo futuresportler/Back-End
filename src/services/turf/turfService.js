@@ -1,37 +1,41 @@
-const turfRepository = require("./repositories/turfRepository")
-const { SupplierService } = require("../supplier/index")
-const { v4: uuidv4 } = require("uuid")
-const slotGenerationService = require("./slotGenerationService")
+const turfRepository = require("./repositories/turfRepository");
+const { SupplierService } = require("../supplier/index");
+const { v4: uuidv4 } = require("uuid");
+const slotGenerationService = require("./slotGenerationService");
+const turfSearchRepository = require("./repositories/turfSearchRepository");
 
 const createTurfProfile = async (supplierId, profileData) => {
-  const supplier = await SupplierService.getSupplierByModule(supplierId, "turf")
+  const supplier = await SupplierService.getSupplierByModule(
+    supplierId,
+    "turf"
+  );
   if (!supplier) {
-    throw new Error("Supplier not found or not configured for turf")
+    throw new Error("Supplier not found or not configured for turf");
   }
 
   // Format location data
   const location = {
     type: "Point",
     coordinates: [profileData.longitude || 0, profileData.latitude || 0],
-  }
+  };
 
   return await turfRepository.createTurfProfile({
     ...profileData,
     supplierId,
     turfId: uuidv4(),
     location,
-  })
-}
+  });
+};
 
 const getTurfProfile = async (turfProfileId) => {
-  const profile = await turfRepository.findTurfProfileById(turfProfileId)
-  if (!profile) throw new Error("Turf profile not found")
-  return profile
-}
+  const profile = await turfRepository.findTurfProfileById(turfProfileId);
+  if (!profile) throw new Error("Turf profile not found");
+  return profile;
+};
 
 const getTurfsBySupplier = async (supplierId) => {
-  return await turfRepository.findTurfsBySupplierId(supplierId)
-}
+  return await turfRepository.findTurfsBySupplierId(supplierId);
+};
 
 const updateTurfProfile = async (turfProfileId, updateData) => {
   // If location data is provided, format it
@@ -39,58 +43,63 @@ const updateTurfProfile = async (turfProfileId, updateData) => {
     updateData.location = {
       type: "Point",
       coordinates: [updateData.longitude, updateData.latitude],
-    }
-    delete updateData.latitude
-    delete updateData.longitude
+    };
+    delete updateData.latitude;
+    delete updateData.longitude;
   }
 
-  const updated = await turfRepository.updateTurfProfile(turfProfileId, updateData)
-  if (!updated) throw new Error("Turf profile not found")
-  return updated
-}
+  const updated = await turfRepository.updateTurfProfile(
+    turfProfileId,
+    updateData
+  );
+  if (!updated) throw new Error("Turf profile not found");
+  return updated;
+};
 
 const deleteTurfProfile = async (turfProfileId) => {
-  const deleted = await turfRepository.deleteTurfProfile(turfProfileId)
-  if (!deleted) throw new Error("Turf profile not found")
+  const deleted = await turfRepository.deleteTurfProfile(turfProfileId);
+  if (!deleted) throw new Error("Turf profile not found");
 
   // Check if supplier has other turfs
-  const remainingTurfs = await turfRepository.findTurfsBySupplierId(deleted.supplierId)
+  const remainingTurfs = await turfRepository.findTurfsBySupplierId(
+    deleted.supplierId
+  );
   if (remainingTurfs.length === 0) {
-    await SupplierService.updateSupplierModule(deleted.supplierId, "none")
+    await SupplierService.updateSupplierModule(deleted.supplierId, "none");
   }
-  return deleted
-}
+  return deleted;
+};
 
 const getNearbyTurfs = async (latitude, longitude, radius = 5000) => {
-  if (!latitude || !longitude) throw new Error("Coordinates are required")
-  return await turfRepository.findTurfsNearby(latitude, longitude, radius)
-}
+  if (!latitude || !longitude) throw new Error("Coordinates are required");
+  return await turfRepository.findTurfsNearby(latitude, longitude, radius);
+};
 
 const addTurfImage = async (turfProfileId, imageUrl, isMainImage = false) => {
-  const profile = await turfRepository.findTurfProfileById(turfProfileId)
-  if (!profile) throw new Error("Turf profile not found")
+  const profile = await turfRepository.findTurfProfileById(turfProfileId);
+  if (!profile) throw new Error("Turf profile not found");
 
-  const updateData = {}
+  const updateData = {};
 
   if (isMainImage) {
-    updateData.mainImage = imageUrl
+    updateData.mainImage = imageUrl;
   } else {
-    const updatedImages = [...(profile.images || []), imageUrl]
-    updateData.images = updatedImages
+    const updatedImages = [...(profile.images || []), imageUrl];
+    updateData.images = updatedImages;
   }
 
-  return await turfRepository.updateTurfProfile(turfProfileId, updateData)
-}
+  return await turfRepository.updateTurfProfile(turfProfileId, updateData);
+};
 
 const getTurfDashboard = async (turfId) => {
-  const turf = await turfRepository.findTurfProfileById(turfId)
-  if (!turf) throw new Error("Turf not found")
+  const turf = await turfRepository.findTurfProfileById(turfId);
+  if (!turf) throw new Error("Turf not found");
 
-  const quickInfo = await turfRepository.getTurfQuickInfo(turfId)
-  const upcomingBookings = await turfRepository.getUpcomingBookings(turfId)
-  const todaySchedule = await turfRepository.getTodaySchedule(turfId)
-  const bookingRequests = await turfRepository.getBookingRequests(turfId)
-  const customerReviews = await turfRepository.getCustomerReviews(turfId)
+  const quickInfo = await turfRepository.getTurfQuickInfo(turfId);
+  const upcomingBookings = await turfRepository.getUpcomingBookings(turfId);
+  const todaySchedule = await turfRepository.getTodaySchedule(turfId);
+  const bookingRequests = await turfRepository.getBookingRequests(turfId);
+  const customerReviews = await turfRepository.getCustomerReviews(turfId);
 
   return {
     overview: {
@@ -115,18 +124,21 @@ const getTurfDashboard = async (turfId) => {
     todaySchedule,
     bookingRequests,
     customerReviews,
-  }
-}
+  };
+};
 
 const handleBookingRequest = async (requestId, action) => {
   if (!["accept", "decline"].includes(action)) {
-    throw new Error("Invalid action. Must be 'accept' or 'decline'")
+    throw new Error("Invalid action. Must be 'accept' or 'decline'");
   }
 
-  const status = action === "accept" ? "approved" : "rejected"
-  const updated = await turfRepository.updateBookingRequestStatus(requestId, status)
+  const status = action === "accept" ? "approved" : "rejected";
+  const updated = await turfRepository.updateBookingRequestStatus(
+    requestId,
+    status
+  );
 
-  if (!updated) throw new Error("Booking request not found")
+  if (!updated) throw new Error("Booking request not found");
 
   // If accepted, create a slot booking
   if (status === "approved") {
@@ -134,8 +146,8 @@ const handleBookingRequest = async (requestId, action) => {
     // This would depend on your slot booking implementation
   }
 
-  return updated
-}
+  return updated;
+};
 
 const addReview = async (turfId, userId, reviewData) => {
   const review = await turfRepository.addTurfReview({
@@ -144,50 +156,54 @@ const addReview = async (turfId, userId, reviewData) => {
     rating: reviewData.rating,
     comment: reviewData.comment,
     reviewId: uuidv4(),
-  })
+  });
 
-  return review
-}
+  return review;
+};
 
 // New methods for ground management
 const createTurfGround = async (turfId, groundData) => {
-  const turf = await turfRepository.findTurfProfileById(turfId)
-  if (!turf) throw new Error("Turf profile not found")
+  const turf = await turfRepository.findTurfProfileById(turfId);
+  if (!turf) throw new Error("Turf profile not found");
 
   const ground = await turfRepository.createTurfGround({
     ...groundData,
     turfId,
     groundId: uuidv4(),
     status: "active",
-  })
+  });
 
   // Generate initial slots for the next 15 days
-  await slotGenerationService.generateInitialSlots(ground.groundId)
+  await slotGenerationService.generateInitialSlots(ground.groundId);
 
-  return ground
-}
+  return ground;
+};
 
 const getTurfGrounds = async (turfId) => {
-  return await turfRepository.findGroundsByTurfId(turfId)
-}
+  return await turfRepository.findGroundsByTurfId(turfId);
+};
 
 const getTurfGround = async (groundId) => {
-  const ground = await turfRepository.findGroundById(groundId)
-  if (!ground) throw new Error("Ground not found")
-  return ground
-}
+  const ground = await turfRepository.findGroundById(groundId);
+  if (!ground) throw new Error("Ground not found");
+  return ground;
+};
 
 const updateTurfGround = async (groundId, updateData) => {
-  const updated = await turfRepository.updateTurfGround(groundId, updateData)
-  if (!updated) throw new Error("Ground not found")
-  return updated
-}
+  const updated = await turfRepository.updateTurfGround(groundId, updateData);
+  if (!updated) throw new Error("Ground not found");
+  return updated;
+};
 
 const deleteTurfGround = async (groundId) => {
-  const deleted = await turfRepository.deleteTurfGround(groundId)
-  if (!deleted) throw new Error("Ground not found")
-  return deleted
-}
+  const deleted = await turfRepository.deleteTurfGround(groundId);
+  if (!deleted) throw new Error("Ground not found");
+  return deleted;
+};
+
+const searchTurfs = async (filters) => {
+  return await turfSearchRepository.searchTurfs(filters);
+};
 
 module.exports = {
   createTurfProfile,
@@ -200,10 +216,11 @@ module.exports = {
   getTurfDashboard,
   handleBookingRequest,
   addReview,
+  searchTurfs,
   // Ground management methods
   createTurfGround,
   getTurfGrounds,
   getTurfGround,
   updateTurfGround,
   deleteTurfGround,
-}
+};
