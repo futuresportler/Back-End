@@ -140,6 +140,21 @@ module.exports = (sequelize) => {
         allowNull: false,
       },
 
+      trailDuration: {
+        type: DataTypes.INTEGER,
+        allowNull: true,
+        // Example: 7 (for 7 days)
+      },
+      trailBookable: {
+        type: DataTypes.BOOLEAN,
+        defaultValue: false,
+        allowNull: false,
+      },
+      cctv: {
+        type: DataTypes.BOOLEAN,
+        defaultValue: false,
+        allowNull: false,
+      },
       // Verification
       isVerified: {
         type: DataTypes.BOOLEAN,
