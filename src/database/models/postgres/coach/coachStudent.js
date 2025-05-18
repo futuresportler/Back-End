@@ -61,6 +61,10 @@ module.exports = (sequelize) => {
         type: DataTypes.ARRAY(DataTypes.JSON),
         defaultValue: [],
       },
+      achievements: {
+        type: DataTypes.ARRAY(DataTypes.JSON),
+        defaultValue: [],
+      },
       grades: {
         type: DataTypes.JSON,
         defaultValue: {},
