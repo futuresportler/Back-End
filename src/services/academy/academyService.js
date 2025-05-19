@@ -6,6 +6,8 @@ const { SupplierService } = require("../supplier/index");
 const { v4: uuidv4 } = require("uuid");
 const { sequelize } = require("../../database");
 const academySearchRepository = require("./repositories/academySearchRepository");
+// Fix the import path - import directly from database instead of database/models
+const { AcademyStudent, AcademyProfile } = require("../../database");
 
 const createAcademyProfile = async (supplierId, profileData) => {
   const supplier = await SupplierService.getSupplierByModule(
@@ -516,6 +518,73 @@ const getOverdueFees = async () => {
   return await academyFeeRepository.getOverdueFees();
 };
 
+const getStudentAchievements = async (academyId, studentId) => {
+  const query = {};
+
+  if (academyId) {
+    query.academyId = academyId;
+  }
+
+  if (studentId) {
+    query.studentId = studentId;
+  }
+
+  const students = await AcademyStudent.findAll({
+    where: query,
+    attributes: ["studentId", "name", "academyId", "achievements"],
+    raw: true,
+  });
+
+  return students.map((student) => ({
+    studentId: student.studentId,
+    name: student.name,
+    academyId: student.academyId,
+    achievements: student.achievements || [],
+  }));
+};
+
+const getStudentFeedback = async (academyId, studentId) => {
+  const query = {};
+
+  if (academyId) {
+    query.academyId = academyId;
+  }
+
+  if (studentId) {
+    query.studentId = studentId;
+  }
+
+  const students = await AcademyStudent.findAll({
+    where: query,
+    attributes: ["studentId", "name", "academyId", "coachFeedback"],
+    raw: true,
+  });
+
+  return students.map((student) => ({
+    studentId: student.studentId,
+    name: student.name,
+    academyId: student.academyId,
+    feedback: student.coachFeedback || [],
+  }));
+};
+
+const getAcademiesByUser = async (userId) => {
+  // Find all academies where this user is enrolled as a student
+  const enrollments = await AcademyStudent.findAll({
+    where: { userId },
+    include: [
+      {
+        model: AcademyProfile,
+        as: "academy",
+        attributes: ["academyProfileId", "name", "sport", "location"],
+      },
+    ],
+  });
+
+  // Extract and return the academy information
+  return enrollments.map((enrollment) => enrollment.academy);
+};
+
 module.exports = {
   createAcademyProfile,
   getAcademyProfile,
@@ -558,4 +627,7 @@ module.exports = {
   deleteFee,
   recordFeePayment,
   getOverdueFees,
+  getStudentAchievements,
+  getStudentFeedback,
+  getAcademiesByUser,
 };

@@ -11,6 +11,12 @@ const {
 router.get("/", academyController.searchAcademies);
 router.get("/nearby", academyController.getNearbyAcademies);
 
+// New endpoint to fetch student achievements/feedback
+router.get("/students/data", authMiddleware, academyController.getStudentData);
+
+// New endpoint to fetch academies by user
+router.get("/by-user/:userId", academyController.getAcademiesByUser);
+
 // Profile routes
 router.get("/:academyProfileId", academyController.getProfile);
 router.patch(

@@ -14,9 +14,12 @@ module.exports = (sequelize) => {
         type: DataTypes.INTEGER,
         unique: true,
         allowNull: false,
-        validate: { min: 2020, max: 2100 }
-      }
+        validate: { min: 2020, max: 2100 },
+      },
     },
-    { timestamps: false }
+    {
+      timestamps: false,
+      tableName: "sport_years", // Explicitly set a different table name to avoid conflicts
+    }
   );
 };

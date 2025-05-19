@@ -1,4 +1,12 @@
-const { CoachProfile, CoachBatch, CoachStudent, CoachPayment, User, Supplier, sequelize } = require("../../../database")
+const {
+  CoachProfile,
+  CoachBatch,
+  CoachStudent,
+  CoachPayment,
+  User,
+  Supplier,
+  sequelize,
+} = require("../../../database");
 
 const findCoachProfileById = async (coachProfileId) => {
   return await CoachProfile.findByPk(coachProfileId, {
@@ -9,32 +17,32 @@ const findCoachProfileById = async (coachProfileId) => {
         attributes: ["email", "mobile_number", "profilePicture", "location"],
       },
     ],
-  })
-}
+  });
+};
 
 const findCoachBySupplierId = async (supplierId) => {
   return await CoachProfile.findOne({
     where: { supplierId },
     include: ["supplier"],
-  })
-}
+  });
+};
 
 const createCoachProfile = async (profileData) => {
-  return await CoachProfile.create(profileData)
-}
+  return await CoachProfile.create(profileData);
+};
 
 const updateCoachProfile = async (coachProfileId, updateData) => {
-  const profile = await CoachProfile.findByPk(coachProfileId)
-  if (!profile) return null
-  return await profile.update(updateData)
-}
+  const profile = await CoachProfile.findByPk(coachProfileId);
+  if (!profile) return null;
+  return await profile.update(updateData);
+};
 
 const deleteCoachProfile = async (coachProfileId) => {
-  const profile = await CoachProfile.findByPk(coachProfileId)
-  if (!profile) return null
-  await profile.destroy()
-  return profile
-}
+  const profile = await CoachProfile.findByPk(coachProfileId);
+  if (!profile) return null;
+  await profile.destroy();
+  return profile;
+};
 
 const findCoachesNearby = async (latitude, longitude, radius) => {
   return await CoachProfile.findAll({
@@ -46,15 +54,19 @@ const findCoachesNearby = async (latitude, longitude, radius) => {
           sequelize.fn(
             "ST_DWithin",
             sequelize.col("supplier.location"),
-            sequelize.fn("ST_SetSRID", sequelize.fn("ST_MakePoint", longitude, latitude), 4326),
-            radius,
+            sequelize.fn(
+              "ST_SetSRID",
+              sequelize.fn("ST_MakePoint", longitude, latitude),
+              4326
+            ),
+            radius
           ),
-          true,
+          true
         ),
       },
     ],
-  })
-}
+  });
+};
 
 // Batch related functions
 const findCoachBatchById = async (batchId) => {
@@ -67,37 +79,42 @@ const findCoachBatchById = async (batchId) => {
           {
             model: Supplier,
             as: "supplier",
-            attributes: ["email", "mobile_number", "profilePicture", "location"],
+            attributes: [
+              "email",
+              "mobile_number",
+              "profilePicture",
+              "location",
+            ],
           },
         ],
       },
     ],
-  })
-}
+  });
+};
 
 const findCoachBatches = async (coachId) => {
   return await CoachBatch.findAll({
     where: { coachId },
     order: [["createdAt", "DESC"]],
-  })
-}
+  });
+};
 
 const createCoachBatch = async (batchData) => {
-  return await CoachBatch.create(batchData)
-}
+  return await CoachBatch.create(batchData);
+};
 
 const updateCoachBatch = async (batchId, updateData) => {
-  const batch = await CoachBatch.findByPk(batchId)
-  if (!batch) return null
-  return await batch.update(updateData)
-}
+  const batch = await CoachBatch.findByPk(batchId);
+  if (!batch) return null;
+  return await batch.update(updateData);
+};
 
 const deleteCoachBatch = async (batchId) => {
-  const batch = await CoachBatch.findByPk(batchId)
-  if (!batch) return null
-  await batch.destroy()
-  return batch
-}
+  const batch = await CoachBatch.findByPk(batchId);
+  if (!batch) return null;
+  await batch.destroy();
+  return batch;
+};
 
 // Student related functions
 const findStudentsByBatch = async (batchId) => {
@@ -107,32 +124,43 @@ const findStudentsByBatch = async (batchId) => {
       {
         model: User,
         as: "student",
-        attributes: ["userId", "first_name", "last_name", "email", "profile_picture"],
+        attributes: [
+          "userId",
+          "first_name",
+          "last_name",
+          "email",
+          "profile_picture",
+        ],
       },
     ],
-  })
-}
+  });
+};
 
-const addStudentToBatch = async (batchId, userId, coachId, studentData = {}) => {
+const addStudentToBatch = async (
+  batchId,
+  userId,
+  coachId,
+  studentData = {}
+) => {
   // First, check if the batch exists and has space
-  const batch = await CoachBatch.findByPk(batchId)
-  if (!batch) throw new Error("Batch not found")
+  const batch = await CoachBatch.findByPk(batchId);
+  if (!batch) throw new Error("Batch not found");
 
   if (batch.currentStudents >= batch.maxStudents) {
-    throw new Error("Batch is full")
+    throw new Error("Batch is full");
   }
 
   // Check if student is already in this coach's roster
   let student = await CoachStudent.findOne({
     where: { coachId, userId },
-  })
+  });
 
   if (student) {
     // Update existing student record
     student = await student.update({
       batchId,
       ...studentData,
-    })
+    });
   } else {
     // Create new student record
     student = await CoachStudent.create({
@@ -140,42 +168,42 @@ const addStudentToBatch = async (batchId, userId, coachId, studentData = {}) => 
       userId,
       batchId,
       ...studentData,
-    })
+    });
   }
 
   // Update batch current students count
-  await updateCoachBatch(batchId, {
-    currentStudents: batch.currentStudents + 1,
-  })
+  await batch.update({
+    currentStudents: sequelize.literal("currentStudents + 1"),
+  });
 
-  return student
-}
+  return student;
+};
 
 const removeStudentFromBatch = async (batchId, userId) => {
   const student = await CoachStudent.findOne({
     where: { batchId, userId },
-  })
+  });
 
-  if (!student) throw new Error("Student not found in this batch")
+  if (!student) throw new Error("Student not found in this batch");
 
   // Update student record to remove batch association
-  await student.update({ batchId: null })
+  await student.update({ batchId: null });
 
   // Update batch current students count
-  const batch = await CoachBatch.findByPk(batchId)
+  const batch = await CoachBatch.findByPk(batchId);
   if (batch) {
-    await updateCoachBatch(batchId, {
-      currentStudents: batch.currentStudents - 1,
-    })
+    await batch.update({
+      currentStudents: sequelize.literal("currentStudents - 1"),
+    });
   }
 
-  return student
-}
+  return student;
+};
 
 // Payment related functions
 const createBatchPayment = async (paymentData) => {
-  return await CoachPayment.create(paymentData)
-}
+  return await CoachPayment.create(paymentData);
+};
 
 const findBatchPayments = async (batchId) => {
   return await CoachPayment.findAll({
@@ -187,8 +215,27 @@ const findBatchPayments = async (batchId) => {
       },
     ],
     order: [["createdAt", "DESC"]],
-  })
-}
+  });
+};
+
+// Update or add these methods to handle students without userId
+const findCoachStudent = async (coachId, userId) => {
+  if (!userId) return null;
+
+  return await CoachStudent.findOne({
+    where: { coachId, userId },
+  });
+};
+
+const createCoachStudent = async (studentData) => {
+  return await CoachStudent.create(studentData);
+};
+
+const updateCoachStudent = async (studentId, updateData) => {
+  const student = await CoachStudent.findByPk(studentId);
+  if (!student) return null;
+  return await student.update(updateData);
+};
 
 module.exports = {
   findCoachProfileById,
@@ -213,4 +260,7 @@ module.exports = {
   // Add the new payment functions
   createBatchPayment,
   findBatchPayments,
-}
+  findCoachStudent,
+  createCoachStudent,
+  updateCoachStudent,
+};

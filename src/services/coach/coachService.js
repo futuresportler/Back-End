@@ -1,5 +1,5 @@
 const { v4: uuidv4 } = require("uuid");
-const { sequelize } = require("../../config/database");
+const { sequelize, CoachStudent, CoachProfile } = require("../../database");
 const coachRepository = require("./repositories/coachRepository");
 const { SupplierService } = require("../supplier/index");
 // Add this import at the top of the file
@@ -290,18 +290,49 @@ const getBatchStudents = async (batchId) => {
   return await coachRepository.findStudentsByBatch(batchId);
 };
 
-const addStudentToBatch = async (batchId, userId, studentData = {}) => {
+// Updated to handle students without userId
+const addStudentToBatch = async (batchId, studentData) => {
   const batch = await coachRepository.findCoachBatchById(batchId);
   if (!batch) {
     throw new Error("Batch not found");
   }
 
-  return await coachRepository.addStudentToBatch(
-    batchId,
-    userId,
-    batch.coachId,
-    studentData
-  );
+  // Check if batch has space
+  if (batch.currentStudents >= batch.maxStudents) {
+    throw new Error("Batch is full");
+  }
+
+  let student;
+
+  // If we have a userId, check if student already exists
+  if (studentData.userId) {
+    student = await coachRepository.findCoachStudent(
+      batch.coachId,
+      studentData.userId
+    );
+  }
+
+  if (student) {
+    // Update existing student record
+    student = await coachRepository.updateCoachStudent(student.id, {
+      batchId,
+      ...studentData,
+    });
+  } else {
+    // Create new student record
+    student = await coachRepository.createCoachStudent({
+      coachId: batch.coachId,
+      batchId,
+      ...studentData,
+    });
+  }
+
+  // Update batch current students count
+  await batch.update({
+    currentStudents: sequelize.literal("currentStudents + 1"),
+  });
+
+  return student;
 };
 
 const removeStudentFromBatch = async (batchId, userId) => {
@@ -351,6 +382,74 @@ const searchCoaches = async (filters) => {
   return await coachSearchRepository.searchCoaches(filters);
 };
 
+// Add these new methods to the coachService.js file
+const getStudentAchievements = async (coachId, studentId) => {
+  const query = {};
+
+  if (coachId) {
+    query.coachId = coachId;
+  }
+
+  if (studentId) {
+    query.id = studentId; // Note: using 'id' instead of 'studentId' since that's the primary key in CoachStudent
+  }
+
+  const students = await CoachStudent.findAll({
+    where: query,
+    attributes: ["id", "name", "coachId", "achievements"],
+    raw: true,
+  });
+
+  return students.map((student) => ({
+    studentId: student.id,
+    name: student.name,
+    coachId: student.coachId,
+    achievements: student.achievements || [],
+  }));
+};
+
+const getStudentFeedback = async (coachId, studentId) => {
+  const query = {};
+
+  if (coachId) {
+    query.coachId = coachId;
+  }
+
+  if (studentId) {
+    query.id = studentId;
+  }
+
+  const students = await CoachStudent.findAll({
+    where: query,
+    attributes: ["id", "name", "coachId", "coachFeedback"],
+    raw: true,
+  });
+
+  return students.map((student) => ({
+    studentId: student.id,
+    name: student.name,
+    coachId: student.coachId,
+    feedback: student.coachFeedback || [],
+  }));
+};
+
+const getCoachesByUser = async (userId) => {
+  // Find all coaches where this user is enrolled as a student
+  const enrollments = await CoachStudent.findAll({
+    where: { userId },
+    include: [
+      {
+        model: CoachProfile,
+        as: "coach",
+        attributes: ["coachId", "name", "sport", "experience"],
+      },
+    ],
+  });
+
+  // Extract and return the coach information
+  return enrollments.map((enrollment) => enrollment.coach);
+};
+
 // Add the new function to the module.exports
 module.exports = {
   getCoachProfile,
@@ -387,4 +486,7 @@ module.exports = {
   // Add the new batch payment functions
   createBatchPayment,
   getBatchPayments,
+  getStudentAchievements,
+  getStudentFeedback,
+  getCoachesByUser,
 };
