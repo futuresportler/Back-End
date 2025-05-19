@@ -326,6 +326,110 @@ const addSessionFeedback = async (req, res) => {
   }
 };
 
+/**
+ * Get all bookings for a user across all session types
+ * @param {Object} req - Request object
+ * @param {Object} res - Response object
+ */
+const getAllUserBookings = async (req, res) => {
+  try {
+    const { user_id } = req.params;
+    const filters = req.query;
+
+    if (!user_id) {
+      return errorResponse(res, 400, "Missing required parameter: user_id");
+    }
+
+    const bookings = await sessionService.getAllUserBookings(user_id, filters);
+    return success(res, 200, "User bookings retrieved successfully", bookings);
+  } catch (err) {
+    error("Error getting user bookings:", err);
+    return errorResponse(res, 500, err.message);
+  }
+};
+
+/**
+ * Get latest completed sessions for a user
+ * @param {Object} req - Request object
+ * @param {Object} res - Response object
+ */
+const getLatestCompletedSessions = async (req, res) => {
+  try {
+    const { user_id } = req.params;
+    const { academy_id, coach_id, limit } = req.query;
+
+    if (!user_id) {
+      return errorResponse(res, 400, "Missing required parameter: user_id");
+    }
+
+    // User must provide either academy_id or coach_id
+    if (!academy_id && !coach_id) {
+      return errorResponse(
+        res,
+        400,
+        "Either academy_id or coach_id must be provided"
+      );
+    }
+
+    const sessions = await sessionService.getLatestCompletedSessions(
+      user_id,
+      academy_id,
+      coach_id,
+      Number.parseInt(limit) || 10
+    );
+    return success(
+      res,
+      200,
+      "Latest completed sessions retrieved successfully",
+      sessions
+    );
+  } catch (err) {
+    error("Error getting latest completed sessions:", err);
+    return errorResponse(res, 500, err.message);
+  }
+};
+
+/**
+ * Get upcoming sessions for a user
+ * @param {Object} req - Request object
+ * @param {Object} res - Response object
+ */
+const getUpcomingSessions = async (req, res) => {
+  try {
+    const { user_id } = req.params;
+    const { academy_id, coach_id, limit } = req.query;
+
+    if (!user_id) {
+      return errorResponse(res, 400, "Missing required parameter: user_id");
+    }
+
+    // User must provide either academy_id or coach_id
+    if (!academy_id && !coach_id) {
+      return errorResponse(
+        res,
+        400,
+        "Either academy_id or coach_id must be provided"
+      );
+    }
+
+    const sessions = await sessionService.getUpcomingSessions(
+      user_id,
+      academy_id,
+      coach_id,
+      Number.parseInt(limit) || 10
+    );
+    return success(
+      res,
+      200,
+      "Upcoming sessions retrieved successfully",
+      sessions
+    );
+  } catch (err) {
+    error("Error getting upcoming sessions:", err);
+    return errorResponse(res, 500, err.message);
+  }
+};
+
 module.exports = {
   requestSession,
   confirmSessionRequest,
@@ -335,4 +439,7 @@ module.exports = {
   cancelSession,
   completeSession,
   addSessionFeedback,
+  getAllUserBookings,
+  getLatestCompletedSessions,
+  getUpcomingSessions,
 };

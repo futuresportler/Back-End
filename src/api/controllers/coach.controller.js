@@ -181,9 +181,9 @@ const getBatchStudents = async (req, res) => {
 
 const addStudentToBatch = async (req, res) => {
   try {
+    // Now we pass the entire req.body instead of just req.body.userId
     const student = await coachService.addStudentToBatch(
       req.params.batchId,
-      req.body.userId,
       req.body
     );
     successResponse(res, "Student added to batch successfully", student);
@@ -238,6 +238,49 @@ const searchCoaches = async (req, res) => {
   }
 };
 
+// New endpoint to fetch student achievements or feedback
+const getStudentData = async (req, res) => {
+  try {
+    const { type, coachId, studentId } = req.query;
+
+    if (!type || (type !== "achievements" && type !== "feedback")) {
+      return errorResponse(
+        res,
+        "Invalid data type. Must be 'achievements' or 'feedback'",
+        null,
+        400
+      );
+    }
+
+    let data;
+    if (type === "achievements") {
+      data = await coachService.getStudentAchievements(coachId, studentId);
+    } else {
+      data = await coachService.getStudentFeedback(coachId, studentId);
+    }
+
+    successResponse(res, `Student ${type} fetched successfully`, data);
+  } catch (error) {
+    errorResponse(res, error.message, error);
+  }
+};
+
+// New endpoint to fetch coaches by user
+const getCoachesByUser = async (req, res) => {
+  try {
+    const { userId } = req.params;
+
+    if (!userId) {
+      return errorResponse(res, "User ID is required", null, 400);
+    }
+
+    const coaches = await coachService.getCoachesByUser(userId);
+    successResponse(res, "User's coaches fetched successfully", coaches);
+  } catch (error) {
+    errorResponse(res, error.message, error);
+  }
+};
+
 module.exports = {
   getMyProfile,
   getProfile,
@@ -263,4 +306,8 @@ module.exports = {
   createBatchPayment,
   getBatchPayments,
   searchCoaches,
+
+  // New endpoints
+  getStudentData,
+  getCoachesByUser,
 };

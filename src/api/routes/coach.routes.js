@@ -13,6 +13,12 @@ const {
 // Add this new route
 router.get("/", coachController.searchCoaches);
 
+// New endpoint to fetch student achievements/feedback
+router.get("/students/data", authMiddleware, coachController.getStudentData);
+
+// New endpoint to fetch coaches by user
+router.get("/by-user/:userId", coachController.getCoachesByUser);
+
 // Profile routes
 router.get("/nearby", coachController.getNearbyCoaches);
 router.get("/me", authMiddleware, coachController.getMyProfile);

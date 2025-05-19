@@ -460,6 +460,49 @@ const searchAcademies = async (req, res) => {
   }
 };
 
+// New endpoint to fetch student achievements or feedback
+const getStudentData = async (req, res) => {
+  try {
+    const { type, academyId, studentId } = req.query;
+
+    if (!type || (type !== "achievements" && type !== "feedback")) {
+      return errorResponse(
+        res,
+        "Invalid data type. Must be 'achievements' or 'feedback'",
+        null,
+        400
+      );
+    }
+
+    let data;
+    if (type === "achievements") {
+      data = await AcademyService.getStudentAchievements(academyId, studentId);
+    } else {
+      data = await AcademyService.getStudentFeedback(academyId, studentId);
+    }
+
+    successResponse(res, `Student ${type} fetched successfully`, data);
+  } catch (error) {
+    errorResponse(res, error.message, error);
+  }
+};
+
+// New endpoint to fetch academies by user
+const getAcademiesByUser = async (req, res) => {
+  try {
+    const { userId } = req.params;
+
+    if (!userId) {
+      return errorResponse(res, "User ID is required", null, 400);
+    }
+
+    const academies = await AcademyService.getAcademiesByUser(userId);
+    successResponse(res, "User's academies fetched successfully", academies);
+  } catch (error) {
+    errorResponse(res, error.message, error);
+  }
+};
+
 module.exports = {
   createProfile,
   getMyProfiles,
@@ -503,4 +546,7 @@ module.exports = {
   recordPayment,
   getOverdueFees,
   searchAcademies,
+  // New endpoints
+  getStudentData,
+  getAcademiesByUser,
 };

@@ -1,8 +1,8 @@
 // models/postgres/coachStudent.js
-const { DataTypes } = require("sequelize")
+const { DataTypes } = require("sequelize");
 
 module.exports = (sequelize) => {
-  return sequelize.define(
+  const CoachStudent = sequelize.define(
     "CoachStudent",
     {
       id: {
@@ -13,65 +13,71 @@ module.exports = (sequelize) => {
       coachId: {
         type: DataTypes.UUID,
         allowNull: false,
-        references: {
-          model: "CoachProfiles",
-          key: "coachId",
-        },
-        onDelete: "CASCADE",
       },
       userId: {
         type: DataTypes.UUID,
-        allowNull: false,
-        references: {
-          model: "User", // Changed from "Users" to "User"
-          key: "userId",
-        },
-        onDelete: "CASCADE",
+        allowNull: true, // Changed from false to true to make it optional
       },
       batchId: {
         type: DataTypes.UUID,
         allowNull: true,
-        references: {
-          model: "CoachBatches",
-          key: "batchId",
-        },
-        onDelete: "SET NULL",
       },
-      enrollmentDate: {
-        type: DataTypes.DATEONLY,
-        defaultValue: DataTypes.NOW,
-      },
-      status: {
-        type: DataTypes.ENUM("active", "completed", "paused"),
-        defaultValue: "active",
-      },
-      source: {
+      // Add fields for students without userId (similar to AcademyStudent)
+      name: {
         type: DataTypes.STRING,
         allowNull: true,
       },
-      goals: {
+      email: {
+        type: DataTypes.STRING,
+        allowNull: true,
+      },
+      phone: {
+        type: DataTypes.STRING,
+        allowNull: true,
+      },
+      age: {
+        type: DataTypes.INTEGER,
+        allowNull: true,
+      },
+      gender: {
+        type: DataTypes.ENUM("male", "female", "other"),
+        allowNull: true,
+      },
+      sport: {
+        type: DataTypes.STRING,
+        allowNull: true,
+      },
+      level: {
+        type: DataTypes.STRING,
+        allowNull: true,
+      },
+      guardianName: {
+        type: DataTypes.STRING,
+        allowNull: true,
+      },
+      guardianMobile: {
+        type: DataTypes.STRING,
+        allowNull: true,
+      },
+      address: {
         type: DataTypes.TEXT,
         allowNull: true,
       },
-      progress: {
-        type: DataTypes.JSON,
-        defaultValue: {},
+      joinDate: {
+        type: DataTypes.DATE,
+        defaultValue: DataTypes.NOW,
       },
-      feedback: {
-        type: DataTypes.ARRAY(DataTypes.JSON),
+      status: {
+        type: DataTypes.ENUM("active", "inactive", "suspended"),
+        defaultValue: "active",
+      },
+      achievements: {
+        type: DataTypes.JSONB,
         defaultValue: [],
       },
-      grades: {
-        type: DataTypes.JSON,
-        defaultValue: {},
-      },
-      totalSessions: {
-        type: DataTypes.INTEGER,
-        defaultValue: 0,
-      },
-      completedSessions: {
-        type: DataTypes.INTEGER,
-        defaultValue: 0,
+      coachFeedback: {
+        type: DataTypes.JSONB,
+        defaultValue: [],
       },
       notes: {
         type: DataTypes.TEXT,
@@ -81,14 +87,22 @@ module.exports = (sequelize) => {
     {
       timestamps: true,
       indexes: [
+        // Modified unique index to only apply when userId is not null
         {
-          fields: ["coachId", "userId"],
           unique: true,
+          fields: ["coachId", "userId"],
+          where: {
+            userId: {
+              [sequelize.Sequelize.Op.ne]: null,
+            },
+          },
         },
         {
           fields: ["batchId"],
         },
       ],
-    },
-  )
-}
+    }
+  );
+
+  return CoachStudent;
+};

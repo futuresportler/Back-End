@@ -1,6 +1,7 @@
 const { sequelize } = require("../../database");
 const { info, error } = require("../../config/logging");
 const { Op } = require("sequelize");
+const moment = require("moment");
 
 // Session models
 let AcademyBatchSession, AcademyProgramSession, CoachSession, TurfSession;
@@ -476,6 +477,430 @@ const addSessionFeedback = async (service, session_id, feedback, rating) => {
   }
 };
 
+/**
+ * Get all bookings for a user across all session types
+ * @param {string} user_id - User ID
+ * @param {Object} filters - Filters for bookings
+ * @returns {Array} - User's bookings across all session types
+ */
+const getAllUserBookings = async (user_id, filters = {}) => {
+  try {
+    // Build where clause for all session types
+    const where = {
+      user_id,
+    };
+
+    // Add status filter
+    if (filters.status) {
+      if (filters.status === "booked") {
+        where.is_cancelled = false;
+        where.is_completed = false;
+      } else if (filters.status === "completed") {
+        where.is_completed = true;
+      } else if (filters.status === "cancelled") {
+        where.is_cancelled = true;
+      }
+    }
+
+    // Add date filter
+    if (filters.startDate) {
+      where.date = {
+        [Op.gte]: filters.startDate,
+      };
+    }
+
+    if (filters.endDate) {
+      where.date = {
+        ...where.date,
+        [Op.lte]: filters.endDate,
+      };
+    }
+
+    // Get sessions from all tables
+    const [
+      academyBatchSessions,
+      academyProgramSessions,
+      coachSessions,
+      turfSessions,
+    ] = await Promise.all([
+      AcademyBatchSession.findAll({
+        where,
+        include: [
+          {
+            model: sequelize.models.AcademyBatch,
+            as: "batch",
+            attributes: ["id", "name", "description"],
+            include: [
+              {
+                model: sequelize.models.AcademyProfile,
+                as: "academy",
+                attributes: ["id", "name", "sport", "location"],
+              },
+            ],
+          },
+        ],
+        limit: filters.limit || 100,
+        offset: filters.offset || 0,
+      }),
+      AcademyProgramSession.findAll({
+        where,
+        include: [
+          {
+            model: sequelize.models.AcademyProgram,
+            as: "program",
+            attributes: ["id", "name", "description"],
+            include: [
+              {
+                model: sequelize.models.AcademyProfile,
+                as: "academy",
+                attributes: ["id", "name", "sport", "location"],
+              },
+            ],
+          },
+        ],
+        limit: filters.limit || 100,
+        offset: filters.offset || 0,
+      }),
+      CoachSession.findAll({
+        where,
+        include: [
+          {
+            model: sequelize.models.CoachBatch,
+            as: "batch",
+            attributes: ["id", "name", "description"],
+            include: [
+              {
+                model: sequelize.models.CoachProfile,
+                as: "coach",
+                attributes: [
+                  "id",
+                  "name",
+                  "sport",
+                  "experience",
+                  "specialization",
+                ],
+              },
+            ],
+          },
+        ],
+        limit: filters.limit || 100,
+        offset: filters.offset || 0,
+      }),
+      TurfSession.findAll({
+        where,
+        include: [
+          {
+            model: sequelize.models.TurfGround,
+            as: "ground",
+            attributes: ["id", "name", "type", "size"],
+            include: [
+              {
+                model: sequelize.models.TurfProfile,
+                as: "turf",
+                attributes: ["id", "name", "location"],
+              },
+            ],
+          },
+        ],
+        limit: filters.limit || 100,
+        offset: filters.offset || 0,
+      }),
+    ]);
+
+    // Add session type to each session
+    const formattedAcademyBatchSessions = academyBatchSessions.map(
+      (session) => {
+        const plainSession = session.get({ plain: true });
+        return { ...plainSession, sessionType: "academy_batch" };
+      }
+    );
+
+    const formattedAcademyProgramSessions = academyProgramSessions.map(
+      (session) => {
+        const plainSession = session.get({ plain: true });
+        return { ...plainSession, sessionType: "academy_program" };
+      }
+    );
+
+    const formattedCoachSessions = coachSessions.map((session) => {
+      const plainSession = session.get({ plain: true });
+      return { ...plainSession, sessionType: "coach" };
+    });
+
+    const formattedTurfSessions = turfSessions.map((session) => {
+      const plainSession = session.get({ plain: true });
+      return { ...plainSession, sessionType: "turf" };
+    });
+
+    // Combine all sessions
+    const allSessions = [
+      ...formattedAcademyBatchSessions,
+      ...formattedAcademyProgramSessions,
+      ...formattedCoachSessions,
+      ...formattedTurfSessions,
+    ];
+
+    // Sort by date and time
+    allSessions.sort((a, b) => {
+      const dateA = new Date(`${a.date}T${a.start_time}`);
+      const dateB = new Date(`${b.date}T${b.start_time}`);
+      return dateA - dateB;
+    });
+
+    return allSessions;
+  } catch (err) {
+    error("Error getting all user bookings:", err);
+    throw err;
+  }
+};
+
+/**
+ * Get latest completed sessions for a user
+ * @param {string} user_id - User ID
+ * @param {string} academy_id - Academy ID (optional)
+ * @param {string} coach_id - Coach ID (optional)
+ * @param {number} limit - Maximum number of sessions to return
+ * @returns {Array} - Latest completed sessions
+ */
+const getLatestCompletedSessions = async (
+  user_id,
+  academy_id,
+  coach_id,
+  limit = 10
+) => {
+  try {
+    // Build where clause
+    const where = {
+      user_id,
+      is_completed: true,
+    };
+
+    let sessions = [];
+
+    if (academy_id) {
+      // Get academy batch sessions
+      const batchSessions = await AcademyBatchSession.findAll({
+        where: {
+          ...where,
+          academy_id,
+        },
+        include: [
+          {
+            model: sequelize.models.AcademyBatch,
+            as: "batch",
+            attributes: ["id", "name", "description"],
+          },
+        ],
+        order: [
+          ["date", "DESC"],
+          ["end_time", "DESC"],
+        ],
+        limit,
+      });
+
+      // Get academy program sessions
+      const programSessions = await AcademyProgramSession.findAll({
+        where: {
+          ...where,
+          academy_id,
+        },
+        include: [
+          {
+            model: sequelize.models.AcademyProgram,
+            as: "program",
+            attributes: ["id", "name", "description"],
+          },
+        ],
+        order: [
+          ["date", "DESC"],
+          ["end_time", "DESC"],
+        ],
+        limit,
+      });
+
+      // Add session type to each session
+      const formattedBatchSessions = batchSessions.map((session) => {
+        const plainSession = session.get({ plain: true });
+        return { ...plainSession, sessionType: "academy_batch" };
+      });
+
+      const formattedProgramSessions = programSessions.map((session) => {
+        const plainSession = session.get({ plain: true });
+        return { ...plainSession, sessionType: "academy_program" };
+      });
+
+      // Combine academy sessions
+      sessions = [...formattedBatchSessions, ...formattedProgramSessions];
+    } else if (coach_id) {
+      // Get coach sessions
+      const coachSessions = await CoachSession.findAll({
+        where: {
+          ...where,
+          coach_id,
+        },
+        include: [
+          {
+            model: sequelize.models.CoachBatch,
+            as: "batch",
+            attributes: ["id", "name", "description"],
+          },
+        ],
+        order: [
+          ["date", "DESC"],
+          ["end_time", "DESC"],
+        ],
+        limit,
+      });
+
+      // Add session type to each session
+      sessions = coachSessions.map((session) => {
+        const plainSession = session.get({ plain: true });
+        return { ...plainSession, sessionType: "coach" };
+      });
+    }
+
+    // Sort by date and time in descending order
+    sessions.sort((a, b) => {
+      const dateA = new Date(`${a.date}T${a.end_time}`);
+      const dateB = new Date(`${b.date}T${b.end_time}`);
+      return dateB - dateA;
+    });
+
+    // Limit the number of sessions
+    return sessions.slice(0, limit);
+  } catch (err) {
+    error("Error getting latest completed sessions:", err);
+    throw err;
+  }
+};
+
+/**
+ * Get upcoming sessions for a user
+ * @param {string} user_id - User ID
+ * @param {string} academy_id - Academy ID (optional)
+ * @param {string} coach_id - Coach ID (optional)
+ * @param {number} limit - Maximum number of sessions to return
+ * @returns {Array} - Upcoming sessions
+ */
+const getUpcomingSessions = async (
+  user_id,
+  academy_id,
+  coach_id,
+  limit = 10
+) => {
+  try {
+    // Get current date
+    const currentDate = moment().format("YYYY-MM-DD");
+
+    // Build where clause
+    const where = {
+      user_id,
+      is_cancelled: false,
+      is_completed: false,
+      date: {
+        [Op.gte]: currentDate,
+      },
+    };
+
+    let sessions = [];
+
+    if (academy_id) {
+      // Get academy batch sessions
+      const batchSessions = await AcademyBatchSession.findAll({
+        where: {
+          ...where,
+          academy_id,
+        },
+        include: [
+          {
+            model: sequelize.models.AcademyBatch,
+            as: "batch",
+            attributes: ["id", "name", "description"],
+          },
+        ],
+        order: [
+          ["date", "ASC"],
+          ["start_time", "ASC"],
+        ],
+        limit,
+      });
+
+      // Get academy program sessions
+      const programSessions = await AcademyProgramSession.findAll({
+        where: {
+          ...where,
+          academy_id,
+        },
+        include: [
+          {
+            model: sequelize.models.AcademyProgram,
+            as: "program",
+            attributes: ["id", "name", "description"],
+          },
+        ],
+        order: [
+          ["date", "ASC"],
+          ["start_time", "ASC"],
+        ],
+        limit,
+      });
+
+      // Add session type to each session
+      const formattedBatchSessions = batchSessions.map((session) => {
+        const plainSession = session.get({ plain: true });
+        return { ...plainSession, sessionType: "academy_batch" };
+      });
+
+      const formattedProgramSessions = programSessions.map((session) => {
+        const plainSession = session.get({ plain: true });
+        return { ...plainSession, sessionType: "academy_program" };
+      });
+
+      // Combine academy sessions
+      sessions = [...formattedBatchSessions, ...formattedProgramSessions];
+    } else if (coach_id) {
+      // Get coach sessions
+      const coachSessions = await CoachSession.findAll({
+        where: {
+          ...where,
+          coach_id,
+        },
+        include: [
+          {
+            model: sequelize.models.CoachBatch,
+            as: "batch",
+            attributes: ["id", "name", "description"],
+          },
+        ],
+        order: [
+          ["date", "ASC"],
+          ["start_time", "ASC"],
+        ],
+        limit,
+      });
+
+      // Add session type to each session
+      sessions = coachSessions.map((session) => {
+        const plainSession = session.get({ plain: true });
+        return { ...plainSession, sessionType: "coach" };
+      });
+    }
+
+    // Sort by date and time in ascending order
+    sessions.sort((a, b) => {
+      const dateA = new Date(`${a.date}T${a.start_time}`);
+      const dateB = new Date(`${b.date}T${b.start_time}`);
+      return dateA - dateB;
+    });
+
+    // Limit the number of sessions
+    return sessions.slice(0, limit);
+  } catch (err) {
+    error("Error getting upcoming sessions:", err);
+    throw err;
+  }
+};
+
 module.exports = {
   initModels,
   requestSession,
@@ -486,4 +911,7 @@ module.exports = {
   cancelSession,
   completeSession,
   addSessionFeedback,
+  getAllUserBookings,
+  getLatestCompletedSessions,
+  getUpcomingSessions,
 };
