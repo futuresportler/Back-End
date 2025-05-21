@@ -4,6 +4,7 @@ const coachRepository = require("./repositories/coachRepository");
 const { SupplierService } = require("../supplier/index");
 // Add this import at the top of the file
 const coachSearchRepository = require("./repositories/coachSearchRepository");
+const coachAnalyticsRepository = require("./repositories/coachAnalyticsRepository");
 
 const getCoachProfile = async (coachProfileId) => {
   const profile = await coachRepository.findCoachProfileById(coachProfileId);
@@ -450,6 +451,78 @@ const getCoachesByUser = async (userId) => {
   return enrollments.map((enrollment) => enrollment.coach);
 };
 
+// Get monthly analytics for a coach
+const getMonthlyAnalytics = async (coachId, filters = {}) => {
+  return await coachAnalyticsRepository.getMonthlyMetrics(coachId, filters);
+};
+
+// Get monthly analytics for a specific batch
+const getBatchMonthlyAnalytics = async (batchId, filters = {}) => {
+  return await coachAnalyticsRepository.getBatchMonthlyMetrics(batchId, filters);
+};
+
+// Get detailed analytics for a specific month
+const getDetailedMonthlyAnalytics = async (coachId, monthId) => {
+  const metrics = await coachAnalyticsRepository.getOrCreateMonthlyMetric(coachId, monthId);
+  
+  // Get the batch breakdown from the metrics
+  const batchBreakdown = metrics.batchMetrics || {};
+  
+  // Format the response
+  return {
+    overview: {
+      totalSessions: metrics.totalSessions,
+      completedSessions: metrics.completedSessions,
+      cancelledSessions: metrics.cancelledSessions,
+      totalRevenue: metrics.totalRevenue,
+      averageRating: metrics.averageRating,
+      totalReviews: metrics.totalReviews,
+      activeStudents: metrics.activeStudents,
+      newStudents: metrics.newStudents,
+      utilization: metrics.utilization
+    },
+    growth: {
+      growthRate: metrics.growthRate,
+      retentionRate: metrics.retentionRate
+    },
+    distribution: {
+      hourlySessionDistribution: metrics.hourlySessionDistribution,
+      dailyRevenue: metrics.dailyRevenue
+    },
+    batches: batchBreakdown
+  };
+};
+const getDetailedBatchAnalytics = async (batchId, monthId) => {
+  const metrics = await coachAnalyticsRepository.getOrCreateBatchMonthlyMetric(batchId, monthId);
+  
+  // Format the response
+  return {
+    overview: {
+      totalSessions: metrics.totalSessions,
+      completedSessions: metrics.completedSessions,
+      cancelledSessions: metrics.cancelledSessions,
+      totalRevenue: metrics.totalRevenue,
+      averageRating: metrics.averageRating,
+      totalReviews: metrics.totalReviews,
+      activeStudents: metrics.activeStudents,
+      newStudents: metrics.newStudents,
+      utilization: metrics.utilization
+    },
+    distribution: {
+      dailyRevenue: metrics.dailyRevenue
+    },
+    performance: {
+      attendanceRate: metrics.attendanceRate
+    }
+  };
+};
+
+// Refresh analytics for a coach (could be triggered manually)
+const refreshAnalytics = async (coachId, monthId) => {
+  return await coachAnalyticsRepository.updateAllCoachMetrics(coachId, monthId);
+};
+
+
 // Add the new function to the module.exports
 module.exports = {
   getCoachProfile,
@@ -489,4 +562,12 @@ module.exports = {
   getStudentAchievements,
   getStudentFeedback,
   getCoachesByUser,
+
+  // Analytics methods
+  getMonthlyAnalytics,
+  getBatchMonthlyAnalytics,
+  getDetailedMonthlyAnalytics,
+  getDetailedBatchAnalytics,
+  refreshAnalytics
+
 };

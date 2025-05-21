@@ -22,6 +22,7 @@ const CoachMetric = require("./models/postgres/coach/coachMetric")(sequelize);
 const CoachStudent = require("./models/postgres/coach/coachStudent")(sequelize);
 const MonthlyCoachMetric =
   require("./models/postgres/coach/monthlyCoachMetric")(sequelize);
+const BatchMonthlyMetric = require("./models/postgres/coach/batchMonthlyMetric")(sequelize);
 const MonthlyStudentProgress =
   require("./models/postgres/coach/monthlyStudentProgress")(sequelize);
 
@@ -461,6 +462,35 @@ const defineAssociations = () => {
     foreignKey: "coachId",
     as: "coach",
   });
+  Month.hasMany(BatchMonthlyMetric, {
+    foreignKey: "monthId",
+    as: "batchMonthlyMetrics",
+  });
+
+  BatchMonthlyMetric.belongsTo(Month, {
+    foreignKey: "monthId",
+    as: "month",
+  });
+
+  CoachBatch.hasMany(BatchMonthlyMetric, {
+    foreignKey: "batchId",
+    as: "monthlyMetrics",
+  });
+
+  BatchMonthlyMetric.belongsTo(CoachBatch, {
+    foreignKey: "batchId",
+    as: "batch",
+  });
+
+  CoachProfile.hasMany(BatchMonthlyMetric, {
+    foreignKey: "coachId",
+    as: "batchMetrics",
+  });
+
+  BatchMonthlyMetric.belongsTo(CoachProfile, {
+      foreignKey: "coachId",
+      as: "coach",
+  });
 };
 
 // Database Sync Function
@@ -528,6 +558,8 @@ module.exports = {
   CoachStudent,
   MonthlyCoachMetric,
   MonthlyStudentProgress,
+  BatchMonthlyMetric,
+
 
   // Academy exports
   AcademyFee,

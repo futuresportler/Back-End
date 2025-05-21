@@ -1,14 +1,23 @@
-// src/database/models/postgres/coach/monthlyCoachMetric.js
+// src/database/models/postgres/coach/batchMonthlyMetric.js
 const { DataTypes } = require("sequelize")
 
 module.exports = (sequelize) => {
   return sequelize.define(
-    "MonthlyCoachMetric",
+    "BatchMonthlyMetric",
     {
       metricId: {
         type: DataTypes.UUID,
         defaultValue: DataTypes.UUIDV4,
         primaryKey: true,
+      },
+      batchId: {
+        type: DataTypes.UUID,
+        allowNull: false,
+        references: {
+          model: "CoachBatches",
+          key: "id",
+        },
+        onDelete: "CASCADE",
       },
       coachId: {
         type: DataTypes.UUID,
@@ -17,7 +26,6 @@ module.exports = (sequelize) => {
           model: "CoachProfiles",
           key: "coachId",
         },
-        onDelete: "CASCADE",
       },
       monthId: {
         type: DataTypes.UUID,
@@ -43,11 +51,11 @@ module.exports = (sequelize) => {
         type: DataTypes.DECIMAL(10, 2),
         defaultValue: 0,
       },
-      newStudents: {
+      activeStudents: {
         type: DataTypes.INTEGER,
         defaultValue: 0,
       },
-      activeStudents: {
+      newStudents: {
         type: DataTypes.INTEGER,
         defaultValue: 0,
       },
@@ -59,34 +67,11 @@ module.exports = (sequelize) => {
         type: DataTypes.INTEGER,
         defaultValue: 0,
       },
-      sessionHours: {
-        type: DataTypes.DECIMAL(10, 2),
-        defaultValue: 0,
-      },
       utilization: {
-        type: DataTypes.DECIMAL(5, 2), // Percentage of available slots that were booked
+        type: DataTypes.DECIMAL(5, 2),
         defaultValue: 0,
       },
-      studentProgress: {
-        type: DataTypes.JSON,
-        defaultValue: {},
-      },
-      // Add batch analytics component
-      batchMetrics: {
-        type: DataTypes.JSON,
-        defaultValue: {},
-        // Structure: { 
-        //   "batchId1": { 
-        //     name: "Batch Name",
-        //     sessions: 10, 
-        //     revenue: 5000, 
-        //     students: 8,
-        //     rating: 4.5,
-        //     utilization: 80
-        //   } 
-        // }
-      },
-      // Revenue breakdown by day of week
+      // Daily distribution
       dailyRevenue: {
         type: DataTypes.JSON,
         defaultValue: {
@@ -94,19 +79,9 @@ module.exports = (sequelize) => {
           "Thursday": 0, "Friday": 0, "Saturday": 0, "Sunday": 0
         },
       },
-      // Sessions breakdown by hour of day
-      hourlySessionDistribution: {
-        type: DataTypes.JSON,
-        defaultValue: {},
-        // E.g., { "06:00": 5, "07:00": 8, ... }
-      },
-      // Performance metrics
-      growthRate: {
-        type: DataTypes.DECIMAL(5, 2), // Percentage growth from previous month
-        defaultValue: 0,
-      },
-      retentionRate: {
-        type: DataTypes.DECIMAL(5, 2), // Percentage of students retained from previous month
+      // Student attendance rate
+      attendanceRate: {
+        type: DataTypes.DECIMAL(5, 2),
         defaultValue: 0,
       }
     },
@@ -114,9 +89,12 @@ module.exports = (sequelize) => {
       timestamps: true,
       indexes: [
         {
-          fields: ["coachId", "monthId"],
+          fields: ["batchId", "monthId"],
           unique: true,
         },
+        {
+          fields: ["coachId"],
+        }
       ],
     }
   )
