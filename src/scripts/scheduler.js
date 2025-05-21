@@ -8,6 +8,8 @@ const {
   generateSessions,
 } = require("../services/session/sessionGenerationService");
 const config = require("../common/utils/config");
+const updateMonthlyMetrics = require("./updateMonthlyMetrics");
+
 
 /**
  * Initialize all scheduled tasks
@@ -33,7 +35,16 @@ function initScheduledTasks() {
       error(err.stack);
     }
   });
-
+  cron.schedule("59 23 28-31 * *", async () => {
+    const now = new Date();
+    const lastDayOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();
+    
+    // Only run if it's the last day of the month
+    if (now.getDate() === lastDayOfMonth) {
+      console.log("Running monthly metrics update job");
+      await updateMonthlyMetrics();
+    }
+  });
   // Schedule daily slot generation for all turf grounds (runs based on configuration)
   cron.schedule(config.scheduler.slotGeneration, async () => {
     try {

@@ -46,6 +46,8 @@ const AcademyStudent = require("./models/postgres/academy/academyStudent")(
   sequelize
 );
 const AcademyFee = require("./models/postgres/academy/academyFee")(sequelize);
+const AcademyProfileView = require("./models/postgres/academy/academyProfileView")(sequelize);
+const AcademyInquiry = require("./models/postgres/academy/academyInquiry")(sequelize);
 const MonthlyStudentMetric =
   require("./models/postgres/academy/monthlyStudentMetric")(sequelize);
 
@@ -178,7 +180,41 @@ const defineAssociations = () => {
     foreignKey: "batchId",
     as: "students",
   });
+    // Academy Profile View Associations
+  AcademyProfile.hasMany(AcademyProfileView, { 
+    foreignKey: "academyId",
+    as: "profileViews"
+  });
+  AcademyProfileView.belongsTo(AcademyProfile, { 
+    foreignKey: "academyId",
+    as: "academy"
+  });
+  User.hasMany(AcademyProfileView, {
+    foreignKey: "userId",
+    as: "academyViews"
+  });
+  AcademyProfileView.belongsTo(User, {
+    foreignKey: "userId",
+    as: "viewer"
+  });
 
+  // Academy Inquiry Associations
+  AcademyProfile.hasMany(AcademyInquiry, {
+    foreignKey: "academyId",
+    as: "inquiries"
+  });
+  AcademyInquiry.belongsTo(AcademyProfile, {
+    foreignKey: "academyId",
+    as: "academy"
+  });
+  AcademyProgram.hasMany(AcademyInquiry, {
+    foreignKey: "programId",
+    as: "inquiries"
+  });
+  AcademyInquiry.belongsTo(AcademyProgram, {
+    foreignKey: "programId",
+    as: "program"
+  });
   // Fee Relationships
   AcademyFee.belongsTo(AcademyProfile, { foreignKey: "academyId" });
   AcademyFee.belongsTo(AcademyProgram, { foreignKey: "programId" });
@@ -411,6 +447,7 @@ const defineAssociations = () => {
 const syncDatabase = async () => {
   try {
     await sequelize.authenticate();
+    defineAssociations();
 
     // Try to create PostGIS extension, but continue if it fails
     try {
@@ -425,7 +462,6 @@ const syncDatabase = async () => {
       );
     }
 
-    defineAssociations();
 
     await sequelize.sync({ alter: true });
     console.log("✅ Database synchronized successfully");
@@ -462,7 +498,8 @@ module.exports = {
   AcademyCoach,
   AcademyStudent,
   MonthlyStudentMetric,
-
+  AcademyProfileView,
+  AcademyInquiry,
   // Turf exports
   TurfGround,
   TurfSlot,
