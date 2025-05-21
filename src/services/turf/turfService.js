@@ -3,6 +3,7 @@ const { SupplierService } = require("../supplier/index");
 const { v4: uuidv4 } = require("uuid");
 const slotGenerationService = require("./slotGenerationService");
 const turfSearchRepository = require("./repositories/turfSearchRepository");
+const turfMetricsRepository = require("./repositories/turfMetricsRepository");
 
 const createTurfProfile = async (supplierId, profileData) => {
   const supplier = await SupplierService.getSupplierByModule(
@@ -205,6 +206,40 @@ const searchTurfs = async (filters) => {
   return await turfSearchRepository.searchTurfs(filters);
 };
 
+
+// Get monthly metrics for a turf
+const getMonthlyMetrics = async (turfId, filters = {}) => {
+  return await turfMetricsRepository.getMonthlyMetrics(turfId, filters);
+};
+
+// Get utilization rate
+const getUtilizationRate = async (turfId, monthId) => {
+  return await turfMetricsRepository.calculateUtilizationRate(turfId, monthId);
+};
+
+// Get revenue by sport
+const getRevenueBySort = async (turfId, monthId) => {
+  return await turfMetricsRepository.calculateRevenueBySort(turfId, monthId);
+};
+
+// Get hourly bookings
+const getHourlyBookings = async (turfId, monthId) => {
+  return await turfMetricsRepository.calculateHourlyBookings(turfId, monthId);
+};
+
+// Get daily bookings
+const getDailyBookings = async (turfId, monthId) => {
+  return await turfMetricsRepository.calculateDailyBookings(turfId, monthId);
+};
+// Get ground metrics
+const getGroundMetrics = async (turfId, monthId) => {
+  return await turfMetricsRepository.calculateGroundMetrics(turfId, monthId);
+};
+
+// Refresh metrics
+const refreshMetrics = async (turfId, monthId) => {
+  return await turfMetricsRepository.updateAllMetrics(turfId, monthId);
+};
 module.exports = {
   createTurfProfile,
   getTurfProfile,
@@ -223,4 +258,11 @@ module.exports = {
   getTurfGround,
   updateTurfGround,
   deleteTurfGround,
+  getMonthlyMetrics,
+  getUtilizationRate,
+  getRevenueBySort,
+  getHourlyBookings,
+  getDailyBookings,
+  getGroundMetrics,
+  refreshMetrics
 };
