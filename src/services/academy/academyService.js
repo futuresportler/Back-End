@@ -6,6 +6,8 @@ const { SupplierService } = require("../supplier/index");
 const { v4: uuidv4 } = require("uuid");
 const { sequelize } = require("../../database");
 const academySearchRepository = require("./repositories/academySearchRepository");
+const academyMetricsRepository = require("./repositories/academyMetricsRepository");
+
 // Fix the import path - import directly from database instead of database/models
 const { AcademyStudent, AcademyProfile } = require("../../database");
 
@@ -585,6 +587,104 @@ const getAcademiesByUser = async (userId) => {
   return enrollments.map((enrollment) => enrollment.academy);
 };
 
+// Record a profile view
+// Add this to recordProfileView in academyService.js
+const recordProfileView = async (academyId, viewData = {}) => {
+  const view = await academyMetricsRepository.recordProfileView({
+    viewId: uuidv4(),
+    academyId,
+    ...viewData
+  });
+  
+  // Increment the monthly metrics counter for views
+  try {
+    const now = new Date();
+    const currentMonth = await sequelize.models.Month.findOne({
+      where: {
+        monthNumber: now.getMonth() + 1,
+        year: now.getFullYear()
+      }
+    });
+    
+    if (currentMonth) {
+      await academyMetricsRepository.incrementMetricCounter(
+        academyId, 
+        currentMonth.monthId,
+        "profileViews"
+      );
+    }
+  } catch (err) {
+    console.error("Error updating monthly metrics:", err);
+  }
+  
+  return view;
+};
+
+// Create an inquiry
+const createInquiry = async (inquiryData) => {
+  return await academyMetricsRepository.createInquiry({
+    inquiryId: uuidv4(),
+    ...inquiryData
+  });
+};
+// Mark inquiry as converted when student enrolls
+const convertInquiryToStudent = async (inquiryId, studentId) => {
+  const inquiry = await academyMetricsRepository.updateInquiry(inquiryId, {
+    status: "enrolled",
+    convertedToStudent: true,
+    convertedStudentId: studentId
+  });
+  
+  // Update metrics for the current month
+  const now = new Date();
+  const currentMonth = await sequelize.models.Month.findOne({
+    where: {
+      monthNumber: now.getMonth() + 1,
+      year: now.getFullYear()
+    }
+  });
+  
+  if (currentMonth) {
+    await academyMetricsRepository.calculateConversionRate(
+      inquiry.academyId, 
+      currentMonth.monthId
+    );
+  }
+  
+  return inquiry;
+};
+// Get monthly metrics
+const getMonthlyMetrics = async (academyId, filters = {}) => {
+  return await academyMetricsRepository.getMonthlyMetrics(academyId, filters);
+};
+
+// Get program specific monthly metrics
+const getProgramMonthlyMetrics = async (programId, monthId) => {
+  const program = await academyProgramRepository.getProgramById(programId);
+  if (!program) throw new Error("Program not found");
+  
+  const metric = await academyMetricsRepository.getOrCreateMonthlyMetric(
+    program.academyId,
+    monthId
+  );
+  
+  // Return the program specific metrics from the JSON field
+  return metric.programMetrics[programId] || {
+    totalBookings: 0,
+    completedSessions: 0,
+    revenue: 0,
+    students: 0,
+    rating: 0,
+    reviews: 0
+  };
+};
+
+// Get conversion rate
+const getConversionRate = async (academyId, monthId) => {
+  return await academyMetricsRepository.calculateConversionRate(academyId, monthId);
+};
+
+
 module.exports = {
   createAcademyProfile,
   getAcademyProfile,
@@ -630,4 +730,11 @@ module.exports = {
   getStudentAchievements,
   getStudentFeedback,
   getAcademiesByUser,
+  // Metrics related exports
+  recordProfileView,
+  createInquiry,
+  convertInquiryToStudent,
+  getMonthlyMetrics,
+  getProgramMonthlyMetrics,
+  getConversionRate
 };
