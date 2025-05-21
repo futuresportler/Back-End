@@ -9,6 +9,7 @@ const {
 } = require("../services/session/sessionGenerationService");
 const config = require("../common/utils/config");
 const updateMonthlyMetrics = require("./updateMonthlyMetrics");
+const updateTurfMonthlyMetrics = require("./updateTurfMonthlyMetrics");
 
 
 /**
@@ -43,6 +44,7 @@ function initScheduledTasks() {
     if (now.getDate() === lastDayOfMonth) {
       console.log("Running monthly metrics update job");
       await updateMonthlyMetrics();
+      await updateTurfMonthlyMetrics();
     }
   });
   // Schedule daily slot generation for all turf grounds (runs based on configuration)

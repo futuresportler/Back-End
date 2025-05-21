@@ -50,4 +50,13 @@ router.post(
   turfController.addReview
 );
 
+// Analytics routes
+router.get("/:turfId/metrics/monthly", authMiddleware, turfController.getMonthlyMetrics);
+router.get("/:turfId/metrics/:monthId/utilization", authMiddleware, turfController.getUtilizationRate);
+router.get("/:turfId/metrics/:monthId/revenue-by-sport", authMiddleware, turfController.getRevenueBySort);
+router.get("/:turfId/metrics/:monthId/hourly-bookings", authMiddleware, turfController.getHourlyBookings);
+router.get("/:turfId/metrics/:monthId/daily-bookings", authMiddleware, turfController.getDailyBookings);
+router.get("/:turfId/metrics/:monthId/ground-metrics", authMiddleware, turfController.getGroundMetrics);
+router.post("/:turfId/metrics/:monthId/refresh", authMiddleware, turfController.refreshMetrics);
+
 module.exports = router;

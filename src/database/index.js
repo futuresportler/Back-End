@@ -58,7 +58,7 @@ const TurfReview = require("./models/postgres/turf/turfReview")(sequelize);
 const TurfPayment = require("./models/postgres/turf/turfPayment")(sequelize);
 const SlotRequest = require("./models/postgres/turf/slotRequest")(sequelize);
 const TurfMetric = require("./models/postgres/turf/turfMetric")(sequelize);
-
+const TurfMonthlyMetric = require("./models/postgres/turf/turfMonthlyMetric")(sequelize);
 // Session models will be initialized dynamically in the session service
 
 // Define Associations
@@ -309,6 +309,26 @@ const defineAssociations = () => {
   TurfMetric.belongsTo(Day, { foreignKey: "dayId" });
   TurfMetric.belongsTo(Month, { foreignKey: "monthId" });
 
+
+  Month.hasMany(TurfMonthlyMetric, {
+    foreignKey: "monthId",
+    as: "turfMonthlyMetrics",
+  });
+
+  TurfMonthlyMetric.belongsTo(Month, {
+    foreignKey: "monthId",
+    as: "month",
+  });
+
+  TurfProfile.hasMany(TurfMonthlyMetric, {
+    foreignKey: "turfId",
+    as: "monthlyMetrics",
+  });
+
+  TurfMonthlyMetric.belongsTo(TurfProfile, {
+    foreignKey: "turfId",
+    as: "turf",
+  });
   // CoachProfile Associations
 
   CoachProfile.hasMany(CoachPayment, {
@@ -462,8 +482,28 @@ const syncDatabase = async () => {
       );
     }
 
-
-    await sequelize.sync({ alter: true });
+        // Skip the Day model entirely in sync
+    const models = Object.values(sequelize.models).filter(
+      model => model.name !== 'Day'
+    );
+    
+    // Sync all models except Day
+    for (const model of models) {
+      try {
+        await model.sync({ alter: false }); // Never use alter in production
+        console.log(`Synced ${model.name} successfully`);
+      } catch (error) {
+        console.error(`Error syncing ${model.name}:`, error.message);
+      }
+    }
+    // Sync models individually with force:false, alter:false first to create tables safely
+    // console.log("Creating tables if they don't exist...");
+    // await sequelize.sync({ force: false, alter: false });
+        
+    // // Then try to sync Year and Month models first to establish their relationship
+    // console.log("Syncing time models...");
+    // await Year.sync({ alter: true });
+    // await sequelize.sync({ alter: true });
     console.log("✅ Database synchronized successfully");
   } catch (error) {
     console.error("❌ Database synchronization failed:", error);
@@ -507,7 +547,7 @@ module.exports = {
   TurfPayment,
   SlotRequest,
   TurfMetric,
-
+  TurfMonthlyMetric,
   // Time exports
   Day,
   Month,
