@@ -1,8 +1,8 @@
 const mongoose = require("mongoose");
 const { Sequelize } = require("sequelize");
 
-const sequelize = new Sequelize("my_new_db", "postgres", "root", {
-  host: "localhost",
+const sequelize = new Sequelize("test1", "postgres", "1422", {
+  host: "127.0.0.1",  // <-- change from "localhost" to IPv4 address
   dialect: "postgres",
   logging: false,
 });
