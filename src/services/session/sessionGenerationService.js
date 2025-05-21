@@ -5,64 +5,7 @@ const config = require("../../common/utils/config");
 const { v4: uuidv4 } = require("uuid");
 
 // Import models
-let AcademyBatchSession, AcademyProgramSession, CoachSession, TurfSession;
-let AcademyBatch, AcademyProgram, CoachBatch, TurfGround;
-
-// Initialize models after database is connected
-const initModels = async () => {
-  try {
-    // Define session models
-    AcademyBatchSession =
-      require("../../database/models/postgres/sessions/academyBatchSession")(
-        sequelize
-      );
-    AcademyProgramSession =
-      require("../../database/models/postgres/sessions/academyProgramSession")(
-        sequelize
-      );
-    CoachSession =
-      require("../../database/models/postgres/sessions/coachSession")(
-        sequelize
-      );
-    TurfSession =
-      require("../../database/models/postgres/sessions/turfSession")(sequelize);
-
-    // Get references to existing models
-    const db = require("../../database");
-    AcademyBatch = db.AcademyBatch;
-    AcademyProgram = db.AcademyProgram;
-    CoachBatch = db.CoachBatch;
-    TurfGround = db.TurfGround;
-
-    // Define associations
-    AcademyBatchSession.belongsTo(AcademyBatch, {
-      foreignKey: "batch_id",
-      as: "batch",
-    });
-    AcademyProgramSession.belongsTo(AcademyProgram, {
-      foreignKey: "program_id",
-      as: "program",
-    });
-    CoachSession.belongsTo(CoachBatch, { foreignKey: "batch_id", as: "batch" });
-    TurfSession.belongsTo(TurfGround, {
-      foreignKey: "ground_id",
-      as: "ground",
-    });
-
-    // Add to database exports
-    db.AcademyBatchSession = AcademyBatchSession;
-    db.AcademyProgramSession = AcademyProgramSession;
-    db.CoachSession = CoachSession;
-    db.TurfSession = TurfSession;
-
-    await sequelize.sync({ alter: true });
-    info("Session models initialized and synced");
-    return true;
-  } catch (err) {
-    error("Failed to initialize session models:", err);
-    return false;
-  }
-};
+const { AcademyBatchSession, AcademyProgramSession, CoachSession, TurfSession, AcademyBatch, AcademyProgram, CoachBatch, TurfGround} = require("../../database/index");
 
 /**
  * Generate a unique session ID
@@ -512,8 +455,6 @@ const isLastWeekOfMonth = () => {
  */
 const generateSessions = async () => {
   try {
-    await initModels();
-
     // Load dynamic configuration
     await config.loadDynamicConfig(require("../../database"));
 
@@ -581,5 +522,4 @@ module.exports = {
   generateAcademyProgramSessions,
   generateCoachSessions,
   generateTurfSessions,
-  initModels,
 };

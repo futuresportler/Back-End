@@ -4,46 +4,16 @@ const { Op } = require("sequelize");
 const moment = require("moment");
 
 // Session models
-let AcademyBatchSession, AcademyProgramSession, CoachSession, TurfSession;
-let AcademyBatchSessionRequest,
+const {
+  AcademyBatchSession,
+  AcademyProgramSession,
+  CoachSession,
+  TurfSession,
+  AcademyBatchSessionRequest,
   AcademyProgramSessionRequest,
   CoachSessionRequest,
-  TurfSessionRequest;
-
-// Initialize models
-const initModels = async () => {
-  try {
-    // Get session models
-    const db = require("../../database");
-    AcademyBatchSession = db.AcademyBatchSession;
-    AcademyProgramSession = db.AcademyProgramSession;
-    CoachSession = db.CoachSession;
-    TurfSession = db.TurfSession;
-
-    // Get session request models
-    const sessionRequests =
-      require("../../database/models/postgres/sessions/sessionRequests")(
-        sequelize
-      );
-    AcademyBatchSessionRequest = sessionRequests.AcademyBatchSessionRequest;
-    AcademyProgramSessionRequest = sessionRequests.AcademyProgramSessionRequest;
-    CoachSessionRequest = sessionRequests.CoachSessionRequest;
-    TurfSessionRequest = sessionRequests.TurfSessionRequest;
-
-    // Add to database exports
-    db.AcademyBatchSessionRequest = AcademyBatchSessionRequest;
-    db.AcademyProgramSessionRequest = AcademyProgramSessionRequest;
-    db.CoachSessionRequest = CoachSessionRequest;
-    db.TurfSessionRequest = TurfSessionRequest;
-
-    await sequelize.sync({ alter: true });
-    info("Session request models initialized and synced");
-    return true;
-  } catch (err) {
-    error("Failed to initialize session request models:", err);
-    return false;
-  }
-};
+  TurfSessionRequest,
+} = require("../../database/models/postgres/sessions/sessionRequests");
 
 /**
  * Get the appropriate session and request models based on service type
@@ -902,7 +872,6 @@ const getUpcomingSessions = async (
 };
 
 module.exports = {
-  initModels,
   requestSession,
   confirmSessionRequest,
   rejectSessionRequest,
