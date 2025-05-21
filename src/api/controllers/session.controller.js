@@ -5,11 +5,6 @@ const {
 const sessionService = require("../../services/session/sessionService");
 const { error, info } = require("../../config/logging");
 
-// Initialize models
-sessionService.initModels().catch((err) => {
-  error("Failed to initialize session models:", err);
-});
-
 /**
  * Request a session
  * @param {Object} req - Request object

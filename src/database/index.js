@@ -92,7 +92,7 @@ const defineAssociations = () => {
   // Time Hierarchy Relationships
   Year.hasMany(Month, {
     foreignKey: "yearId",
-    as: "months",
+    as: "month",
   });
   Month.belongsTo(Year, {
     foreignKey: "yearId",
@@ -101,7 +101,7 @@ const defineAssociations = () => {
 
   Month.hasMany(Day, {
     foreignKey: "monthId",
-    as: "days",
+    as: "day",
   });
   Day.belongsTo(Month, {
     foreignKey: "monthId",

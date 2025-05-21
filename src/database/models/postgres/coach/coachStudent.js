@@ -50,7 +50,7 @@ module.exports = (sequelize) => {
       level: {
         type: DataTypes.STRING,
         allowNull: true,
-      
+      },
       achievements: {
         type: DataTypes.ARRAY(DataTypes.JSON),
         defaultValue: [],
