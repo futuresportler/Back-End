@@ -281,6 +281,69 @@ const getCoachesByUser = async (req, res) => {
   }
 };
 
+// Get monthly metrics
+const getMonthlyAnalytics = async (req, res) => {
+  try {
+    const metrics = await coachService.getMonthlyAnalytics(
+      req.params.coachId,
+      req.query
+    );
+    successResponse(res, "Monthly analytics fetched", metrics);
+  } catch (error) {
+    errorResponse(res, error.message, error);
+  }
+};
+// Get batch monthly metrics
+const getBatchMonthlyAnalytics = async (req, res) => {
+  try {
+    const metrics = await coachService.getBatchMonthlyAnalytics(
+      req.params.batchId,
+      req.query
+    );
+    successResponse(res, "Batch monthly analytics fetched", metrics);
+  } catch (error) {
+    errorResponse(res, error.message, error);
+  }
+};
+
+// Get detailed monthly analytics
+const getDetailedMonthlyAnalytics = async (req, res) => {
+  try {
+    const analytics = await coachService.getDetailedMonthlyAnalytics(
+      req.params.coachId,
+      req.params.monthId
+    );
+    successResponse(res, "Detailed monthly analytics fetched", analytics);
+  } catch (error) {
+    errorResponse(res, error.message, error);
+  }
+};
+
+// Get detailed batch analytics
+const getDetailedBatchAnalytics = async (req, res) => {
+  try {
+    const analytics = await coachService.getDetailedBatchAnalytics(
+      req.params.batchId,
+      req.params.monthId
+    );
+    successResponse(res, "Detailed batch analytics fetched", analytics);
+  } catch (error) {
+    errorResponse(res, error.message, error);
+  }
+};
+
+// Refresh analytics
+const refreshAnalytics = async (req, res) => {
+  try {
+    const result = await coachService.refreshAnalytics(
+      req.params.coachId,
+      req.params.monthId
+    );
+    successResponse(res, "Analytics refreshed", result);
+  } catch (error) {
+    errorResponse(res, error.message, error);
+  }
+};
 module.exports = {
   getMyProfile,
   getProfile,
@@ -310,4 +373,10 @@ module.exports = {
   // New endpoints
   getStudentData,
   getCoachesByUser,
+  // Analytics controller methods
+  getMonthlyAnalytics,
+  getBatchMonthlyAnalytics,
+  getDetailedMonthlyAnalytics,
+  getDetailedBatchAnalytics,
+  refreshAnalytics
 };

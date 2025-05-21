@@ -10,6 +10,7 @@ const {
 const config = require("../common/utils/config");
 const updateMonthlyMetrics = require("./updateMonthlyMetrics");
 const updateTurfMonthlyMetrics = require("./updateTurfMonthlyMetrics");
+const updateCoachMonthlyMetrics = require("./updateCoachMonthlyMetrics");
 
 
 /**
@@ -45,6 +46,8 @@ function initScheduledTasks() {
       console.log("Running monthly metrics update job");
       await updateMonthlyMetrics();
       await updateTurfMonthlyMetrics();
+      await updateCoachMonthlyMetrics();
+
     }
   });
   // Schedule daily slot generation for all turf grounds (runs based on configuration)

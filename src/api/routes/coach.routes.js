@@ -85,4 +85,12 @@ router.post(
   coachController.createBatchPayment
 );
 
+
+// Analytics routes
+router.get("/:coachId/analytics/monthly", authMiddleware, coachController.getMonthlyAnalytics);
+router.get("/batches/:batchId/analytics/monthly", authMiddleware, coachController.getBatchMonthlyAnalytics);
+router.get("/:coachId/analytics/:monthId", authMiddleware, coachController.getDetailedMonthlyAnalytics);
+router.get("/batches/:batchId/analytics/:monthId", authMiddleware, coachController.getDetailedBatchAnalytics);
+router.post("/:coachId/analytics/:monthId/refresh", authMiddleware, coachController.refreshAnalytics);
+
 module.exports = router;
