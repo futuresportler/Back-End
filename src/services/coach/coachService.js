@@ -5,6 +5,7 @@ const { SupplierService } = require("../supplier/index");
 // Add this import at the top of the file
 const coachSearchRepository = require("./repositories/coachSearchRepository");
 const coachAnalyticsRepository = require("./repositories/coachAnalyticsRepository");
+const feedbackService = require("../feedback");
 
 const getCoachProfile = async (coachProfileId) => {
   const profile = await coachRepository.findCoachProfileById(coachProfileId);
@@ -522,6 +523,23 @@ const refreshAnalytics = async (coachId, monthId) => {
   return await coachAnalyticsRepository.updateAllCoachMetrics(coachId, monthId);
 };
 
+const getCoachWithFeedback = async (coachId) => {
+  try {
+    const coach = await coachRepository.getCoachById(coachId);
+    const [feedback, analytics] = await Promise.all([
+      feedbackService.getRecentFeedback('coach', coachId, 5),
+      feedbackService.getFeedbackAnalytics('coach', coachId)
+    ]);
+    
+    return {
+      ...coach,
+      recentFeedback: feedback,
+      feedbackAnalytics: analytics
+    };
+  } catch (error) {
+    throw new Error(`Failed to get coach with feedback: ${error.message}`);
+  }
+};
 
 // Add the new function to the module.exports
 module.exports = {
@@ -532,6 +550,8 @@ module.exports = {
   getNearbyCoaches,
   addCoachCertification,
   searchCoaches, // Add this line
+  getCoachWithFeedback,
+
 
   // Student management
   addStudent,
