@@ -9,6 +9,7 @@ const academySearchRepository = require("./repositories/academySearchRepository"
 const academyMetricsRepository = require("./repositories/academyMetricsRepository");
 const academyFeedbackRepository = require("./repositories/academyFeedbackRepository");
 const academyBookingRepository = require("./repositories/academyBookingRepository");
+const academyCoachService = require("./academyCoachService");
 
 // Fix the import path - import directly from database instead of database/models
 const { AcademyStudent, AcademyProfile } = require("../../database");
@@ -861,6 +862,17 @@ module.exports = {
   getAcademyCoachFeedback,
   getBookingPlatforms,
   recordBookingPlatform,
-  getPopularPrograms
+  getPopularPrograms,
+
+    // Academy Coach exports
+  academyCoachService,
+  createAcademyCoach: academyCoachService.createCoach.bind(academyCoachService),
+  getAcademyCoach: academyCoachService.getCoachById.bind(academyCoachService),
+  getAcademyCoaches: academyCoachService.getCoachesByAcademy.bind(academyCoachService),
+  updateAcademyCoach: academyCoachService.updateCoach.bind(academyCoachService),
+  deleteAcademyCoach: academyCoachService.deleteCoach.bind(academyCoachService),
+  getCoachSchedule: academyCoachService.getCoachSchedule.bind(academyCoachService),
+  getCoachBatchesAndPrograms: academyCoachService.getCoachBatchesAndPrograms.bind(academyCoachService)
+
 
 };
