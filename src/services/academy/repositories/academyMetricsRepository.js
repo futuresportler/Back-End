@@ -16,7 +16,7 @@ class AcademyMetricsRepository {
         academyId: viewData.academyId,
         ...(viewData.userId ? { userId: viewData.userId } : { ipAddress: viewData.ipAddress }),
         createdAt: {
-            [Op.gt]: new Date(Date.now() - 10 * 60 * 1000) // 10 min ago
+            [Op.gt]: new Date(Date.now() - 1 * 60 * 1000) // 1 min ago
         }
         }
     });

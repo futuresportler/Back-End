@@ -84,7 +84,35 @@ module.exports = (sequelize) => {
       programMetrics: {
         type: DataTypes.JSON,
         defaultValue: {},
-      }
+      },
+      revenue: {
+        type: DataTypes.DECIMAL(10, 2),
+        defaultValue: 0.00,
+        allowNull: false,
+      },
+      enrollments: {
+        type: DataTypes.INTEGER,
+        defaultValue: 0,
+        allowNull: false,
+        comment: "Total number of student enrollments in this month",
+      },
+      utilization: {
+        type: DataTypes.DECIMAL(5, 2),
+        defaultValue: 0.00,
+        allowNull: false,
+        comment: "Percentage of maximum batch capacity utilized",
+      },
+      enrollmentSources: {
+        type: DataTypes.JSON,
+        defaultValue: {
+          "website": 0,
+          "app": 0,
+          "direct": 0,
+          "partners": 0,
+          "other": 0
+        },
+        allowNull: false,
+      },
     },
     {
       timestamps: true,
