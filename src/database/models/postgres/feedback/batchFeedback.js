@@ -1,22 +1,22 @@
-// models/postgres/academy/academyReview.js
 const { DataTypes } = require("sequelize");
 
 module.exports = (sequelize) => {
   return sequelize.define(
-    "AcademyReview",
+    "BatchFeedback",
     {
-      reviewId: {
+      feedbackId: {
         type: DataTypes.UUID,
         defaultValue: DataTypes.UUIDV4,
         primaryKey: true,
       },
-      academyId: {
+      batchId: {
         type: DataTypes.UUID,
         allowNull: false,
-        references: {
-          model: "AcademyProfiles",
-          key: "academyId",
-        },
+        // Can reference AcademyBatch or CoachBatch
+      },
+      batchType: {
+        type: DataTypes.ENUM('academy', 'coach'),
+        allowNull: false,
       },
       userId: {
         type: DataTypes.UUID,
@@ -28,12 +28,20 @@ module.exports = (sequelize) => {
       },
       rating: {
         type: DataTypes.INTEGER,
-        validate: { min: 1, max: 5 }
+        allowNull: false,
+        validate: {
+          min: 1,
+          max: 5,
+        },
       },
-      comment: DataTypes.TEXT,
-      verifiedPurchase: {
-        type: DataTypes.BOOLEAN,
-        defaultValue: false,
+      comment: {
+        type: DataTypes.TEXT,
+        allowNull: true,
+      },
+      feedbackAspects: {
+        type: DataTypes.JSON,
+        defaultValue: {},
+        // E.g., { "coaching_quality": 5, "facilities": 4, "schedule": 3 }
       },
     },
     { timestamps: true }
