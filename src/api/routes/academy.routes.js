@@ -160,4 +160,31 @@ router.get("/:academyId/conversion-rate/:monthId", authMiddleware, academyContro
 router.post("/inquiries", academyController.createInquiry);
 router.get("/:academyId/inquiries", authMiddleware, academyController.getInquiries);
 
+
+// Add Academy Coach routes 
+// CRUD routes for academy coaches
+router.post("/:academyId/coaches", authMiddleware, academyController.createAcademyCoach);
+router.get("/coaches/:coachId", academyController.getAcademyCoach);
+router.get("/:academyId/coaches", academyController.getAcademyCoaches);
+router.patch("/coaches/:coachId", authMiddleware, academyController.updateAcademyCoach);
+router.delete("/coaches/:coachId", authMiddleware, academyController.deleteAcademyCoach);
+
+// Batch assignment routes
+router.post("/coaches/:coachId/batches", authMiddleware, academyController.assignCoachToBatch);
+router.delete("/coaches/:coachId/batches/:batchId", authMiddleware, academyController.removeCoachFromBatch);
+
+// Program assignment routes
+router.post("/coaches/:coachId/programs", authMiddleware, academyController.assignCoachToProgram);
+router.delete("/coaches/:coachId/programs/:programId", authMiddleware, academyController.removeCoachFromProgram);
+
+// Get coach's batches and programs
+router.get("/coaches/:coachId/assignments", academyController.getCoachBatchesAndPrograms);
+
+// Get coach schedule
+router.get("/coaches/:coachId/schedule", academyController.getCoachSchedule);
+
+// Sync coaches with platform
+router.post("/:academyId/coaches/sync", authMiddleware, academyController.syncCoachesWithPlatform);
+
+
 module.exports = router;
