@@ -224,6 +224,92 @@ const searchTurfs = async (req, res) => {
     return errorResponse(res, error.message);
   }
 };
+const getMonthlyMetrics = async (req, res) => {
+  try {
+    const metrics = await turfService.getMonthlyMetrics(
+      req.params.turfId,
+      req.query
+    );
+    successResponse(res, "Monthly metrics fetched", metrics);
+  } catch (error) {
+    errorResponse(res, error.message, error);
+  }
+};
+
+// Get utilization rate
+const getUtilizationRate = async (req, res) => {
+  try {
+    const data = await turfService.getUtilizationRate(
+      req.params.turfId,
+      req.params.monthId
+    );
+    successResponse(res, "Utilization rate calculated", data);
+  } catch (error) {
+    errorResponse(res, error.message, error);
+  }
+};
+// Get revenue by sport
+const getRevenueBySort = async (req, res) => {
+  try {
+    const data = await turfService.getRevenueBySort(
+      req.params.turfId,
+      req.params.monthId
+    );
+    successResponse(res, "Revenue by sport calculated", data);
+  } catch (error) {
+    errorResponse(res, error.message, error);
+  }
+};
+
+// Get hourly bookings
+const getHourlyBookings = async (req, res) => {
+  try {
+    const data = await turfService.getHourlyBookings(
+      req.params.turfId,
+      req.params.monthId
+    );
+    successResponse(res, "Hourly bookings fetched", data);
+  } catch (error) {
+    errorResponse(res, error.message, error);
+  }
+};
+// Get daily bookings
+const getDailyBookings = async (req, res) => {
+  try {
+    const data = await turfService.getDailyBookings(
+      req.params.turfId,
+      req.params.monthId
+    );
+    successResponse(res, "Daily bookings fetched", data);
+  } catch (error) {
+    errorResponse(res, error.message, error);
+  }
+};
+
+// Get ground metrics
+const getGroundMetrics = async (req, res) => {
+  try {
+    const data = await turfService.getGroundMetrics(
+      req.params.turfId,
+      req.params.monthId
+    );
+    successResponse(res, "Ground metrics fetched", data);
+  } catch (error) {
+    errorResponse(res, error.message, error);
+  }
+};
+// Refresh metrics
+const refreshMetrics = async (req, res) => {
+  try {
+    const data = await turfService.refreshMetrics(
+      req.params.turfId,
+      req.params.monthId
+    );
+    successResponse(res, "Metrics refreshed", data);
+  } catch (error) {
+    errorResponse(res, error.message, error);
+  }
+};
 
 module.exports = {
   createProfile,
@@ -244,4 +330,11 @@ module.exports = {
   updateGround,
   deleteGround,
   searchTurfs,
+  getMonthlyMetrics,
+  getUtilizationRate,
+  getRevenueBySort,
+  getHourlyBookings,
+  getDailyBookings,
+  getGroundMetrics,
+  refreshMetrics
 };

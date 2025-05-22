@@ -2,7 +2,7 @@ const { DataTypes } = require("sequelize");
 
 module.exports = (sequelize) => {
   return sequelize.define(
-    "AcademyMetric",
+    "TurfMonthlyMetric",
     {
       metricId: {
         type: DataTypes.UUID,
@@ -18,52 +18,30 @@ module.exports = (sequelize) => {
           key: "monthId",
         },
       },
-      academyId: {
+      turfId: {
         type: DataTypes.UUID,
         allowNull: false,
         references: {
-          model: "AcademyProfiles",
-          key: "academyId",
+          model: "TurfProfiles",
+          key: "turfId",
         },
       },
-      // Traffic & Conversion Metrics
-      profileViews: {
+      // Booking Metrics
+      totalBookings: {
         type: DataTypes.INTEGER,
         defaultValue: 0,
       },
-      uniqueVisitors: {
+      completedBookings: {
         type: DataTypes.INTEGER,
         defaultValue: 0,
       },
-      inquiries: {
-        type: DataTypes.INTEGER,
-        defaultValue: 0,
-      },
-      // Enrollment Metrics
-      newEnrollments: {
-        type: DataTypes.INTEGER,
-        defaultValue: 0,
-      },
-      totalStudents: {
+      cancelledBookings: {
         type: DataTypes.INTEGER,
         defaultValue: 0,
       },
       // Financial Metrics
       revenue: {
         type: DataTypes.DECIMAL(10, 2),
-        defaultValue: 0,
-      },
-      pendingFees: {
-        type: DataTypes.DECIMAL(10, 2),
-        defaultValue: 0,
-      },
-      // Activity Metrics
-      totalSessions: {
-        type: DataTypes.INTEGER,
-        defaultValue: 0,
-      },
-      completedSessions: {
-        type: DataTypes.INTEGER,
         defaultValue: 0,
       },
       // Performance Metrics
@@ -75,39 +53,63 @@ module.exports = (sequelize) => {
         type: DataTypes.INTEGER,
         defaultValue: 0,
       },
-      // Conversion Metrics
-      conversionRate: {
-        type: DataTypes.DECIMAL(5, 2),
+      // Utilization
+      utilization: {
+        type: DataTypes.DECIMAL(5, 2), // percentage
         defaultValue: 0,
       },
-      // Program specific metrics are stored as JSON
-      programMetrics: {
+      totalSlots: {
+        type: DataTypes.INTEGER,
+        defaultValue: 0,
+      },
+      // Sport-specific revenue breakdown
+      sportRevenue: {
         type: DataTypes.JSON,
         defaultValue: {},
+        // E.g., { "Football": 5000, "Cricket": 3000 }
+      },
+      // Time-based metrics - bookings by hour
+      hourlyBookings: {
+        type: DataTypes.JSON,
+        defaultValue: {},
+        // E.g., { "06:00": 5, "07:00": 8, ... }
+      },
+      // Day-of-week metrics
+      dailyBookings: {
+        type: DataTypes.JSON,
+        defaultValue: {
+          "Monday": 0, "Tuesday": 0, "Wednesday": 0, 
+          "Thursday": 0, "Friday": 0, "Saturday": 0, "Sunday": 0
+        },
+      },
+      // Ground-specific metrics
+      groundMetrics: {
+        type: DataTypes.JSON,
+        defaultValue: {},
+        // Structure: { "groundId1": { bookings: 10, revenue: 5000, ... } }
       },
       revenue: {
         type: DataTypes.DECIMAL(10, 2),
         defaultValue: 0.00,
         allowNull: false,
       },
-      enrollments: {
+      totalBookings: {
         type: DataTypes.INTEGER,
         defaultValue: 0,
         allowNull: false,
-        comment: "Total number of student enrollments in this month",
       },
       utilization: {
         type: DataTypes.DECIMAL(5, 2),
         defaultValue: 0.00,
         allowNull: false,
-        comment: "Percentage of maximum batch capacity utilized",
+        comment: "Percentage of available slots that were booked",
       },
-      enrollmentSources: {
+      bookingSources: {
         type: DataTypes.JSON,
         defaultValue: {
           "website": 0,
           "app": 0,
-          "direct": 0,
+          "direct": 0, 
           "partners": 0,
           "other": 0
         },
@@ -118,7 +120,7 @@ module.exports = (sequelize) => {
       timestamps: true,
       indexes: [
         {
-          fields: ["academyId", "monthId"],
+          fields: ["turfId", "monthId"],
           unique: true
         }
       ]

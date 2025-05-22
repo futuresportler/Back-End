@@ -10,6 +10,23 @@ module.exports = (sequelize) => {
         primaryKey: true,
         allowNull: false,
       },
+      academyId: {
+        type: DataTypes.UUID,
+        allowNull: false,
+        references: {
+          model: 'AcademyProfiles',
+          key: 'id'
+        }
+      },
+      // Add coachId explicitly
+      coachId: {
+        type: DataTypes.UUID,
+        allowNull: true,
+        references: {
+          model: 'CoachProfiles',
+          key: 'id' // Assuming this is the primary key in CoachProfiles
+        }
+      },
       name: {
         type: DataTypes.STRING,
         allowNull: false,

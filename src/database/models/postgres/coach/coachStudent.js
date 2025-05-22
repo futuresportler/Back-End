@@ -52,7 +52,7 @@ module.exports = (sequelize) => {
         allowNull: true,
       },
       achievements: {
-        type: DataTypes.ARRAY(DataTypes.JSON),
+        type: DataTypes.JSONB,
         defaultValue: [],
       },
       grades: {
@@ -79,10 +79,6 @@ module.exports = (sequelize) => {
       status: {
         type: DataTypes.ENUM("active", "inactive", "suspended"),
         defaultValue: "active",
-      },
-      achievements: {
-        type: DataTypes.JSONB,
-        defaultValue: [],
       },
       coachFeedback: {
         type: DataTypes.JSONB,

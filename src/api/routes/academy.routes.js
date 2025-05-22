@@ -29,7 +29,21 @@ router.delete(
   authMiddleware,
   academyController.deleteProfile
 );
-
+router.get(
+  "/:academyId/coach-feedback", 
+  authMiddleware, 
+  academyController.getAcademyCoachFeedback
+);
+router.get(
+  "/:academyId/booking-platforms",
+  authMiddleware,
+  academyController.getBookingPlatforms
+);
+router.get(
+  "/:academyId/popular-programs",
+  authMiddleware,
+  academyController.getPopularPrograms
+);
 // Student routes
 router.get(
   "/:academyId/students",
@@ -135,5 +149,15 @@ router.post(
   academyController.recordPayment
 );
 router.get("/fees/overdue", authMiddleware, academyController.getOverdueFees);
+
+// Metrics routes - Add these after your existing routes, before module.exports
+router.post("/profile-views", authMiddleware, academyController.recordProfileView);
+router.get("/:academyId/metrics/monthly", authMiddleware, academyController.getMonthlyMetrics);
+router.get("/programs/:programId/metrics/:monthId", authMiddleware, academyController.getProgramMonthlyMetrics);
+router.get("/:academyId/conversion-rate/:monthId", authMiddleware, academyController.getConversionRate);
+
+// Inquiries
+router.post("/inquiries", academyController.createInquiry);
+router.get("/:academyId/inquiries", authMiddleware, academyController.getInquiries);
 
 module.exports = router;

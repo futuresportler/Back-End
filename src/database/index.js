@@ -22,6 +22,7 @@ const CoachMetric = require("./models/postgres/coach/coachMetric")(sequelize);
 const CoachStudent = require("./models/postgres/coach/coachStudent")(sequelize);
 const MonthlyCoachMetric =
   require("./models/postgres/coach/monthlyCoachMetric")(sequelize);
+const BatchMonthlyMetric = require("./models/postgres/coach/batchMonthlyMetric")(sequelize);
 const MonthlyStudentProgress =
   require("./models/postgres/coach/monthlyStudentProgress")(sequelize);
 
@@ -46,6 +47,8 @@ const AcademyStudent = require("./models/postgres/academy/academyStudent")(
   sequelize
 );
 const AcademyFee = require("./models/postgres/academy/academyFee")(sequelize);
+const AcademyProfileView = require("./models/postgres/academy/academyProfileView")(sequelize);
+const AcademyInquiry = require("./models/postgres/academy/academyInquiry")(sequelize);
 const MonthlyStudentMetric =
   require("./models/postgres/academy/monthlyStudentMetric")(sequelize);
 
@@ -56,8 +59,9 @@ const TurfReview = require("./models/postgres/turf/turfReview")(sequelize);
 const TurfPayment = require("./models/postgres/turf/turfPayment")(sequelize);
 const SlotRequest = require("./models/postgres/turf/slotRequest")(sequelize);
 const TurfMetric = require("./models/postgres/turf/turfMetric")(sequelize);
-
+const TurfMonthlyMetric = require("./models/postgres/turf/turfMonthlyMetric")(sequelize);
 // Session models will be initialized dynamically in the session service
+const AcademyBookingPlatform = require("./models/postgres/academy/academyBookingPlatform")(sequelize);
 
 // Define Associations
 const defineAssociations = () => {
@@ -178,7 +182,41 @@ const defineAssociations = () => {
     foreignKey: "batchId",
     as: "students",
   });
+    // Academy Profile View Associations
+  AcademyProfile.hasMany(AcademyProfileView, { 
+    foreignKey: "academyId",
+    as: "profileViews"
+  });
+  AcademyProfileView.belongsTo(AcademyProfile, { 
+    foreignKey: "academyId",
+    as: "academy"
+  });
+  User.hasMany(AcademyProfileView, {
+    foreignKey: "userId",
+    as: "academyViews"
+  });
+  AcademyProfileView.belongsTo(User, {
+    foreignKey: "userId",
+    as: "viewer"
+  });
 
+  // Academy Inquiry Associations
+  AcademyProfile.hasMany(AcademyInquiry, {
+    foreignKey: "academyId",
+    as: "inquiries"
+  });
+  AcademyInquiry.belongsTo(AcademyProfile, {
+    foreignKey: "academyId",
+    as: "academy"
+  });
+  AcademyProgram.hasMany(AcademyInquiry, {
+    foreignKey: "programId",
+    as: "inquiries"
+  });
+  AcademyInquiry.belongsTo(AcademyProgram, {
+    foreignKey: "programId",
+    as: "program"
+  });
   // Fee Relationships
   AcademyFee.belongsTo(AcademyProfile, { foreignKey: "academyId" });
   AcademyFee.belongsTo(AcademyProgram, { foreignKey: "programId" });
@@ -273,6 +311,26 @@ const defineAssociations = () => {
   TurfMetric.belongsTo(Day, { foreignKey: "dayId" });
   TurfMetric.belongsTo(Month, { foreignKey: "monthId" });
 
+
+  Month.hasMany(TurfMonthlyMetric, {
+    foreignKey: "monthId",
+    as: "turfMonthlyMetrics",
+  });
+
+  TurfMonthlyMetric.belongsTo(Month, {
+    foreignKey: "monthId",
+    as: "month",
+  });
+
+  TurfProfile.hasMany(TurfMonthlyMetric, {
+    foreignKey: "turfId",
+    as: "monthlyMetrics",
+  });
+
+  TurfMonthlyMetric.belongsTo(TurfProfile, {
+    foreignKey: "turfId",
+    as: "turf",
+  });
   // CoachProfile Associations
 
   CoachProfile.hasMany(CoachPayment, {
@@ -405,12 +463,63 @@ const defineAssociations = () => {
     foreignKey: "coachId",
     as: "coach",
   });
+  Month.hasMany(BatchMonthlyMetric, {
+    foreignKey: "monthId",
+    as: "batchMonthlyMetrics",
+  });
+
+  BatchMonthlyMetric.belongsTo(Month, {
+    foreignKey: "monthId",
+    as: "month",
+  });
+
+  CoachBatch.hasMany(BatchMonthlyMetric, {
+    foreignKey: "batchId",
+    as: "monthlyMetrics",
+  });
+
+  BatchMonthlyMetric.belongsTo(CoachBatch, {
+    foreignKey: "batchId",
+    as: "batch",
+  });
+
+  CoachProfile.hasMany(BatchMonthlyMetric, {
+    foreignKey: "coachId",
+    as: "batchMetrics",
+  });
+
+  BatchMonthlyMetric.belongsTo(CoachProfile, {
+      foreignKey: "coachId",
+      as: "coach",
+  });
+   // Academy Coach associations
+  AcademyProfile.hasMany(AcademyCoach, {
+    foreignKey: "academyId",
+    as: "coaches"
+  });
+  
+  AcademyCoach.belongsTo(AcademyProfile, {
+    foreignKey: "academyId",
+    as: "academy"
+  });
+  
+  CoachProfile.hasMany(AcademyCoach, {
+    foreignKey: "coachId",
+    as: "academyPositions"
+  });
+  
+  AcademyCoach.belongsTo(CoachProfile, {
+    foreignKey: "coachId",
+    as: "coachProfile"
+  });
+
 };
 
 // Database Sync Function
 const syncDatabase = async () => {
   try {
     await sequelize.authenticate();
+    defineAssociations();
 
     // Try to create PostGIS extension, but continue if it fails
     try {
@@ -425,9 +534,28 @@ const syncDatabase = async () => {
       );
     }
 
-    defineAssociations();
-
-    await sequelize.sync({ alter: true });
+        // Skip the Day model entirely in sync
+    const models = Object.values(sequelize.models).filter(
+      model => model.name !== 'Day'
+    );
+    
+    // Sync all models except Day
+    for (const model of models) {
+      try {
+        await model.sync({ alter: false }); // Never use alter in production
+        console.log(`Synced ${model.name} successfully`);
+      } catch (error) {
+        console.error(`Error syncing ${model.name}:`, error.message);
+      }
+    }
+    // Sync models individually with force:false, alter:false first to create tables safely
+    // console.log("Creating tables if they don't exist...");
+    // await sequelize.sync({ force: false, alter: false });
+        
+    // // Then try to sync Year and Month models first to establish their relationship
+    // console.log("Syncing time models...");
+    // await Year.sync({ alter: true });
+    // await sequelize.sync({ alter: true });
     console.log("✅ Database synchronized successfully");
   } catch (error) {
     console.error("❌ Database synchronization failed:", error);
@@ -452,6 +580,8 @@ module.exports = {
   CoachStudent,
   MonthlyCoachMetric,
   MonthlyStudentProgress,
+  BatchMonthlyMetric,
+
 
   // Academy exports
   AcademyFee,
@@ -462,6 +592,9 @@ module.exports = {
   AcademyCoach,
   AcademyStudent,
   MonthlyStudentMetric,
+  AcademyProfileView,
+  AcademyInquiry,
+  AcademyBookingPlatform,
 
   // Turf exports
   TurfGround,
@@ -470,7 +603,7 @@ module.exports = {
   TurfPayment,
   SlotRequest,
   TurfMetric,
-
+  TurfMonthlyMetric,
   // Time exports
   Day,
   Month,

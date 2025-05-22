@@ -34,6 +34,26 @@ const getProfile = async (req, res) => {
       req.params.academyProfileId,
       req.body.options
     );
+        // Automatically record the profile view
+    try {
+      // Only record view if this is a client-facing request (not internal API calls)
+      // You can add additional conditions as needed
+      if (!req.headers['x-internal-api']) {
+        await AcademyService.recordProfileView(
+          req.params.academyProfileId,
+          {
+            userId: req.user?.userId,
+            ipAddress: req.ip,
+            userAgent: req.headers['user-agent'],
+            referrer: req.headers.referer,
+            deviceType: req.headers['sec-ch-ua-mobile'] === '?0' ? 'desktop' : 'mobile'
+          }
+        );
+      }
+    } catch (viewError) {
+      // Log the error but don't fail the request
+      console.error("Error recording profile view:", viewError);
+    }
     successResponse(res, "Academy profile fetched", profile);
   } catch (error) {
     errorResponse(res, error.message, error);
@@ -503,6 +523,138 @@ const getAcademiesByUser = async (req, res) => {
   }
 };
 
+// Record profile view
+const recordProfileView = async (req, res) => {
+  try {
+    const view = await AcademyService.recordProfileView(
+      req.body.academyId,
+      {
+        userId: req.user?.userId,
+        ipAddress: req.ip,
+        userAgent: req.headers['user-agent'],
+        referrer: req.headers.referer,
+        deviceType: req.body.deviceType
+      }
+    );
+    successResponse(res, "Profile view recorded", view, 201);
+  } catch (error) {
+    errorResponse(res, error.message, error);
+  }
+};
+
+// Create inquiry
+const createInquiry = async (req, res) => {
+  try {
+    const inquiry = await AcademyService.createInquiry(req.body);
+    successResponse(res, "Inquiry created successfully", inquiry, 201);
+  } catch (error) {
+    errorResponse(res, error.message, error);
+  }
+};
+// Get inquiries
+const getInquiries = async (req, res) => {
+  try {
+    const inquiries = await AcademyService.getInquiries(
+      req.params.academyId,
+      req.query
+    );
+    successResponse(res, "Inquiries fetched successfully", inquiries);
+  } catch (error) {
+    errorResponse(res, error.message, error);
+  }
+};
+
+// Get monthly metrics
+const getMonthlyMetrics = async (req, res) => {
+  try {
+    const metrics = await AcademyService.getMonthlyMetrics(
+      req.params.academyId,
+      req.query
+    );
+    successResponse(res, "Monthly metrics fetched", metrics);
+  } catch (error) {
+    errorResponse(res, error.message, error);
+  }
+};
+// Get program monthly metrics
+const getProgramMonthlyMetrics = async (req, res) => {
+  try {
+    const metrics = await AcademyService.getProgramMonthlyMetrics(
+      req.params.programId,
+      req.params.monthId
+    );
+    successResponse(res, "Program monthly metrics fetched", metrics);
+  } catch (error) {
+    errorResponse(res, error.message, error);
+  }
+};
+
+// Get conversion rate
+const getConversionRate = async (req, res) => {
+  try {
+    const data = await AcademyService.getConversionRate(
+      req.params.academyId,
+      req.params.monthId
+    );
+    successResponse(res, "Conversion rate calculated", data);
+  } catch (error) {
+    errorResponse(res, error.message, error);
+  }
+};
+
+const getAcademyCoachFeedback = async (req, res) => {
+  try {
+    const { academyId } = req.params;
+    
+    if (!academyId) {
+      return errorResponse(res, "Academy ID is required", null, 400);
+    }
+    
+    const feedback = await AcademyService.getAcademyCoachFeedback(academyId);
+    successResponse(res, "Academy coach feedback fetched successfully", { feedback });
+  } catch (error) {
+    errorResponse(res, error.message, error);
+  }
+};
+const getBookingPlatforms = async (req, res) => {
+  try {
+    const { academyId } = req.params;
+    const period = req.query.period ? parseInt(req.query.period) : 3;
+    
+    if (!academyId) {
+      return errorResponse(res, "Academy ID is required", null, 400);
+    }
+    
+    if (isNaN(period) || period < 1 || period > 12) {
+      return errorResponse(res, "Period must be a number between 1 and 12", null, 400);
+    }
+    
+    const bookingData = await AcademyService.getBookingPlatforms(academyId, period);
+    successResponse(res, "Booking platforms data fetched successfully", bookingData);
+  } catch (error) {
+    errorResponse(res, error.message, error);
+  }
+};
+const getPopularPrograms = async (req, res) => {
+  try {
+    const { academyId } = req.params;
+    const limit = req.query.limit ? parseInt(req.query.limit) : 5;
+    
+    if (!academyId) {
+      return errorResponse(res, "Academy ID is required", null, 400);
+    }
+    
+    if (isNaN(limit) || limit < 1 || limit > 20) {
+      return errorResponse(res, "Limit must be a number between 1 and 20", null, 400);
+    }
+    
+    const popularPrograms = await AcademyService.getPopularPrograms(academyId, limit);
+    successResponse(res, "Popular programs fetched successfully", popularPrograms);
+  } catch (error) {
+    errorResponse(res, error.message, error);
+  }
+};
+
 module.exports = {
   createProfile,
   getMyProfiles,
@@ -549,4 +701,15 @@ module.exports = {
   // New endpoints
   getStudentData,
   getAcademiesByUser,
+  // Metrics exports
+  recordProfileView,
+  createInquiry,
+  getInquiries,
+  getMonthlyMetrics,
+  getProgramMonthlyMetrics,
+  getConversionRate,
+  getAcademyCoachFeedback,
+  getBookingPlatforms,
+  getPopularPrograms
+
 };

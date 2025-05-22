@@ -6,7 +6,7 @@ const SupplierRepository = require("./repositories/supplierRepository")
 const AcademyProfileRepository = require("./repositories/academyProfileRepository")
 const CoachProfileRepository = require("./repositories/coachProfileRepository")
 const { verifyAndExtractUser } = require("../../config/otp")
-
+const supplierAnalyticsRepository = require("./repositories/supplierAnalyticsRepository")
 async function signUp({ mobile_number, firebaseIdToken, ...rest }) {
   // Verify Firebase token
   let tokenMobile = null
@@ -127,6 +127,42 @@ async function deleteSupplier(supplierId) {
   return await SupplierRepository.deleteSupplier(supplierId)
 }
 
+async function getSupplierEntities(supplierId) {
+  // Get supplier with all related profiles
+  const supplier = await SupplierRepository.findSupplierById(supplierId)
+  if (!supplier) {
+    throw new Error("Supplier not found")
+  }
+
+  // Format the response
+  return {
+    supplierId: supplier.supplierId,
+    modules: supplier.module || [],
+    isVerified: supplier.isVerified,
+    academyProfiles: (supplier.academyProfiles || []).map(academy => ({
+      id: academy.academyId,
+      name: academy.name,
+      location: academy.city,
+      isVerified: academy.isVerified || false
+    })),
+    turfProfiles: (supplier.turfProfiles || []).map(turf => ({
+      id: turf.turfId,
+      name: turf.name,
+      location: turf.city,
+      isVerified: turf.isVerified || false
+    })),
+    coachProfiles: supplier.coachProfile ? [{
+      id: supplier.coachProfile.coachId,
+      name: supplier.coachProfile.name,
+      location: supplier.coachProfile.city,
+      isVerified: supplier.coachProfile.isVerified || false
+    }] : []
+  }
+}
+
+async function getSupplierAnalyticsOverview(supplierId, period) {
+  return await supplierAnalyticsRepository.getSupplierOverviewAnalytics(supplierId, period);
+}
 module.exports = {
   signUp,
   signIn,
@@ -137,4 +173,8 @@ module.exports = {
   updateSupplierProfile,
   getSupplierByModule,
   deleteSupplier,
+  getSupplierEntities,
+  getSupplierAnalyticsOverview,
+
+
 }
