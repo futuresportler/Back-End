@@ -15,7 +15,7 @@ module.exports = (sequelize) => {
         allowNull: false,
         references: {
           model: "CoachBatches",
-          key: "id",
+          key: "batchId",
         },
         onDelete: "CASCADE",
       },
