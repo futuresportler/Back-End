@@ -62,6 +62,8 @@ const TurfMetric = require("./models/postgres/turf/turfMetric")(sequelize);
 const TurfMonthlyMetric = require("./models/postgres/turf/turfMonthlyMetric")(sequelize);
 // Session models will be initialized dynamically in the session service
 const AcademyBookingPlatform = require("./models/postgres/academy/academyBookingPlatform")(sequelize);
+const AcademyCoachBatch = require("./models/postgres/academy/academyCoachBatch")(sequelize);
+const AcademyCoachProgram = require("./models/postgres/academy/academyCoachProgram")(sequelize);
 
 // Define Associations
 const defineAssociations = () => {
@@ -504,13 +506,83 @@ const defineAssociations = () => {
   });
   
   CoachProfile.hasMany(AcademyCoach, {
-    foreignKey: "coachId",
+    foreignKey: "platformCoachId",
     as: "academyPositions"
   });
   
   AcademyCoach.belongsTo(CoachProfile, {
-    foreignKey: "coachId",
-    as: "coachProfile"
+    foreignKey: "platformCoachId",
+    as: "platformCoach"
+  });
+    // Many-to-Many: Academy Coach <-> Academy Batch
+  AcademyCoach.belongsToMany(AcademyBatch, {
+    through: AcademyCoachBatch,
+    foreignKey: 'academyCoachId',
+    otherKey: 'batchId',
+    as: 'batches'
+  });
+  
+  AcademyBatch.belongsToMany(AcademyCoach, {
+    through: AcademyCoachBatch,
+    foreignKey: 'batchId',
+    otherKey: 'academyCoachId',
+    as: 'coaches'
+  });
+  // Primary coach relationships
+  AcademyBatch.belongsTo(AcademyCoach, {
+    foreignKey: 'primaryCoachId',
+    as: 'primaryCoach'
+  });
+
+  AcademyCoach.hasMany(AcademyBatch, {
+    foreignKey: 'primaryCoachId',
+    as: 'primaryBatches'
+  });
+
+  // Many-to-Many: Academy Coach <-> Academy Program
+  AcademyCoach.belongsToMany(AcademyProgram, {
+    through: AcademyCoachProgram,
+    foreignKey: 'academyCoachId',
+    otherKey: 'programId',
+    as: 'programs'
+  });
+  
+  AcademyProgram.belongsToMany(AcademyCoach, {
+    through: AcademyCoachProgram,
+    foreignKey: 'programId',
+    otherKey: 'academyCoachId',
+    as: 'coaches'
+  });
+    // Primary coach relationships for programs
+  AcademyProgram.belongsTo(AcademyCoach, {
+    foreignKey: 'primaryCoachId',
+    as: 'primaryCoach'
+  });
+
+  AcademyCoach.hasMany(AcademyProgram, {
+    foreignKey: 'primaryCoachId',
+    as: 'primaryPrograms'
+  });
+
+  // Junction table associations
+  AcademyCoachBatch.belongsTo(AcademyCoach, {
+    foreignKey: 'academyCoachId',
+    as: 'coach'
+  });
+
+  AcademyCoachBatch.belongsTo(AcademyBatch, {
+    foreignKey: 'batchId',
+    as: 'batch'
+  });
+
+  AcademyCoachProgram.belongsTo(AcademyCoach, {
+    foreignKey: 'academyCoachId',
+    as: 'coach'
+  });
+
+  AcademyCoachProgram.belongsTo(AcademyProgram, {
+    foreignKey: 'programId',
+    as: 'program'
   });
 
 };
@@ -595,6 +667,8 @@ module.exports = {
   AcademyProfileView,
   AcademyInquiry,
   AcademyBookingPlatform,
+  AcademyCoachBatch,
+  AcademyCoachProgram,
 
   // Turf exports
   TurfGround,
