@@ -10,6 +10,14 @@ module.exports = (sequelize) => {
         defaultValue: DataTypes.UUIDV4,
         primaryKey: true,
       },
+      primaryCoachId: {
+        type: DataTypes.UUID,
+        allowNull: true,
+        references: {
+          model: 'AcademyCoaches',
+          key: 'id'
+        }
+      },
       programName: DataTypes.STRING,
       description: DataTypes.TEXT,
       fee: DataTypes.DECIMAL(10, 2),
@@ -40,6 +48,13 @@ module.exports = (sequelize) => {
         defaultValue: "active",
       },
     },
-    { timestamps: true },
+    { timestamps: true,
+      indexes: [
+        // ...existing indexes...
+        {
+          fields: ['primaryCoachId']
+        }
+      ]
+     },
   )
 }

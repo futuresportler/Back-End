@@ -14,6 +14,15 @@ module.exports = (sequelize) => {
         allowNull: false,
         unique: true,
       },
+      academyCoachId: {
+        type: DataTypes.UUID,
+        allowNull: true,
+        references: {
+          model: 'AcademyCoaches',
+          key: 'id'
+        }
+      },
+      
       batch_id: {
         type: DataTypes.UUID,
         allowNull: false,
@@ -89,6 +98,9 @@ module.exports = (sequelize) => {
         },
         {
           fields: ["date"],
+        },
+        {
+          fields: ["academyCoachId"],
         },
       ],
     }

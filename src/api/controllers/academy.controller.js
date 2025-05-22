@@ -655,6 +655,210 @@ const getPopularPrograms = async (req, res) => {
   }
 };
 
+// Add these Academy Coach controller methods to the existing file
+
+const createAcademyCoach = async (req, res) => {
+  try {
+    const { academyId } = req.params;
+    
+    // Add academy ownership validation
+    const academy = await AcademyService.getAcademyProfile(academyId);
+    if (academy.supplierId !== req.user.supplierId) {
+      return errorResponse(res, "Unauthorized to create coaches for this academy", null, 403);
+    }
+    
+    const coach = await AcademyService.createAcademyCoach(academyId, req.body);
+    successResponse(res, "Academy coach created successfully", coach, 201);
+  } catch (error) {
+    errorResponse(res, error.message, error);
+  }
+};
+
+const getAcademyCoach = async (req, res) => {
+  try {
+    const { coachId } = req.params;
+    const coach = await AcademyService.getAcademyCoach(coachId);
+    successResponse(res, "Academy coach fetched successfully", coach);
+  } catch (error) {
+    errorResponse(res, error.message, error);
+  }
+};
+
+const getAcademyCoaches = async (req, res) => {
+  try {
+    const { academyId } = req.params;
+    const coaches = await AcademyService.getAcademyCoaches(academyId, req.query);
+    successResponse(res, "Academy coaches fetched successfully", coaches);
+  } catch (error) {
+    errorResponse(res, error.message, error);
+  }
+};
+
+const updateAcademyCoach = async (req, res) => {
+  try {
+    const { coachId } = req.params;
+    
+    // Add authorization check - coach must belong to user's academy
+    const coach = await AcademyService.getAcademyCoach(coachId);
+    const academy = await AcademyService.getAcademyProfile(coach.academyId);
+    
+    if (academy.supplierId !== req.user.supplierId) {
+      return errorResponse(res, "Unauthorized to update this coach", null, 403);
+    }
+    
+    const updatedCoach = await AcademyService.updateAcademyCoach(coachId, req.body);
+    successResponse(res, "Academy coach updated successfully", updatedCoach);
+  } catch (error) {
+    errorResponse(res, error.message, error);
+  }
+};
+
+const deleteAcademyCoach = async (req, res) => {
+  try {
+    const { coachId } = req.params;
+    
+    // Add authorization check
+    const coach = await AcademyService.getAcademyCoach(coachId);
+    const academy = await AcademyService.getAcademyProfile(coach.academyId);
+    
+    if (academy.supplierId !== req.user.supplierId) {
+      return errorResponse(res, "Unauthorized to delete this coach", null, 403);
+    }
+    
+    await AcademyService.deleteAcademyCoach(coachId);
+    successResponse(res, "Academy coach deleted successfully", null, 204);
+  } catch (error) {
+    errorResponse(res, error.message, error);
+  }
+};
+
+const assignCoachToBatch = async (req, res) => {
+  try {
+    const { coachId } = req.params;
+    const { batchId, isPrimary } = req.body;
+    
+    // Validate coach belongs to user's academy
+    const coach = await AcademyService.getAcademyCoach(coachId);
+    const academy = await AcademyService.getAcademyProfile(coach.academyId);
+    
+    if (academy.supplierId !== req.user.supplierId) {
+      return errorResponse(res, "Unauthorized to assign this coach", null, 403);
+    }
+    
+    // Validate batch belongs to same academy
+    const batch = await AcademyService.getBatchById(batchId);
+    if (batch.academyId !== coach.academyId) {
+      return errorResponse(res, "Coach and batch must belong to the same academy", null, 400);
+    }
+    
+    const assignment = await AcademyService.academyCoachService.assignToBatch(coachId, batchId, isPrimary);
+    successResponse(res, "Coach assigned to batch successfully", assignment);
+  } catch (error) {
+    errorResponse(res, error.message, error);
+  }
+};
+
+const removeCoachFromBatch = async (req, res) => {
+  try {
+    const { coachId, batchId } = req.params;
+    
+    // Add authorization check
+    const coach = await AcademyService.getAcademyCoach(coachId);
+    const academy = await AcademyService.getAcademyProfile(coach.academyId);
+    
+    if (academy.supplierId !== req.user.supplierId) {
+      return errorResponse(res, "Unauthorized to remove this coach", null, 403);
+    }
+    
+    await AcademyService.academyCoachService.removeFromBatch(coachId, batchId);
+    successResponse(res, "Coach removed from batch successfully", null, 204);
+  } catch (error) {
+    errorResponse(res, error.message, error);
+  }
+};
+
+const assignCoachToProgram = async (req, res) => {
+  try {
+    const { coachId } = req.params;
+    const { programId, isPrimary } = req.body;
+    
+    // Validate coach belongs to user's academy
+    const coach = await AcademyService.getAcademyCoach(coachId);
+    const academy = await AcademyService.getAcademyProfile(coach.academyId);
+    
+    if (academy.supplierId !== req.user.supplierId) {
+      return errorResponse(res, "Unauthorized to assign this coach", null, 403);
+    }
+    
+    // Validate program belongs to same academy
+    const program = await AcademyService.getProgramById(programId);
+    if (program.academyId !== coach.academyId) {
+      return errorResponse(res, "Coach and program must belong to the same academy", null, 400);
+    }
+    
+    const assignment = await AcademyService.academyCoachService.assignToProgram(coachId, programId, isPrimary);
+    successResponse(res, "Coach assigned to program successfully", assignment);
+  } catch (error) {
+    errorResponse(res, error.message, error);
+  }
+};
+
+const removeCoachFromProgram = async (req, res) => {
+  try {
+    const { coachId, programId } = req.params;
+    
+    // Add authorization check
+    const coach = await AcademyService.getAcademyCoach(coachId);
+    const academy = await AcademyService.getAcademyProfile(coach.academyId);
+    
+    if (academy.supplierId !== req.user.supplierId) {
+      return errorResponse(res, "Unauthorized to remove this coach", null, 403);
+    }
+    
+    await AcademyService.academyCoachService.removeFromProgram(coachId, programId);
+    successResponse(res, "Coach removed from program successfully", null, 204);
+  } catch (error) {
+    errorResponse(res, error.message, error);
+  }
+};
+
+const getCoachBatchesAndPrograms = async (req, res) => {
+  try {
+    const { coachId } = req.params;
+    const data = await AcademyService.getCoachBatchesAndPrograms(coachId);
+    successResponse(res, "Coach batches and programs fetched successfully", data);
+  } catch (error) {
+    errorResponse(res, error.message, error);
+  }
+};
+
+const getCoachSchedule = async (req, res) => {
+  try {
+    const { coachId } = req.params;
+    const schedule = await AcademyService.getCoachSchedule(coachId);
+    successResponse(res, "Coach schedule fetched successfully", schedule);
+  } catch (error) {
+    errorResponse(res, error.message, error);
+  }
+};
+const syncCoachesWithPlatform = async (req, res) => {
+  try {
+    const { academyId } = req.params;
+    
+    // Add academy ownership validation
+    const academy = await AcademyService.getAcademyProfile(academyId);
+    if (academy.supplierId !== req.user.supplierId) {
+      return errorResponse(res, "Unauthorized to sync coaches for this academy", null, 403);
+    }
+    
+    const result = await AcademyService.academyCoachService.syncAllCoachesWithPlatform(academyId);
+    successResponse(res, "Coaches synced with platform successfully", result);
+  } catch (error) {
+    errorResponse(res, error.message, error);
+  }
+};
+
+
 module.exports = {
   createProfile,
   getMyProfiles,
@@ -710,6 +914,21 @@ module.exports = {
   getConversionRate,
   getAcademyCoachFeedback,
   getBookingPlatforms,
-  getPopularPrograms
+  getPopularPrograms,
+
+  // Add Academy Coach 
+  createAcademyCoach,
+  getAcademyCoach,
+  getAcademyCoaches,
+  updateAcademyCoach,
+  deleteAcademyCoach,
+  assignCoachToBatch,
+  removeCoachFromBatch,
+  assignCoachToProgram,
+  removeCoachFromProgram,
+  getCoachBatchesAndPrograms,
+  getCoachSchedule,
+  syncCoachesWithPlatform,
+  
 
 };

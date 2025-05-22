@@ -15,16 +15,16 @@ module.exports = (sequelize) => {
         allowNull: false,
         references: {
           model: 'AcademyProfiles',
-          key: 'id'
+          key: 'academyId'
         }
       },
       // Add coachId explicitly
-      coachId: {
+      platformCoachId: {
         type: DataTypes.UUID,
         allowNull: true,
         references: {
           model: 'CoachProfiles',
-          key: 'id' // Assuming this is the primary key in CoachProfiles
+          key: 'coachId'
         }
       },
       name: {
@@ -34,7 +34,7 @@ module.exports = (sequelize) => {
       email: {
         type: DataTypes.STRING,
         allowNull: true,
-        unique: true,
+        unique: false,
       },
       mobileNumber: {
         type: DataTypes.STRING,
@@ -56,7 +56,50 @@ module.exports = (sequelize) => {
         type: DataTypes.ARRAY(DataTypes.STRING),
         allowNull: true,
       },
+      salary: {
+        type: DataTypes.DECIMAL(10, 2),
+        allowNull: true
+      },
+      joiningDate: {
+        type: DataTypes.DATE,
+        allowNull: true
+      },
+      isVerified: {
+        type: DataTypes.BOOLEAN,
+        defaultValue: false
+      },
+      status: {
+        type: DataTypes.ENUM('active', 'inactive', 'pending'),
+        defaultValue: 'pending'
+      },
+      schedule: {
+        type: DataTypes.JSON,
+        allowNull: true,
+      },
+      bio: {
+        type: DataTypes.TEXT,
+        allowNull: true
+      },
+      hourlyRate: {
+        type: DataTypes.DECIMAL(10, 2),
+        allowNull: true
+      },
+      profilePicture: {
+        type: DataTypes.STRING,
+        allowNull: true
+      }
     },
-    { timestamps: false }
+    { timestamps: true,
+      indexes: [
+        {
+          fields: ['academyId']
+        },
+        {
+          fields: ['platformCoachId']
+        },
+        {
+          fields: ['mobileNumber']
+        }
+      ] }
   );
 };
