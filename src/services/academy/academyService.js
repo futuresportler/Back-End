@@ -10,6 +10,7 @@ const academyMetricsRepository = require("./repositories/academyMetricsRepositor
 const academyFeedbackRepository = require("./repositories/academyFeedbackRepository");
 const academyBookingRepository = require("./repositories/academyBookingRepository");
 const academyCoachService = require("./academyCoachService");
+const feedbackService = require("../feedback");
 
 // Fix the import path - import directly from database instead of database/models
 const { AcademyStudent, AcademyProfile } = require("../../database");
@@ -807,6 +808,23 @@ const getPopularPrograms = async (academyId, limit = 5) => {
   return { programs: result };
 };
 
+const getAcademyWithFeedback = async (academyId) => {
+  try {
+    const academy = await academyRepository.getAcademyById(academyId);
+    const [feedback, analytics] = await Promise.all([
+      feedbackService.getRecentFeedback('academy', academyId, 5),
+      feedbackService.getFeedbackAnalytics('academy', academyId)
+    ]);
+    
+    return {
+      ...academy,
+      recentFeedback: feedback,
+      feedbackAnalytics: analytics
+    };
+  } catch (error) {
+    throw new Error(`Failed to get academy with feedback: ${error.message}`);
+  }
+};
 module.exports = {
   createAcademyProfile,
   getAcademyProfile,
@@ -863,6 +881,7 @@ module.exports = {
   getBookingPlatforms,
   recordBookingPlatform,
   getPopularPrograms,
+  getAcademyWithFeedback,
 
     // Academy Coach exports
   academyCoachService,

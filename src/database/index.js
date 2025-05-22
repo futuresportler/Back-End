@@ -65,6 +65,11 @@ const AcademyBookingPlatform = require("./models/postgres/academy/academyBooking
 const AcademyCoachBatch = require("./models/postgres/academy/academyCoachBatch")(sequelize);
 const AcademyCoachProgram = require("./models/postgres/academy/academyCoachProgram")(sequelize);
 
+const SessionFeedback = require("./models/postgres/sessions/sessionFeedback")(sequelize);
+const BatchFeedback = require("./models/postgres/feedback/batchFeedback")(sequelize);
+const ProgramFeedback = require("./models/postgres/feedback/programFeedback")(sequelize);
+const AcademyReview = require("./models/postgres/academy/academyReview")(sequelize);
+
 // Define Associations
 const defineAssociations = () => {
   // Supplier -> Profile Relationships (One-to-One for Coach)
@@ -585,6 +590,62 @@ const defineAssociations = () => {
     as: 'program'
   });
 
+    AcademyProfile.hasMany(AcademyReview, {
+      foreignKey: "academyId",
+      as: "reviews",
+    });
+    AcademyReview.belongsTo(AcademyProfile, {
+      foreignKey: "academyId",
+      as: "academy",
+    });
+    User.hasMany(AcademyReview, {
+      foreignKey: "userId",
+      as: "academyReviews",
+    });
+    AcademyReview.belongsTo(User, {
+      foreignKey: "userId",
+      as: "user",
+    });
+
+    // Session Feedback Associations
+    User.hasMany(SessionFeedback, {
+      foreignKey: "userId",
+      as: "sessionFeedbacks",
+    });
+    SessionFeedback.belongsTo(User, {
+      foreignKey: "userId",
+      as: "user",
+    });
+      // Batch Feedback Associations
+  User.hasMany(BatchFeedback, {
+    foreignKey: "userId",
+    as: "batchFeedbacks",
+  });
+  BatchFeedback.belongsTo(User, {
+    foreignKey: "userId",
+    as: "user",
+  });
+
+  // Program Feedback Associations
+  AcademyProgram.hasMany(ProgramFeedback, {
+    foreignKey: "programId",
+    as: "feedbacks",
+  });
+  ProgramFeedback.belongsTo(AcademyProgram, {
+    foreignKey: "programId",
+    as: "program",
+  });
+  User.hasMany(ProgramFeedback, {
+    foreignKey: "userId",
+    as: "programFeedbacks",
+  });
+  ProgramFeedback.belongsTo(User, {
+    foreignKey: "userId",
+    as: "user",
+  });
+
+
+
 };
 
 // Database Sync Function
@@ -684,5 +745,12 @@ module.exports = {
   Year,
   User,
 
+  //feedback exports
+  SessionFeedback,
+  BatchFeedback,
+  ProgramFeedback,
+  AcademyReview,
+
+  
   syncDatabase,
 };
