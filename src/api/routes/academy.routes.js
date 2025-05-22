@@ -29,7 +29,21 @@ router.delete(
   authMiddleware,
   academyController.deleteProfile
 );
-
+router.get(
+  "/:academyId/coach-feedback", 
+  authMiddleware, 
+  academyController.getAcademyCoachFeedback
+);
+router.get(
+  "/:academyId/booking-platforms",
+  authMiddleware,
+  academyController.getBookingPlatforms
+);
+router.get(
+  "/:academyId/popular-programs",
+  authMiddleware,
+  academyController.getPopularPrograms
+);
 // Student routes
 router.get(
   "/:academyId/students",

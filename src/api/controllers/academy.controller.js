@@ -601,6 +601,60 @@ const getConversionRate = async (req, res) => {
     errorResponse(res, error.message, error);
   }
 };
+
+const getAcademyCoachFeedback = async (req, res) => {
+  try {
+    const { academyId } = req.params;
+    
+    if (!academyId) {
+      return errorResponse(res, "Academy ID is required", null, 400);
+    }
+    
+    const feedback = await AcademyService.getAcademyCoachFeedback(academyId);
+    successResponse(res, "Academy coach feedback fetched successfully", { feedback });
+  } catch (error) {
+    errorResponse(res, error.message, error);
+  }
+};
+const getBookingPlatforms = async (req, res) => {
+  try {
+    const { academyId } = req.params;
+    const period = req.query.period ? parseInt(req.query.period) : 3;
+    
+    if (!academyId) {
+      return errorResponse(res, "Academy ID is required", null, 400);
+    }
+    
+    if (isNaN(period) || period < 1 || period > 12) {
+      return errorResponse(res, "Period must be a number between 1 and 12", null, 400);
+    }
+    
+    const bookingData = await AcademyService.getBookingPlatforms(academyId, period);
+    successResponse(res, "Booking platforms data fetched successfully", bookingData);
+  } catch (error) {
+    errorResponse(res, error.message, error);
+  }
+};
+const getPopularPrograms = async (req, res) => {
+  try {
+    const { academyId } = req.params;
+    const limit = req.query.limit ? parseInt(req.query.limit) : 5;
+    
+    if (!academyId) {
+      return errorResponse(res, "Academy ID is required", null, 400);
+    }
+    
+    if (isNaN(limit) || limit < 1 || limit > 20) {
+      return errorResponse(res, "Limit must be a number between 1 and 20", null, 400);
+    }
+    
+    const popularPrograms = await AcademyService.getPopularPrograms(academyId, limit);
+    successResponse(res, "Popular programs fetched successfully", popularPrograms);
+  } catch (error) {
+    errorResponse(res, error.message, error);
+  }
+};
+
 module.exports = {
   createProfile,
   getMyProfiles,
@@ -653,5 +707,9 @@ module.exports = {
   getInquiries,
   getMonthlyMetrics,
   getProgramMonthlyMetrics,
-  getConversionRate
+  getConversionRate,
+  getAcademyCoachFeedback,
+  getBookingPlatforms,
+  getPopularPrograms
+
 };
