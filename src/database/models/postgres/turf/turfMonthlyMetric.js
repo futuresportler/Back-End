@@ -87,7 +87,34 @@ module.exports = (sequelize) => {
         type: DataTypes.JSON,
         defaultValue: {},
         // Structure: { "groundId1": { bookings: 10, revenue: 5000, ... } }
-      }
+      },
+      revenue: {
+        type: DataTypes.DECIMAL(10, 2),
+        defaultValue: 0.00,
+        allowNull: false,
+      },
+      totalBookings: {
+        type: DataTypes.INTEGER,
+        defaultValue: 0,
+        allowNull: false,
+      },
+      utilization: {
+        type: DataTypes.DECIMAL(5, 2),
+        defaultValue: 0.00,
+        allowNull: false,
+        comment: "Percentage of available slots that were booked",
+      },
+      bookingSources: {
+        type: DataTypes.JSON,
+        defaultValue: {
+          "website": 0,
+          "app": 0,
+          "direct": 0, 
+          "partners": 0,
+          "other": 0
+        },
+        allowNull: false,
+      },
     },
     {
       timestamps: true,

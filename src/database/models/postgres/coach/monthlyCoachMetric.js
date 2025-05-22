@@ -108,7 +108,34 @@ module.exports = (sequelize) => {
       retentionRate: {
         type: DataTypes.DECIMAL(5, 2), // Percentage of students retained from previous month
         defaultValue: 0,
-      }
+      },
+      totalRevenue: {
+        type: DataTypes.DECIMAL(10, 2),
+        defaultValue: 0.00,
+        allowNull: false,
+      },
+      totalSessions: {
+        type: DataTypes.INTEGER,
+        defaultValue: 0,
+        allowNull: false,
+      },
+      utilization: {
+        type: DataTypes.DECIMAL(5, 2),
+        defaultValue: 0.00,
+        allowNull: false,
+        comment: "Percentage of available time slots that were booked",
+      },
+      bookingSources: {
+      type: DataTypes.JSON,
+        defaultValue: {
+          "website": 0,
+          "app": 0, 
+          "direct": 0,
+          "partners": 0,
+          "other": 0
+        },
+      allowNull: false,
+    },
     },
     {
       timestamps: true,

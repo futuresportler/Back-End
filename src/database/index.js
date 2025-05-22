@@ -61,6 +61,7 @@ const SlotRequest = require("./models/postgres/turf/slotRequest")(sequelize);
 const TurfMetric = require("./models/postgres/turf/turfMetric")(sequelize);
 const TurfMonthlyMetric = require("./models/postgres/turf/turfMonthlyMetric")(sequelize);
 // Session models will be initialized dynamically in the session service
+const AcademyBookingPlatform = require("./models/postgres/academy/academyBookingPlatform")(sequelize);
 
 // Define Associations
 const defineAssociations = () => {
@@ -491,6 +492,27 @@ const defineAssociations = () => {
       foreignKey: "coachId",
       as: "coach",
   });
+   // Academy Coach associations
+  AcademyProfile.hasMany(AcademyCoach, {
+    foreignKey: "academyId",
+    as: "coaches"
+  });
+  
+  AcademyCoach.belongsTo(AcademyProfile, {
+    foreignKey: "academyId",
+    as: "academy"
+  });
+  
+  CoachProfile.hasMany(AcademyCoach, {
+    foreignKey: "coachId",
+    as: "academyPositions"
+  });
+  
+  AcademyCoach.belongsTo(CoachProfile, {
+    foreignKey: "coachId",
+    as: "coachProfile"
+  });
+
 };
 
 // Database Sync Function
@@ -572,6 +594,8 @@ module.exports = {
   MonthlyStudentMetric,
   AcademyProfileView,
   AcademyInquiry,
+  AcademyBookingPlatform,
+
   // Turf exports
   TurfGround,
   TurfSlot,
