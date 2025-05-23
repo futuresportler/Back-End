@@ -7,7 +7,7 @@ const { info } = require("./src/config/logging")
 const routes = require("./src/api/index")
 const { connectMongoDB, connectPostgres, syncDatabase } = require("./src/database/index")
 const { initScheduledTasks } = require("./src/scripts/scheduler")
-
+const realTimeNotificationService = require("./src/services/notification/realTimeNotificationService")
 // Initialize Express app
 const app = express()
 
@@ -45,6 +45,10 @@ app.listen(PORT, async () => {
     await connectPostgres()
     await syncDatabase()
 
+    // Initialize WebSocket server 
+    realTimeNotificationService.initializeWebSocketServer(app)
+    realTimeNotificationService.startCleanupInterval()
+    
     // Initialize scheduled tasks
     initScheduledTasks()
 
