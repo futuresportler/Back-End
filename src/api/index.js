@@ -13,7 +13,7 @@ const adminRoutes = require("./routes/admin.routes");
 const chatbotRoutes = require("./routes/chatbot.routes");
 const sessionRoutes = require("./routes/session.routes");
 const feedbackRoutes = require("./routes/feedback.routes");
-
+const notificationRoutes = require("./routes/notification.routes");
 // Mount routes
 router.use("/users", userRoutes);
 router.use("/suppliers", supplierRoutes);
@@ -26,5 +26,6 @@ router.use("/admin", adminRoutes);
 router.use("/chatbot", chatbotRoutes);
 router.use("/sessions", sessionRoutes);
 router.use("/feedback", feedbackRoutes);
+router.use("/notifications", notificationRoutes);
 
 module.exports = router;
