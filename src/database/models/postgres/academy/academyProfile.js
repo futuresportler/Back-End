@@ -168,6 +168,14 @@ module.exports = (sequelize) => {
         defaultValue: { value: 0, reason: "standard" },
         allowNull: false,
       },
+      notifications: {
+        type: DataTypes.ARRAY(DataTypes.JSON),
+        defaultValue: [],
+      },
+      bookingRequestNotifications: {
+        type: DataTypes.ARRAY(DataTypes.JSON),
+        defaultValue: [],
+      },
     },
     {
       timestamps: true,

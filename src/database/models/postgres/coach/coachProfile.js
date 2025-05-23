@@ -112,6 +112,18 @@ module.exports = (sequelize) => {
         defaultValue: { value: 0, reason: "standard" },
         allowNull: false,
       },
+      notifications: {
+        type: DataTypes.ARRAY(DataTypes.JSON),
+        defaultValue: [],
+      },
+      feedbackPendingNotifications: {
+        type: DataTypes.ARRAY(DataTypes.JSON),
+        defaultValue: [],
+      },
+      lastFeedbackReminderSent: {
+        type: DataTypes.DATE,
+        allowNull: true
+      }
     },
     {
       timestamps: true,

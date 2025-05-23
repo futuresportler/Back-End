@@ -70,6 +70,18 @@ module.exports = (sequelize) => {
         type: DataTypes.ENUM("active", "inactive", "maintenance"),
         defaultValue: "active",
       },
+      notifications: {
+        type: DataTypes.ARRAY(DataTypes.JSON),
+        defaultValue: [],
+      },
+      autoAcceptBookings: {
+        type: DataTypes.BOOLEAN,
+        defaultValue: false
+      },
+      maxResponseTime: {
+        type: DataTypes.INTEGER, // in hours
+        defaultValue: 24
+      }
     },
     { timestamps: true },
   )

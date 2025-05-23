@@ -87,7 +87,15 @@ module.exports = (sequelize) => {
       profilePicture: {
         type: DataTypes.STRING,
         allowNull: true
-      }
+      },
+      notifications: {
+        type: DataTypes.ARRAY(DataTypes.JSON),
+        defaultValue: [],
+      },
+      feedbackReminders: {
+        type: DataTypes.ARRAY(DataTypes.JSON),
+        defaultValue: [],
+      },
     },
     { timestamps: true,
       indexes: [
