@@ -7,6 +7,8 @@ const AcademyProfileRepository = require("./repositories/academyProfileRepositor
 const CoachProfileRepository = require("./repositories/coachProfileRepository")
 const { verifyAndExtractUser } = require("../../config/otp")
 const supplierAnalyticsRepository = require("./repositories/supplierAnalyticsRepository")
+const academyInvitationService = require('../academy/academyInvitationService');
+
 async function signUp({ mobile_number, firebaseIdToken, ...rest }) {
   // Verify Firebase token
   let tokenMobile = null
@@ -163,6 +165,79 @@ async function getSupplierEntities(supplierId) {
 async function getSupplierAnalyticsOverview(supplierId, period) {
   return await supplierAnalyticsRepository.getSupplierOverviewAnalytics(supplierId, period);
 }
+
+// Add function to find supplier by phone
+async function getSupplierByPhone(phoneNumber) {
+  const supplier = await SupplierRepository.getSupplierByPhone(phoneNumber);
+  if (!supplier) {
+    throw new Error("Supplier not found");
+  }
+  return supplier;
+}
+
+// Update createSupplier to accept verification flag
+async function createSupplier(supplierData, requireVerification = true) {
+  // Check if supplier exists by mobile
+  const existingSupplier = await SupplierRepository.findSupplierByMobile(supplierData.mobile_number);
+  if (existingSupplier) {
+    throw new Error("Supplier already exists");
+  }
+
+  if (!requireVerification) {
+    // Skip verification for invited users
+    const supplier = await SupplierRepository.createSupplier({
+      ...supplierData,
+      supplierId: uuidv4(),
+      isVerified: false
+    });
+    return supplier;
+  }
+  
+  // Existing verification logic for regular signups...
+  const newSupplier = await SupplierRepository.createSupplier({
+    ...supplierData,
+    supplierId: uuidv4(),
+  });
+  
+  return newSupplier;
+}
+
+// Add function to get supplier invitations
+async function getSupplierInvitations(supplierId, status = null) {
+  return await academyInvitationService.getSupplierInvitations(supplierId, status);
+}
+
+// Add function to accept invitation
+async function acceptInvitation(invitationToken, supplierId) {
+  return await academyInvitationService.acceptInvitation(invitationToken, supplierId);
+}
+
+// Add function to reject invitation
+async function rejectInvitation(invitationToken, supplierId) {
+  return await academyInvitationService.rejectInvitation(invitationToken, supplierId);
+}
+
+// Add function to get managing academies
+async function getManagingAcademies(supplierId) {
+  const { AcademyProfile } = require("../../database");
+  
+  return await AcademyProfile.findAll({
+    where: { 
+      managerId: supplierId,
+      managerInvitationStatus: 'accepted'
+    },
+    attributes: [
+      'academyId', 
+      'name', 
+      'description', 
+      'photos',
+      'sports',
+      'managerAcceptedAt'
+    ]
+  });
+}
+
+
 module.exports = {
   signUp,
   signIn,
@@ -176,5 +251,10 @@ module.exports = {
   getSupplierEntities,
   getSupplierAnalyticsOverview,
 
-
+  getSupplierByPhone,
+  createSupplier,
+  getSupplierInvitations,
+  acceptInvitation,
+  rejectInvitation,
+  getManagingAcademies,
 }
