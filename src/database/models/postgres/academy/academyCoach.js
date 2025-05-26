@@ -96,6 +96,24 @@ module.exports = (sequelize) => {
         type: DataTypes.ARRAY(DataTypes.JSON),
         defaultValue: [],
       },
+      invitationStatus: {
+        type: DataTypes.ENUM('pending', 'accepted', 'rejected'),
+        defaultValue: 'pending',
+        allowNull: false
+      },
+      invitedAt: {
+        type: DataTypes.DATE,
+        allowNull: true
+      },
+      acceptedAt: {
+        type: DataTypes.DATE,
+        allowNull: true
+      },
+      invitationToken: {
+        type: DataTypes.STRING,
+        allowNull: true,
+        unique: true
+      }
     },
     { timestamps: true,
       indexes: [

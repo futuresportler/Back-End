@@ -72,6 +72,7 @@ const AcademyReview = require("./models/postgres/academy/academyReview")(sequeli
 const Notification = require("./models/postgres/notification/notification")(sequelize);
 const FeedbackReminder = require("./models/postgres/notification/feedbackReminder")(sequelize);
 const BookingNotification = require("./models/postgres/notification/bookingNotification")(sequelize);
+const AcademyInvitation = require("./models/postgres/academy/academyInvitation")(sequelize);
 
 // Define Associations
 const defineAssociations = () => {
@@ -788,6 +789,26 @@ const defineAssociations = () => {
     },
     as: "coachBookingNotifications"
   });
+  // Academy Invitation associations
+  AcademyInvitation.belongsTo(AcademyProfile, {
+    foreignKey: "academyId",
+    as: "academy"
+  });
+
+  AcademyInvitation.belongsTo(Supplier, {
+    foreignKey: "inviterSupplierId",
+    as: "inviter"
+  });
+
+  AcademyInvitation.belongsTo(Supplier, {
+    foreignKey: "inviteeSupplierId",
+    as: "invitee"
+  });
+
+  AcademyProfile.hasMany(AcademyInvitation, {
+    foreignKey: "academyId",
+    as: "invitations"
+  });
 };
 
 // Database Sync Function
@@ -872,6 +893,8 @@ module.exports = {
   AcademyBookingPlatform,
   AcademyCoachBatch,
   AcademyCoachProgram,
+  AcademyInvitation,
+
 
   // Turf exports
   TurfGround,
