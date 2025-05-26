@@ -90,10 +90,10 @@ const getManagingAcademies = async (req, res) => {
         invitationStatus: 'accepted'
       },
       attributes: [
-        'academyProfileId', 
-        'academy_name', 
+        'academyId', 
+        'name', 
         'description', 
-        'mainImage',
+        'photos',
         'sports',
         'managerAcceptedAt'
       ]

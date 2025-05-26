@@ -1,7 +1,7 @@
 const { AcademyInvitation, AcademyProfile, Supplier, AcademyCoach } = require("../../database");
 const { v4: uuidv4 } = require("uuid");
 const crypto = require("crypto");
-const supplierService = require("../supplier/supplierService");
+const SupplierRepository = require("../supplier/repositories/supplierRepository");
 const notificationService = require("../notification/notificationService");
 
 class AcademyInvitationService {
@@ -28,7 +28,7 @@ class AcademyInvitationService {
     // Check if supplier exists with phone number
     let existingSupplier = null;
     try {
-      existingSupplier = await supplierService.getSupplierByPhone(phoneNumber);
+      existingSupplier = await SupplierRepository.findSupplierByMobile(phoneNumber);
     } catch (error) {
       // Supplier doesn't exist, we'll create one
     }
@@ -39,12 +39,13 @@ class AcademyInvitationService {
       inviteeSupplierId = existingSupplier.supplierId;
     } else {
       // Create unverified supplier account
-      const newSupplier = await supplierService.createSupplier({
+      const newSupplier = await SupplierRepository.createSupplier({
+        supplierId: uuidv4(),
         mobile_number: phoneNumber,
         email: email,
         name: name,
         isVerified: false,
-        role: 'supplier',
+        role: 'manager',
         module: ['academy']
       }, false); // Don't require verification yet
       
@@ -96,7 +97,7 @@ class AcademyInvitationService {
     // Check if supplier exists with phone number
     let existingSupplier = null;
     try {
-      existingSupplier = await supplierService.getSupplierByPhone(phoneNumber);
+      existingSupplier = await SupplierRepository.findSupplierByMobile(phoneNumber);
     } catch (error) {
       // Supplier doesn't exist
     }
@@ -107,12 +108,13 @@ class AcademyInvitationService {
       inviteeSupplierId = existingSupplier.supplierId;
     } else {
       // Create unverified supplier account
-      const newSupplier = await supplierService.createSupplier({
+      const newSupplier = await SupplierRepository.createSupplier({
+        supplierId: uuidv4(),
         mobile_number: phoneNumber,
         email: email,
         name: name,
         isVerified: false,
-        role: 'supplier',
+        role: 'coach',
         module: ['coach']
       }, false);
       
@@ -139,12 +141,13 @@ class AcademyInvitationService {
 
     // Create academy coach record with pending status
     await AcademyCoach.create({
+      id: uuidv4(),
       academyId,
       name,
       mobileNumber: phoneNumber,
       email,
       bio,
-      specialization,
+      sport: specialization?.[0] || 'General',
       supplierId: inviteeSupplierId,
       invitationStatus: 'pending',
       invitedAt: new Date(),
@@ -270,7 +273,7 @@ class AcademyInvitationService {
         { 
           model: AcademyProfile, 
           as: 'academy',
-          attributes: ['academyProfileId', 'academy_name', 'description', 'mainImage']
+          attributes: ['academyId', 'name', 'description', 'photos'] // Changed from academyProfileId to academyId and academy_name to name
         }
       ],
       order: [['createdAt', 'DESC']]
@@ -279,26 +282,30 @@ class AcademyInvitationService {
 
   // Send invitation notification
   async sendInvitationNotification(invitation, academy, role) {
-    const message = `You've been invited to join ${academy.academy_name} as a ${role}. Please check your app to accept or reject this invitation.`;
+    const message = `You've been invited to join ${academy.name} as a ${role}. Please check your app to accept or reject this invitation.`;
     
     // Create app notification
-    await notificationService.createNotification(
-      invitation.inviteeSupplierId,
-      'supplier',
-      {
-        type: `academy_${role}_invitation`,
-        title: `${role.charAt(0).toUpperCase() + role.slice(1)} Invitation`,
-        message,
-        data: {
-          academyId: invitation.academyId,
-          academyName: academy.academy_name,
-          invitationId: invitation.invitationId,
-          invitationToken: invitation.invitationToken,
-          role
-        },
-        priority: 'high'
-      }
-    );
+    try {
+      await notificationService.createNotification(
+        invitation.inviteeSupplierId,
+        'supplier',
+        {
+          type: `academy_${role}_invitation`,
+          title: `${role.charAt(0).toUpperCase() + role.slice(1)} Invitation`,
+          message,
+          data: {
+            academyId: invitation.academyId,
+            academyName: academy.name,
+            invitationId: invitation.invitationId,
+            invitationToken: invitation.invitationToken,
+            role
+          },
+          priority: 'high'
+        }
+      );
+    } catch (error) {
+      console.error('Failed to create notification:', error);
+    }
 
     // Send WhatsApp notification
     try {
@@ -314,7 +321,7 @@ class AcademyInvitationService {
   // Send acceptance notification
   async sendAcceptanceNotification(invitation) {
     const academy = await AcademyProfile.findByPk(invitation.academyId);
-    const message = `${invitation.metadata.inviteeName} has accepted your invitation to join ${academy.academy_name} as ${invitation.role}.`;
+    const message = `${invitation.metadata.inviteeName} has accepted your invitation to join ${academy.name} as ${invitation.role}.`;
     
     await notificationService.createNotification(
       invitation.inviterSupplierId,
@@ -337,7 +344,7 @@ class AcademyInvitationService {
   // Send rejection notification
   async sendRejectionNotification(invitation) {
     const academy = await AcademyProfile.findByPk(invitation.academyId);
-    const message = `${invitation.metadata.inviteeName} has declined your invitation to join ${academy.academy_name} as ${invitation.role}.`;
+    const message = `${invitation.metadata.inviteeName} has declined your invitation to join ${academy.name} as ${invitation.role}.`;
     
     await notificationService.createNotification(
       invitation.inviterSupplierId,

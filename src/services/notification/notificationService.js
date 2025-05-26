@@ -12,7 +12,7 @@ const handleServiceError = (operation, error) => {
 class NotificationService {
 
     getModelByType(recipientType) {
-    const { User, CoachProfile, AcademyProfile, TurfProfile, AcademyCoach } = require("../../database");
+    const { User, CoachProfile, AcademyProfile, TurfProfile, AcademyCoach, Supplier } = require("../../database");
     
     switch (recipientType) {
         case 'user':
@@ -26,6 +26,8 @@ class NotificationService {
         return AcademyProfile;
         case 'turf':
         return TurfProfile;
+        case 'supplier': 
+        return Supplier;
         default:
         throw new Error(`Unknown recipient type: ${recipientType}`);
     }
@@ -44,6 +46,8 @@ class NotificationService {
         return 'academyProfileId';
         case 'turf':
         return 'turfProfileId';
+        case 'supplier': 
+        return 'supplierId';
         default:
         return 'id';
     }
@@ -456,10 +460,10 @@ class NotificationService {
       console.log(`Real-time notification sent via WebSocket to ${recipientType}:${recipientId}`);
     } else {
       console.log(`User ${recipientId} not connected via WebSocket, skipping real-time notification`);
+      await this.sendPushNotification(recipientId, notification);
     }
 
     // You can also implement push notifications here for mobile apps
-    // await this.sendPushNotification(recipientId, notification);
     
     return { websocket: wsSuccess };
   } catch (error) {

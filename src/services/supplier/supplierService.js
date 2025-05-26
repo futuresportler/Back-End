@@ -33,7 +33,7 @@ async function signUp({ mobile_number, firebaseIdToken, ...rest }) {
     ...rest,
     mobile_number,
     supplierId: uuidv4(),
-  })
+  },true)
 
   // Generate tokens
   const tokens = generateSupplierTokens(newSupplier)
@@ -168,7 +168,7 @@ async function getSupplierAnalyticsOverview(supplierId, period) {
 
 // Add function to find supplier by phone
 async function getSupplierByPhone(phoneNumber) {
-  const supplier = await SupplierRepository.getSupplierByPhone(phoneNumber);
+  const supplier = await SupplierRepository.findSupplierByMobile(phoneNumber);
   if (!supplier) {
     throw new Error("Supplier not found");
   }

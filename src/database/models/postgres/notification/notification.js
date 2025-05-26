@@ -18,11 +18,11 @@ module.exports = (sequelize) => {
         }
       },
       recipientType: {
-        type: DataTypes.ENUM('user', 'coach', 'academy', 'turf'),
+        type: DataTypes.ENUM('user', 'coach', 'academy', 'turf','student','supplier','academy_coach'),
         allowNull: false,
         validate: {
           notEmpty: true,
-          isIn: [['user', 'coach', 'academy', 'turf']]
+          isIn: [['user', 'coach', 'academy', 'turf','student','supplier','academy_coach']]
         }
       },
       type: {
@@ -33,7 +33,8 @@ module.exports = (sequelize) => {
           'booking_rejection',
           'payment_reminder',
           'review_request',
-          'general'
+          'general',
+          'academy_manager_invitation'
         ),
         allowNull: false,
         validate: {

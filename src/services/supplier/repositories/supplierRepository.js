@@ -5,7 +5,7 @@ const {
   TurfProfile,
 } = require("../../../database");
 
-async function createSupplier(supplierData) {
+async function createSupplier(supplierData, requireVerification = true) {
   const supplier = await Supplier.create(supplierData);
   
   // If this is an invited user, don't require immediate verification

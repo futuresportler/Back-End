@@ -1,7 +1,7 @@
 const express = require("express");
 const router = express.Router();
 const invitationController = require("../controllers/invitation.controller");
-const authMiddleware = require("../middlewares/authMiddleware");
+const { authMiddleware } = require("../middlewares/auth.middleware");
 
 // Invite manager to academy
 router.post("/academy/:academyId/invite-manager", 
