@@ -1,6 +1,6 @@
-const { 
+const {
   AcademyReview,
-  CoachReview, 
+  CoachReview,
   TurfReview,
   AcademyStudent,
   CoachStudent,
@@ -16,7 +16,7 @@ const {
   CoachProfile,
   TurfProfile,
   Month,
-  sequelize 
+  sequelize,
 } = require("../../../database");
 
 class FeedbackRepository {
@@ -25,14 +25,17 @@ class FeedbackRepository {
   // Academy Feedback
   async getAcademyFeedback(academyId, filters = {}) {
     const where = { academyId };
-    
+
     if (filters.rating) {
       where.rating = filters.rating;
     }
-    
+
     if (filters.startDate && filters.endDate) {
       where.createdAt = {
-        [sequelize.Op.between]: [new Date(filters.startDate), new Date(filters.endDate)]
+        [sequelize.Op.between]: [
+          new Date(filters.startDate),
+          new Date(filters.endDate),
+        ],
       };
     }
 
@@ -42,36 +45,39 @@ class FeedbackRepository {
         {
           model: User,
           as: "user",
-          attributes: ["userId", "first_name", "last_name", "email"]
+          attributes: ["userId", "first_name", "last_name", "email"],
         },
         {
           model: AcademyProfile,
           as: "academy",
-          attributes: ["academyId", "academy_name"]
-        }
+          attributes: ["academyId", "academy_name"],
+        },
       ],
       order: [["createdAt", "DESC"]],
-      limit: filters.limit ? parseInt(filters.limit) : 50
+      limit: filters.limit ? parseInt(filters.limit) : 50,
     });
   }
 
   async getAcademyCoachFeedback(academyId, filters = {}) {
-    const coaches = await sequelize.query(`
-      SELECT DISTINCT ac."platformCoachId" as "coachId"
-      FROM "AcademyCoaches" ac
+    const coaches = await sequelize.query(
+      `
+      SELECT DISTINCT ac."coachId" as "coachId"
+      FROM "AcademyCoach" ac
       WHERE ac."academyId" = :academyId
-    `, {
-      replacements: { academyId },
-      type: sequelize.QueryTypes.SELECT
-    });
+    `,
+      {
+        replacements: { academyId },
+        type: sequelize.QueryTypes.SELECT,
+      }
+    );
 
-    const coachIds = coaches.map(c => c.coachId);
-    
+    const coachIds = coaches.map((c) => c.coachId);
+
     if (coachIds.length === 0) return [];
 
-    const where = { 
+    const where = {
       coachId: { [sequelize.Op.in]: coachIds },
-      isPublic: true 
+      isPublic: true,
     };
 
     if (filters.rating) {
@@ -84,22 +90,22 @@ class FeedbackRepository {
         {
           model: User,
           as: "user",
-          attributes: ["userId", "first_name", "last_name"]
+          attributes: ["userId", "first_name", "last_name"],
         },
         {
           model: CoachProfile,
           as: "coach",
-          attributes: ["coachId", "name"]
-        }
+          attributes: ["coachId", "name"],
+        },
       ],
       order: [["createdAt", "DESC"]],
-      limit: filters.limit ? parseInt(filters.limit) : 50
+      limit: filters.limit ? parseInt(filters.limit) : 50,
     });
   }
 
   async getAcademyStudentFeedback(academyId, filters = {}) {
     const where = { academyId };
-    
+
     if (filters.studentId) {
       where.studentId = filters.studentId;
     }
@@ -112,33 +118,33 @@ class FeedbackRepository {
           model: User,
           as: "user",
           attributes: ["userId", "first_name", "last_name"],
-          required: false
-        }
+          required: false,
+        },
       ],
       order: [["createdAt", "DESC"]],
-      limit: filters.limit ? parseInt(filters.limit) : 50
+      limit: filters.limit ? parseInt(filters.limit) : 50,
     });
 
     // Format coach feedback array
-    return students.map(student => ({
+    return students.map((student) => ({
       ...student.toJSON(),
-      feedbacks: student.coachFeedback || []
+      feedbacks: student.coachFeedback || [],
     }));
   }
 
   async getAcademyBatchFeedback(academyId, filters = {}) {
     const batches = await AcademyBatch.findAll({
       where: { academyId },
-      attributes: ["batchId", "batchName"]
+      attributes: ["batchId", "batchName"],
     });
 
-    const batchIds = batches.map(b => b.batchId);
-    
+    const batchIds = batches.map((b) => b.batchId);
+
     if (batchIds.length === 0) return [];
 
     const where = {
       batchId: { [sequelize.Op.in]: batchIds },
-      batchType: "academy"
+      batchType: "academy",
     };
 
     if (filters.rating) {
@@ -151,26 +157,26 @@ class FeedbackRepository {
         {
           model: User,
           as: "user",
-          attributes: ["userId", "first_name", "last_name"]
-        }
+          attributes: ["userId", "first_name", "last_name"],
+        },
       ],
       order: [["createdAt", "DESC"]],
-      limit: filters.limit ? parseInt(filters.limit) : 50
+      limit: filters.limit ? parseInt(filters.limit) : 50,
     });
   }
 
   async getAcademyProgramFeedback(academyId, filters = {}) {
     const programs = await AcademyProgram.findAll({
       where: { academyId },
-      attributes: ["programId", "programName"]
+      attributes: ["programId", "programName"],
     });
 
-    const programIds = programs.map(p => p.programId);
-    
+    const programIds = programs.map((p) => p.programId);
+
     if (programIds.length === 0) return [];
 
     const where = {
-      programId: { [sequelize.Op.in]: programIds }
+      programId: { [sequelize.Op.in]: programIds },
     };
 
     if (filters.rating) {
@@ -183,23 +189,23 @@ class FeedbackRepository {
         {
           model: User,
           as: "user",
-          attributes: ["userId", "first_name", "last_name"]
+          attributes: ["userId", "first_name", "last_name"],
         },
         {
           model: AcademyProgram,
           as: "program",
-          attributes: ["programId", "programName"]
-        }
+          attributes: ["programId", "programName"],
+        },
       ],
       order: [["createdAt", "DESC"]],
-      limit: filters.limit ? parseInt(filters.limit) : 50
+      limit: filters.limit ? parseInt(filters.limit) : 50,
     });
   }
 
   // Coach Feedback
   async getCoachFeedback(coachId, filters = {}) {
     const where = { coachId };
-    
+
     if (filters.rating) {
       where.rating = filters.rating;
     }
@@ -214,22 +220,22 @@ class FeedbackRepository {
         {
           model: User,
           as: "user",
-          attributes: ["userId", "first_name", "last_name"]
+          attributes: ["userId", "first_name", "last_name"],
         },
         {
           model: CoachProfile,
           as: "coach",
-          attributes: ["coachId", "name"]
-        }
+          attributes: ["coachId", "name"],
+        },
       ],
       order: [["createdAt", "DESC"]],
-      limit: filters.limit ? parseInt(filters.limit) : 50
+      limit: filters.limit ? parseInt(filters.limit) : 50,
     });
   }
 
   async getCoachStudentFeedback(coachId, filters = {}) {
     const where = { coachId };
-    
+
     if (filters.studentId) {
       where.userId = filters.studentId;
     }
@@ -238,28 +244,28 @@ class FeedbackRepository {
       where,
       attributes: ["id", "name", "coachFeedback", "createdAt"],
       order: [["createdAt", "DESC"]],
-      limit: filters.limit ? parseInt(filters.limit) : 50
+      limit: filters.limit ? parseInt(filters.limit) : 50,
     });
 
-    return students.map(student => ({
+    return students.map((student) => ({
       ...student.toJSON(),
-      feedbacks: student.coachFeedback || []
+      feedbacks: student.coachFeedback || [],
     }));
   }
 
   async getCoachBatchFeedback(coachId, filters = {}) {
     const batches = await CoachBatch.findAll({
       where: { coachId },
-      attributes: ["batchId", "name"]
+      attributes: ["batchId", "name"],
     });
 
-    const batchIds = batches.map(b => b.batchId);
-    
+    const batchIds = batches.map((b) => b.batchId);
+
     if (batchIds.length === 0) return [];
 
     const where = {
       batchId: { [sequelize.Op.in]: batchIds },
-      batchType: "coach"
+      batchType: "coach",
     };
 
     return await BatchFeedback.findAll({
@@ -268,57 +274,70 @@ class FeedbackRepository {
         {
           model: User,
           as: "user",
-          attributes: ["userId", "first_name", "last_name"]
-        }
+          attributes: ["userId", "first_name", "last_name"],
+        },
       ],
       order: [["createdAt", "DESC"]],
-      limit: filters.limit ? parseInt(filters.limit) : 50
+      limit: filters.limit ? parseInt(filters.limit) : 50,
     });
   }
 
   // Student Feedback
   async getStudentFeedback(studentId, filters = {}) {
-    const [academyFeedback, coachFeedback, monthlyProgress] = await Promise.all([
-      AcademyStudent.findAll({
-        where: { studentId },
-        attributes: ["studentId", "name", "coachFeedback", "createdAt", "academyId"],
-        include: [
-          {
-            model: AcademyProfile,
-            as: "academy",
-            attributes: ["academyId", "academy_name"]
-          }
-        ]
-      }),
-      CoachStudent.findAll({
-        where: { userId: studentId },
-        attributes: ["id", "name", "coachFeedback", "createdAt", "coachId"]
-      }),
-      MonthlyStudentProgress.findAll({
-        where: { studentId },
-        attributes: ["progressId", "coachFeedback", "studentFeedback", "createdAt"],
-        include: [
-          {
-            model: Month,
-            as: "month",
-            attributes: ["monthId", "monthName", "year"]
-          }
-        ],
-        order: [["createdAt", "DESC"]],
-        limit: 12
-      })
-    ]);
+    const [academyFeedback, coachFeedback, monthlyProgress] = await Promise.all(
+      [
+        AcademyStudent.findAll({
+          where: { studentId },
+          attributes: [
+            "studentId",
+            "name",
+            "coachFeedback",
+            "createdAt",
+            "academyId",
+          ],
+          include: [
+            {
+              model: AcademyProfile,
+              as: "academy",
+              attributes: ["academyId", "academy_name"],
+            },
+          ],
+        }),
+        CoachStudent.findAll({
+          where: { userId: studentId },
+          attributes: ["id", "name", "coachFeedback", "createdAt", "coachId"],
+        }),
+        MonthlyStudentProgress.findAll({
+          where: { studentId },
+          attributes: [
+            "progressId",
+            "coachFeedback",
+            "studentFeedback",
+            "createdAt",
+          ],
+          include: [
+            {
+              model: Month,
+              as: "month",
+              attributes: ["monthId", "monthName", "year"],
+            },
+          ],
+          order: [["createdAt", "DESC"]],
+          limit: 12,
+        }),
+      ]
+    );
 
     return {
-      academyFeedback: academyFeedback.map(af => ({
+      academyFeedback: academyFeedback.map((af) => ({
         ...af.toJSON(),
-        feedbacks: af.coachFeedback || []
+        feedbacks: af.coachFeedback || [],
       })),
-      coachFeedback: coachFeedback.map(cf => ({
+      coachFeedback: coachFeedback.map((cf) => ({
         ...cf.toJSON(),
-        feedbacks: cf.coachFeedback || []
+        feedbacks: cf.coachFeedback || [],
       })),
-      monthlyProgress
+      monthlyProgress,
     };
   }
 
@@ -336,11 +355,11 @@ class FeedbackRepository {
         {
           model: User,
           as: "user",
-          attributes: ["userId", "first_name", "last_name"]
-        }
+          attributes: ["userId", "first_name", "last_name"],
+        },
       ],
       order: [["createdAt", "DESC"]],
-      limit: filters.limit ? parseInt(filters.limit) : 50
+      limit: filters.limit ? parseInt(filters.limit) : 50,
     });
   }
 
@@ -362,16 +381,16 @@ class FeedbackRepository {
         {
           model: User,
           as: "user",
-          attributes: ["userId", "first_name", "last_name"]
+          attributes: ["userId", "first_name", "last_name"],
         },
         {
           model: AcademyProgram,
           as: "program",
-          attributes: ["programId", "programName"]
-        }
+          attributes: ["programId", "programName"],
+        },
       ],
       order: [["createdAt", "DESC"]],
-      limit: filters.limit ? parseInt(filters.limit) : 50
+      limit: filters.limit ? parseInt(filters.limit) : 50,
     });
   }
 
@@ -389,10 +408,10 @@ class FeedbackRepository {
         {
           model: User,
           as: "user",
-          attributes: ["userId", "first_name", "last_name"]
-        }
+          attributes: ["userId", "first_name", "last_name"],
+        },
       ],
-      order: [["createdAt", "DESC"]]
+      order: [["createdAt", "DESC"]],
     });
   }
 
@@ -408,39 +427,45 @@ class FeedbackRepository {
 
   async createStudentFeedback(feedbackData) {
     const { studentId, academyId, coachId, feedback } = feedbackData;
-    
+
     if (academyId) {
       const student = await AcademyStudent.findOne({
-        where: { studentId, academyId }
+        where: { studentId, academyId },
       });
-      
+
       if (student) {
         const currentFeedback = student.coachFeedback || [];
-        const updatedFeedback = [...currentFeedback, {
-          ...feedback,
-          createdAt: new Date()
-        }];
-        
+        const updatedFeedback = [
+          ...currentFeedback,
+          {
+            ...feedback,
+            createdAt: new Date(),
+          },
+        ];
+
         return await student.update({ coachFeedback: updatedFeedback });
       }
     }
-    
+
     if (coachId) {
       const student = await CoachStudent.findOne({
-        where: { userId: studentId, coachId }
+        where: { userId: studentId, coachId },
       });
-      
+
       if (student) {
         const currentFeedback = student.coachFeedback || [];
-        const updatedFeedback = [...currentFeedback, {
-          ...feedback,
-          createdAt: new Date()
-        }];
-        
+        const updatedFeedback = [
+          ...currentFeedback,
+          {
+            ...feedback,
+            createdAt: new Date(),
+          },
+        ];
+
         return await student.update({ coachFeedback: updatedFeedback });
       }
     }
-    
+
     throw new Error("Student not found");
   }
 
@@ -460,29 +485,30 @@ class FeedbackRepository {
 
   async getFeedbackAnalytics(entityType, entityId) {
     let model, whereClause;
-    
+
     switch (entityType) {
-      case 'academy':
+      case "academy":
         model = AcademyReview;
         whereClause = { academyId: entityId };
         break;
-      case 'coach':
+      case "coach":
         model = CoachReview;
         whereClause = { coachId: entityId };
         break;
-      case 'program':
+      case "program":
         model = ProgramFeedback;
         whereClause = { programId: entityId };
         break;
-      case 'batch':
+      case "batch":
         model = BatchFeedback;
         whereClause = { batchId: entityId };
         break;
       default:
-        throw new Error('Invalid entity type');
+        throw new Error("Invalid entity type");
     }
 
-    const [analytics] = await sequelize.query(`
+    const [analytics] = await sequelize.query(
+      `
       SELECT 
         COUNT(*) as total_reviews,
         AVG(rating::numeric) as average_rating,
@@ -492,11 +518,15 @@ class FeedbackRepository {
         COUNT(CASE WHEN rating = 2 THEN 1 END) as two_star,
         COUNT(CASE WHEN rating = 1 THEN 1 END) as one_star
       FROM "${model.tableName}"
-      WHERE ${Object.keys(whereClause).map(key => `"${key}" = :${key}`).join(' AND ')}
-    `, {
-      replacements: whereClause,
-      type: sequelize.QueryTypes.SELECT
-    });
+      WHERE ${Object.keys(whereClause)
+        .map((key) => `"${key}" = :${key}`)
+        .join(" AND ")}
+    `,
+      {
+        replacements: whereClause,
+        type: sequelize.QueryTypes.SELECT,
+      }
+    );
 
     return {
       totalReviews: parseInt(analytics.total_reviews),
@@ -506,8 +536,8 @@ class FeedbackRepository {
         4: parseInt(analytics.four_star),
         3: parseInt(analytics.three_star),
         2: parseInt(analytics.two_star),
-        1: parseInt(analytics.one_star)
-      }
+        1: parseInt(analytics.one_star),
+      },
     };
   }
 }

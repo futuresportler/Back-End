@@ -18,11 +18,11 @@ module.exports = (sequelize) => {
         type: DataTypes.UUID,
         allowNull: true,
         references: {
-          model: 'AcademyCoaches',
-          key: 'id'
-        }
+          model: "AcademyCoach",
+          key: "id",
+        },
       },
-      
+
       batch_id: {
         type: DataTypes.UUID,
         allowNull: false,

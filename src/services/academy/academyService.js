@@ -16,21 +16,6 @@ const academyInvitationService = require('./academyInvitationService');
 // Fix the import path - import directly from database instead of database/models
 const { AcademyStudent, AcademyProfile } = require("../../database");
 
-const createAcademyProfile = async (supplierId, profileData) => {
-  const supplier = await SupplierService.getSupplierByModule(
-    supplierId,
-    "academy"
-  );
-  if (!supplier) {
-    throw new Error("Supplier not found or not configured for academy");
-  }
-
-  return await academyRepository.createAcademyProfile({
-    ...profileData,
-    supplierId,
-    academyProfileId: uuidv4(),
-  });
-};
 
 const getAcademyProfile = async (academyProfileId, options) => {
   const profile = await academyRepository.getAcademyProfileWithDetails(

@@ -7,7 +7,7 @@ const {
 } = require("../../../database");
 const SupplierRepository = require("./supplierRepository");
 const { v4: uuidv4 } = require("uuid");
-const academyInvitationService = require('../../academy/academyInvitationService');
+const academyInvitationService = require("../../academy/academyInvitationService");
 
 async function createAcademyProfile(data) {
   const {
@@ -30,7 +30,7 @@ async function createAcademyProfile(data) {
     let mgr = await SupplierRepository.findSupplierByMobile(m.phone);
     if (mgr) {
       managerId = mgr.supplierId;
-    }else {
+    } else {
       // create new “manager” supplier
       mgr = await SupplierRepository.createSupplier({
         supplierId: uuidv4(),
@@ -65,9 +65,9 @@ async function createAcademyProfile(data) {
     foundedYear: basic_info.year_of_establishment,
     supplierId,
     managerId,
-    managerInvitationStatus: managerId ? 'pending' : null,
+    managerInvitationStatus: managerId ? "pending" : null,
     managerInvitedAt: managerId ? new Date() : null,
-    
+
     city: basic_info.city,
     address: basic_info.full_address,
     email: basic_info.contact_email,
@@ -100,9 +100,9 @@ async function createAcademyProfile(data) {
       email: c.email,
       mobileNumber: c.mobileNumber,
       academyId,
-      invitationStatus: 'pending',
+      invitationStatus: "pending",
       invitedAt: new Date(),
-      invitationToken: uuidv4(), 
+      invitationToken: uuidv4(),
     });
   }
 
@@ -151,26 +151,22 @@ async function createAcademyProfile(data) {
         manager_info.manager
       );
     } catch (error) {
-      console.error('Failed to send manager invitation:', error);
+      console.error("Failed to send manager invitation:", error);
       // Don't fail academy creation if invitation fails
     }
   }
   for (const c of coaches) {
     if (c.mobileNumber) {
       try {
-        await academyInvitationService.inviteCoach(
-          academyId,
-          supplierId,
-          {
-            phoneNumber: c.mobileNumber,
-            email: c.email,
-            name: c.coach_name,
-            bio: `${c.specialization} coach with ${c.years_of_experience} years experience`,
-            specialization: [c.specialization]
-          }
-        );
+        await academyInvitationService.inviteCoach(academyId, supplierId, {
+          phoneNumber: c.mobileNumber,
+          email: c.email,
+          name: c.coach_name,
+          bio: `${c.specialization} coach with ${c.years_of_experience} years experience`,
+          specialization: [c.specialization],
+        });
       } catch (error) {
-        console.error('Failed to send coach invitation:', error);
+        console.error("Failed to send coach invitation:", error);
       }
     }
   }
@@ -197,13 +193,13 @@ async function getAcademyProfileBySupplierId(
   const include = [];
 
   if (includeBatches) {
-    include.push({ model: AcademyBatch, as: "AcademyBatches" });
+    include.push({ model: AcademyBatch, as: "AcademyBatche" });
   }
   if (includePrograms) {
-    include.push({ model: AcademyProgram, as: "AcademyPrograms" });
+    include.push({ model: AcademyProgram, as: "" });
   }
   if (includeCoaches) {
-    include.push({ model: AcademyCoach, as: "AcademyCoaches" });
+    include.push({ model: AcademyCoach, as: "AcademyCoach" });
   }
   if (includeStudents) {
     include.push({ model: AcademyStudent, as: "AcademyStudents" });
