@@ -34,7 +34,10 @@ module.exports = (sequelize) => {
           'payment_reminder',
           'review_request',
           'general',
-          'academy_manager_invitation'
+          'academy_manager_invitation',
+          'academy_coach_invitation',
+          'invitation_accepted',
+          'invitation_rejected'
         ),
         allowNull: false,
         validate: {

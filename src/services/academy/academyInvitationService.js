@@ -81,12 +81,12 @@ class AcademyInvitationService {
 
   // Invite coach to academy
   async inviteCoach(academyId, inviterSupplierId, coachData) {
-    const { phoneNumber, email, name, bio, specialization } = coachData;
+    const { phoneNumber, email, name, bio, specialization, role, experienceLevel,certifications } = coachData;
     
     // Check if academy exists and inviter has permission
     const academy = await AcademyProfile.findByPk(academyId);
     if (!academy) {
-      throw new Error("Academy not found");
+      throw new Error(`Academy with ID ${academyId} not found`);
     }
     
     // Check if inviter is owner or manager
@@ -114,7 +114,7 @@ class AcademyInvitationService {
         email: email,
         name: name,
         isVerified: false,
-        role: 'coach',
+        role: 'employee',
         module: ['coach']
       }, false);
       
@@ -144,11 +144,13 @@ class AcademyInvitationService {
       id: uuidv4(),
       academyId,
       name,
-      mobileNumber: phoneNumber,
-      email,
-      bio,
-      sport: specialization?.[0] || 'General',
       supplierId: inviteeSupplierId,
+      role:'coach',
+      experienceLevel:experienceLevel || 'beginner',
+      mobileNumber: phoneNumber,
+      certifications: certifications || [],
+      email,
+      sport: specialization?.[0] || 'General',
       invitationStatus: 'pending',
       invitedAt: new Date(),
       invitationToken: invitation.invitationToken
@@ -191,10 +193,10 @@ class AcademyInvitationService {
     if (invitation.role === 'manager') {
       // Update academy
       await AcademyProfile.update({
-        invitationStatus: 'accepted',
+        managerInvitationStatus: 'accepted',
         managerAcceptedAt: new Date()
       }, {
-        where: { academyProfileId: invitation.academyId }
+        where: { academyId: invitation.academyId }
       });
     } else if (invitation.role === 'coach') {
       // Update academy coach
@@ -242,7 +244,7 @@ class AcademyInvitationService {
         invitationStatus: null,
         managerInvitedAt: null
       }, {
-        where: { academyProfileId: invitation.academyId }
+        where: { academyId: invitation.academyId }
       });
     } else if (invitation.role === 'coach') {
       // Remove academy coach record
