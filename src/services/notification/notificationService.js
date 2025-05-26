@@ -3,6 +3,7 @@ const notificationRepository = require("./repositories/notificationRepository");
 const feedbackReminderRepository = require("./repositories/feedbackReminderRepository");
 const { sequelize } = require("../../database");
 const realTimeNotificationService = require('./realTimeNotificationService');
+const pushNotificationService = require('./pushNotificationService');
 
 const handleServiceError = (operation, error) => {
   console.error(`Notification Service Error in ${operation}:`, error);
@@ -52,6 +53,68 @@ class NotificationService {
         return 'id';
     }
     }
+
+    async getUserDeviceTokens(recipientId, recipientType) {
+    try {
+      const { UserDeviceToken } = require("../../database");
+      
+      let userIdField = 'userId';
+      switch (recipientType) {
+        case 'coach':
+        case 'academy_coach':
+          userIdField = 'coachId';
+          break;
+        case 'supplier':
+          userIdField = 'supplierId';
+          break;
+        default:
+          userIdField = 'userId';
+      }
+
+      const tokens = await UserDeviceToken.findAll({
+        where: { [userIdField]: recipientId, isActive: true },
+        attributes: ['deviceToken']
+      });
+
+      return tokens.map(t => t.deviceToken);
+    } catch (error) {
+      console.error('Error getting device tokens:', error);
+      return [];
+    }
+  }
+
+  async sendFCMNotification(deviceToken, payload) {
+    return await pushNotificationService.sendNotification(deviceToken, payload);
+  }
+  mapPriorityToFCM(priority) {
+    return pushNotificationService.mapPriorityToFCM(priority);
+  }
+
+  // Bulk push notification method
+  async sendBulkPushNotifications(notifications) {
+    const pushNotifications = await Promise.all(
+      notifications.map(async (notif) => {
+        const tokens = await this.getUserDeviceTokens(notif.recipientId, notif.recipientType);
+        return tokens.map(token => ({
+          deviceToken: token,
+          payload: {
+            title: notif.title,
+            body: notif.message,
+            data: notif.data,
+            priority: this.mapPriorityToFCM(notif.priority)
+          }
+        }));
+      })
+    );
+
+    const flattenedNotifications = pushNotifications.flat();
+    
+    if (flattenedNotifications.length > 0) {
+      return await pushNotificationService.sendBulkNotifications(flattenedNotifications);
+    }
+    
+    return { successCount: 0, failureCount: 0 };
+  }
 
   // ============ GENERAL NOTIFICATION METHODS ============
   async validateRecipientExists(recipientId, recipientType) {
@@ -450,25 +513,65 @@ class NotificationService {
 
   // ============ UTILITY METHODS ============
 
+  // Add the main push notification method
+  async sendPushNotification(recipientId, recipientType, notification) {
+    try {
+      // Get user's device tokens
+      const deviceTokens = await this.getUserDeviceTokens(recipientId, recipientType);
+      
+      if (!deviceTokens || deviceTokens.length === 0) {
+        console.log(`No device tokens found for ${recipientType}:${recipientId}`);
+        return false;
+      }
+
+      const pushPayload = {
+        title: notification.title,
+        body: notification.message,
+        data: {
+          notificationId: notification.notificationId,
+          type: notification.type,
+          priority: notification.priority,
+          ...notification.data
+        },
+        priority: this.mapPriorityToFCM(notification.priority)
+      };
+
+      // Send to all user devices
+      const results = await Promise.allSettled(
+        deviceTokens.map(token => this.sendFCMNotification(token, pushPayload))
+      );
+
+      const successCount = results.filter(r => r.status === 'fulfilled' && r.value.success).length;
+      
+      console.log(`Push notifications sent: ${successCount}/${deviceTokens.length} successful`);
+      
+      return successCount > 0;
+    } catch (error) {
+      console.error('Error sending push notification:', error);
+      return false;
+    }
+  }
+
   async sendRealTimeNotification(recipientId, recipientType, notification) {
   try {
     // Send via WebSocket
     const wsSuccess = realTimeNotificationService.sendNotificationToUser(recipientId, notification);
     
+    let pushSuccess = false;
     // Log the attempt
     if (wsSuccess) {
       console.log(`Real-time notification sent via WebSocket to ${recipientType}:${recipientId}`);
     } else {
       console.log(`User ${recipientId} not connected via WebSocket, skipping real-time notification`);
-      await this.sendPushNotification(recipientId, notification);
+      pushSuccess = await this.sendPushNotification(recipientId, recipientType, notification);
     }
 
     // You can also implement push notifications here for mobile apps
     
-    return { websocket: wsSuccess };
+    return { websocket: wsSuccess, push: pushSuccess };
   } catch (error) {
     console.error('Error sending real-time notification:', error);
-    return { websocket: false, error: error.message };
+    return { websocket: false, push: false,error: error.message };
   }
 }
 
