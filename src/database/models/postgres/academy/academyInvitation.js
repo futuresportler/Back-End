@@ -11,15 +11,15 @@ module.exports = (sequelize) => {
         defaultValue: () => uuidv4()
       },
       academyId: {
-        type: DataTypes.STRING,
+        type: DataTypes.UUID,
         allowNull: false,
         references: {
           model: "AcademyProfiles",
-          key: "academyProfileId"
+          key: "academyId"
         }
       },
       inviterSupplierId: {
-        type: DataTypes.STRING,
+        type: DataTypes.UUID,
         allowNull: false,
         references: {
           model: "Suppliers",
@@ -27,7 +27,7 @@ module.exports = (sequelize) => {
         }
       },
       inviteeSupplierId: {
-        type: DataTypes.STRING,
+        type: DataTypes.UUID,
         allowNull: true,
         references: {
           model: "Suppliers",

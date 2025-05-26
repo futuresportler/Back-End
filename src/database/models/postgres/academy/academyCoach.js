@@ -19,7 +19,7 @@ module.exports = (sequelize) => {
         }
       },
       // Add coachId explicitly
-      platformCoachId: {
+      coachId: {  // ✅ Matches the referenced key
         type: DataTypes.UUID,
         allowNull: true,
         references: {
@@ -121,7 +121,7 @@ module.exports = (sequelize) => {
           fields: ['academyId']
         },
         {
-          fields: ['platformCoachId']
+          fields: ['coachId']
         },
         {
           fields: ['mobileNumber']
