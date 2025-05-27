@@ -39,14 +39,14 @@ app.use((err, req, res, next) => {
 
 // Server
 const PORT = process.env.PORT || 5000
-app.listen(PORT, async () => {
+const server = app.listen(PORT, async () => {
   try {
     // Connect to databases
     await connectPostgres()
     await syncDatabase()
 
     // Initialize WebSocket server 
-    realTimeNotificationService.initializeWebSocketServer(app)
+    realTimeNotificationService.initializeWebSocketServer(server)
     realTimeNotificationService.startCleanupInterval()
     
     // Initialize scheduled tasks

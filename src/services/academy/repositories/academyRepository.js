@@ -149,8 +149,8 @@ const getStudentsByAcademy = async (academyId, filters = {}) => {
     limit: Number.parseInt(limit),
     offset: Number.parseInt(offset),
     include: [
-      { model: AcademyBatch, as: "batch", attributes: ["batchId", "name"] },
-      { model: AcademyProgram, as: "program", attributes: ["programId", "name"] },
+      { model: AcademyBatch, as: "batch", attributes: ["batchId", "batchName"] },
+      { model: AcademyProgram, as: "program", attributes: ["programId", "programName"] },
     ],
     order: [["createdAt", "DESC"]],
   })

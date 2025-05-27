@@ -251,12 +251,24 @@ class NotificationRepository {
     if (programId) whereClause.programId = programId;
     if (academyId) whereClause.academyId = academyId;
     
-    return await AcademyStudent.findAll({
-        where: whereClause,
-        include: [
-        { model: User, as: 'student', attributes: ['userId', 'name'] }
-        ]
-    });
+     return await AcademyStudent.findAll({
+      where: whereClause,
+      include: [
+      { 
+        model: User, 
+        as: 'user', 
+        attributes: ['userId', 'first_name', 'last_name', 'email', 'mobile'] 
+      }
+      ],
+      attributes: [
+        'studentId', 
+        'academyId', 
+        'batchId', 
+        'programId', 
+        'name', 
+        'userId'
+      ]
+  });
     }
 
 
@@ -271,7 +283,7 @@ class NotificationRepository {
     return await AcademyCoach.findAll({
         where: whereClause,
         include: [
-        { model: CoachProfile, as: 'coach', attributes: ['coachId', 'name'] }
+        { model: CoachProfile, as: 'platformCoach', attributes: ['coachId', 'name'] }
         ]
     });
     }

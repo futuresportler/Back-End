@@ -839,6 +839,15 @@ const defineAssociations = () => {
     foreignKey: "coachId", 
     as: "coach"
   });
+  AcademyStudent.belongsTo(User, {
+    foreignKey: "userId",
+    as: "user"
+  });
+
+  User.hasMany(AcademyStudent, {
+    foreignKey: "userId", 
+    as: "student"
+  });
 };
 
 // Database Sync Function

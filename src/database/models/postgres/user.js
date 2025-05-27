@@ -76,6 +76,11 @@ module.exports = (sequelize) => {
         type: DataTypes.INTEGER,
         defaultValue: 0
       },
+      role: {
+        type: DataTypes.ENUM("user", "student", "admin"),
+        defaultValue: "user",
+        allowNull: false
+      },
     },
     {
       freezeTableName: true, // 🚨 This is the magic sauce

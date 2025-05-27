@@ -79,7 +79,7 @@ class RealTimeNotificationService {
   // Extract token from WebSocket request
   extractTokenFromRequest(req) {
     const url = new URL(req.url, `http://${req.headers.host}`);
-    return req.headers.authorization?.replace('Bearer ', '');
+    return req.headers.authorization?.replace('Bearer ', '') || url.searchParams.get('token');
   }
 
   // Verify JWT token

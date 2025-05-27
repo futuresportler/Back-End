@@ -141,7 +141,6 @@ const validateNotificationOwnership = async (notificationId, userId) => {
 const getNotifications = async (req, res) => {
   try {
     const { recipientType } = req.params;
-    
     // Authorization check
     if (!isAuthorizedForRecipientType(req.user, recipientType)) {
       return errorResponse(res, "Unauthorized access to this resource", null, 403);
@@ -280,9 +279,8 @@ const generateFeedbackNotifications = async (req, res) => {
   try {
     const { type, entityId } = req.params;
     const options = req.body;
-    
     // Authorization check - only academy admins and coaches can generate notifications
-    if (!['academy', 'academy_admin', 'coach'].includes(req.user.role)) {
+    if (!['academy', 'academy_admin', 'coach', 'supplier','owner'].includes(req.user.role)) {
       return errorResponse(res, "Unauthorized to generate feedback notifications", null, 403);
     }
     
