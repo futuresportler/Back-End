@@ -186,6 +186,4 @@ router.get("/coaches/:coachId/schedule", academyController.getCoachSchedule);
 // Sync coaches with platform
 router.post("/:academyId/coaches/sync", authMiddleware, academyController.syncCoachesWithPlatform);
 
-router.post("/:academyId/invite-coach", authMiddleware, academyController.inviteCoach);
-
 module.exports = router;

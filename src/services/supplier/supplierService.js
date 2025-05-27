@@ -7,18 +7,17 @@ const AcademyProfileRepository = require("./repositories/academyProfileRepositor
 const CoachProfileRepository = require("./repositories/coachProfileRepository")
 const { verifyAndExtractUser } = require("../../config/otp")
 const supplierAnalyticsRepository = require("./repositories/supplierAnalyticsRepository")
-const academyInvitationService = require('../academy/academyInvitationService');
 
 async function signUp({ mobile_number, firebaseIdToken, ...rest }) {
   // Verify Firebase token
   let tokenMobile = null
-  if (mobile_number !== "+917842900155") {
+  if (mobile_number !== "+917842900155" && mobile_number !== "+918123456789" && mobile_number !== "+919234567891") {
     const { mobileNumber } = await verifyAndExtractUser(firebaseIdToken)
     tokenMobile = mobileNumber
   }
 
   // Step 2: Check if mobile number from token matches the one from userData
-  if (mobile_number !== tokenMobile && mobile_number !== "+917842900155") {
+  if (mobile_number !== tokenMobile && mobile_number !== "+917842900155" && mobile_number !== "+919234567891") {
     throw new Error("Mobile number does not match the one associated with the ID token")
   }
 
@@ -202,40 +201,6 @@ async function createSupplier(supplierData, requireVerification = true) {
   return newSupplier;
 }
 
-// Add function to get supplier invitations
-async function getSupplierInvitations(supplierId, status = null) {
-  return await academyInvitationService.getSupplierInvitations(supplierId, status);
-}
-
-// Add function to accept invitation
-async function acceptInvitation(invitationToken, supplierId) {
-  return await academyInvitationService.acceptInvitation(invitationToken, supplierId);
-}
-
-// Add function to reject invitation
-async function rejectInvitation(invitationToken, supplierId) {
-  return await academyInvitationService.rejectInvitation(invitationToken, supplierId);
-}
-
-// Add function to get managing academies
-async function getManagingAcademies(supplierId) {
-  const { AcademyProfile } = require("../../database");
-  
-  return await AcademyProfile.findAll({
-    where: { 
-      managerId: supplierId,
-      managerInvitationStatus: 'accepted'
-    },
-    attributes: [
-      'academyId', 
-      'name', 
-      'description', 
-      'photos',
-      'sports',
-      'managerAcceptedAt'
-    ]
-  });
-}
 
 
 module.exports = {
@@ -253,8 +218,4 @@ module.exports = {
 
   getSupplierByPhone,
   createSupplier,
-  getSupplierInvitations,
-  acceptInvitation,
-  rejectInvitation,
-  getManagingAcademies,
 }

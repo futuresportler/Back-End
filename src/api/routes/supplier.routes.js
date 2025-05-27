@@ -23,10 +23,5 @@ router.get("/me/analytics/overview", authMiddleware, supplierController.getAnaly
 // OTP routes
 // router.post("/request-otp", authMiddleware, supplierController.requestOTP);
 // router.post("/verify-otp", authMiddleware, supplierController.verifyOTP);
-router.get("/invitations", authMiddleware, supplierController.getSupplierInvitations);
-router.post("/invitations/:invitationToken/accept", authMiddleware, supplierController.acceptInvitation);
-router.post("/invitations/:invitationToken/reject", authMiddleware, supplierController.rejectInvitation);
-router.get("/managing-academies", authMiddleware, supplierController.getManagingAcademies);
-router.get("/dashboard", authMiddleware, supplierController.getSupplierDashboard);
 
 module.exports = router

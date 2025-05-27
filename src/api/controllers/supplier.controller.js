@@ -98,99 +98,6 @@ const getAnalyticsOverview = async (req, res) => {
   }
 };
 
-// Add new controller functions for invitation management
-const getSupplierInvitations = async (req, res) => {
-  try {
-    const { status } = req.query;
-    const invitations = await SupplierService.getSupplierInvitations(
-      req.user.supplierId,
-      status
-    );
-    successResponse(res, "Invitations fetched successfully", invitations);
-  } catch (error) {
-    errorResponse(res, error.message, error);
-  }
-};
-
-const acceptInvitation = async (req, res) => {
-  try {
-    const { invitationToken } = req.params;
-    const invitation = await SupplierService.acceptInvitation(
-      invitationToken,
-      req.user.supplierId
-    );
-    successResponse(res, "Invitation accepted successfully", invitation);
-  } catch (error) {
-    errorResponse(res, error.message, error);
-  }
-};
-
-const rejectInvitation = async (req, res) => {
-  try {
-    const { invitationToken } = req.params;
-    const invitation = await SupplierService.rejectInvitation(
-      invitationToken,
-      req.user.supplierId
-    );
-    successResponse(res, "Invitation rejected successfully", invitation);
-  } catch (error) {
-    errorResponse(res, error.message, error);
-  }
-};
-
-const getManagingAcademies = async (req, res) => {
-  try {
-    const academies = await SupplierService.getManagingAcademies(
-      req.user.supplierId
-    );
-    successResponse(res, "Managing academies fetched successfully", academies);
-  } catch (error) {
-    errorResponse(res, error.message, error);
-  }
-};
-
-const getSupplierDashboard = async (req, res) => {
-  try {
-    const supplierId = req.user.supplierId;
-    
-    // Get owned academies
-    const ownedAcademies = await SupplierService.getSupplierProfile(supplierId, 'academy');
-    
-    // Get managing academies
-    const managingAcademies = await SupplierService.getManagingAcademies(supplierId);
-    
-    // Get coaching academies (from AcademyCoach table)
-    const { AcademyCoach, AcademyProfile } = require("../../database");
-    const coachingAcademies = await AcademyCoach.findAll({
-      where: { 
-        supplierId: supplierId,
-        invitationStatus: 'accepted'
-      },
-      include: [{ 
-        model: AcademyProfile, 
-        as: 'academy',
-        attributes: ['academyId', 'name', 'description', 'photos', 'sports']
-      }]
-    });
-    
-    const dashboard = {
-      ownedAcademies: ownedAcademies?.academyProfiles || [],
-      managingAcademies,
-      coachingAcademies: coachingAcademies.map(ac => ac.academy),
-      roles: {
-        isOwner: (ownedAcademies?.academyProfiles || []).length > 0,
-        isManager: managingAcademies.length > 0,
-        isCoach: coachingAcademies.length > 0
-      }
-    };
-    
-    successResponse(res, "Supplier dashboard data fetched", dashboard);
-  } catch (error) {
-    errorResponse(res, error.message, error);
-  }
-};
-
-
 module.exports = {
   signup,
   signin,
@@ -201,9 +108,4 @@ module.exports = {
   setSupplierModule,
   getSupplierEntities,
   getAnalyticsOverview,
-  getSupplierInvitations,
-  acceptInvitation,
-  rejectInvitation,
-  getManagingAcademies,
-  getSupplierDashboard,
 }
