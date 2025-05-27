@@ -540,7 +540,21 @@ const getCoachWithFeedback = async (coachId) => {
     throw new Error(`Failed to get coach with feedback: ${error.message}`);
   }
 };
+const getCoachWithPromotionStatus = async (coachProfileId) => {
+  const profile = await coachRepository.findCoachProfileById(coachProfileId);
+  if (!profile) {
+    throw new Error("Coach profile not found");
+  }
 
+  return {
+    ...profile.toJSON(),
+    promotionStatus: {
+      isPromoted: profile.priority?.value > 0,
+      plan: profile.priority?.plan || "none",
+      expiresAt: profile.priority?.expiresAt
+    }
+  };
+};
 // Add the new function to the module.exports
 module.exports = {
   getCoachProfile,
@@ -575,6 +589,8 @@ module.exports = {
   getBatchStudents,
   addStudentToBatch,
   removeStudentFromBatch,
+
+  getCoachWithPromotionStatus,
 
   // Add the new batch payment functions
   createBatchPayment,
