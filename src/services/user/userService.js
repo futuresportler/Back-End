@@ -33,9 +33,10 @@ const signUp = async (userData) => {
   const hashedPassword = await hashPassword(password);
   // Create user
   const newUser = await userRepository.createUser({
+    ...otherData,
     email,
     password: hashedPassword,
-    ...otherData,
+    role: userData.role || "user"
   });
 
   setTimeout(async () => {
@@ -176,6 +177,7 @@ const handleOAuth = async (idToken) => {
         isOAuth: true,
         isVerified: true,
         firebaseUID: uid,
+        role: "user",
       });
     }
 

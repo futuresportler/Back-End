@@ -96,6 +96,7 @@ const findAcademiesNearby = async (latitude, longitude, radius) => {
   })
 }
 
+
 // Student-related repository methods
 const createStudent = async (studentData, transaction = null) => {
   return await AcademyStudent.create(studentData, { transaction })
@@ -148,8 +149,8 @@ const getStudentsByAcademy = async (academyId, filters = {}) => {
     limit: Number.parseInt(limit),
     offset: Number.parseInt(offset),
     include: [
-      { model: AcademyBatch, as: "batch", attributes: ["batchId", "name"] },
-      { model: AcademyProgram, as: "program", attributes: ["programId", "name"] },
+      { model: AcademyBatch, as: "batch", attributes: ["batchId", "batchName"] },
+      { model: AcademyProgram, as: "program", attributes: ["programId", "programName"] },
     ],
     order: [["createdAt", "DESC"]],
   })

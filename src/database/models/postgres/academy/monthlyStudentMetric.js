@@ -14,9 +14,27 @@ module.exports = (sequelize) => {
         feedback: DataTypes.ARRAY(DataTypes.JSON),
         feeStatus: DataTypes.STRING,
         attendanceSummary: DataTypes.JSON,
-        programId: DataTypes.UUID,
-        batchId: DataTypes.UUID,
-        monthId: DataTypes.UUID
+        programId: {
+          type: DataTypes.UUID,
+          references: {
+            model: "AcademyPrograms", // Add proper reference
+            key: "programId",
+          },
+        },
+        batchId: {
+          type: DataTypes.UUID,
+          references: {
+            model: "AcademyBatches", // Add proper reference
+            key: "batchId",
+          },
+        },
+        monthId: {
+          type: DataTypes.UUID,
+          references: {
+            model: "Months", // Add proper reference
+            key: "monthId",
+          },
+        }
       },
       { timestamps: false }
     );

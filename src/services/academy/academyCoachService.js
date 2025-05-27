@@ -173,7 +173,7 @@ class AcademyCoachService {
     const { coaches } = await academyCoachRepository.findCoachesByAcademy(academyId);
     
     for (const coach of coaches) {
-      if (coach.mobileNumber && !coach.platformCoachId) {
+      if (coach.mobileNumber && !coach.coachId) {
         await this.handlePlatformCoachLinking(coach);
       }
     }

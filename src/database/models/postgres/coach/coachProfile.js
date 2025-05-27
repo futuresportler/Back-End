@@ -25,6 +25,10 @@ module.exports = (sequelize) => {
         type: DataTypes.STRING,
         allowNull: true,
       },
+      name: {
+        type: DataTypes.STRING,
+        allowNull: false,
+      },
       hourlyRate: DataTypes.DECIMAL(10, 2),
       minHourlyRate: DataTypes.DECIMAL(10, 2),
       experienceYears: DataTypes.INTEGER,
@@ -110,6 +114,23 @@ module.exports = (sequelize) => {
       priority: {
         type: DataTypes.JSON,
         defaultValue: { value: 0, reason: "standard" },
+        allowNull: false,
+      },
+      notifications: {
+        type: DataTypes.ARRAY(DataTypes.JSON),
+        defaultValue: [],
+      },
+      feedbackPendingNotifications: {
+        type: DataTypes.ARRAY(DataTypes.JSON),
+        defaultValue: [],
+      },
+      lastFeedbackReminderSent: {
+        type: DataTypes.DATE,
+        allowNull: true
+      },
+      notifications: {
+        type: DataTypes.ARRAY(DataTypes.JSON),
+        defaultValue: [],
         allowNull: false,
       },
     },

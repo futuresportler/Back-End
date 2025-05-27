@@ -1,5 +1,5 @@
 // models/postgres/academyProgram.js
-const { DataTypes } = require("sequelize")
+const { DataTypes } = require("sequelize");
 
 module.exports = (sequelize) => {
   return sequelize.define(
@@ -14,9 +14,9 @@ module.exports = (sequelize) => {
         type: DataTypes.UUID,
         allowNull: true,
         references: {
-          model: 'AcademyCoaches',
-          key: 'id'
-        }
+          model: "AcademyCoaches",
+          key: "id",
+        },
       },
       programName: DataTypes.STRING,
       description: DataTypes.TEXT,
@@ -48,13 +48,14 @@ module.exports = (sequelize) => {
         defaultValue: "active",
       },
     },
-    { timestamps: true,
+    {
+      timestamps: true,
       indexes: [
         // ...existing indexes...
         {
-          fields: ['primaryCoachId']
-        }
-      ]
-     },
-  )
-}
+          fields: ["primaryCoachId"],
+        },
+      ],
+    }
+  );
+};

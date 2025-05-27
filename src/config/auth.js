@@ -1,7 +1,7 @@
 const jwt = require("jsonwebtoken");
 
 const generateTokens = (user) => {
-  const payload = { userId: user.userId, email: user.email };
+  const payload = { userId: user.userId, email: user.email,role: user.role || "user" };
 
   const accessToken = jwt.sign(payload, process.env.JWT_SECRET, {
     expiresIn: "1h",
@@ -15,7 +15,7 @@ const generateTokens = (user) => {
 };
 
 const generateSupplierTokens = (supplier) => {
-  const payload = { supplierId: supplier.supplierId, mobile_number: supplier.mobile_number };
+  const payload = { supplierId: supplier.supplierId, mobile_number: supplier.mobile_number, role: supplier.role || "supplier" };
 
   const accessToken = jwt.sign(payload, process.env.JWT_SECRET, {
     expiresIn: "1h",
@@ -29,7 +29,7 @@ const generateSupplierTokens = (supplier) => {
 };
 
 const generateCoachTokens = (coach) => {
-  const payload = { coachId: coach.coachId, mobile_number: coach.mobile_number };
+  const payload = { coachId: coach.coachId, mobile_number: coach.mobile_number ,role : coach.role || "coach"};
 
   const accessToken = jwt.sign(payload, process.env.JWT_SECRET, {
     expiresIn: "1h",
@@ -43,7 +43,7 @@ const generateCoachTokens = (coach) => {
 };
 
 const generateAcademyTokens = (academy) => {
-  const payload = { academyId: academy.academyId, mobile_number: academy.mobile_number };
+  const payload = { academyId: academy.academyId, mobile_number: academy.mobile_number, role: academy.role || "academy" };
 
   const accessToken = jwt.sign(payload, process.env.JWT_SECRET, {
     expiresIn: "1h",
@@ -57,7 +57,7 @@ const generateAcademyTokens = (academy) => {
 };
 
 const generateTurfTokens = (turf) => {
-  const payload = { turfId: turf.turfId, mobile_number: turf.mobile_number };
+  const payload = { turfId: turf.turfId, mobile_number: turf.mobile_number , role: turf.role || "turf" };
 
   const accessToken = jwt.sign(payload, process.env.JWT_SECRET, {
     expiresIn: "1h",

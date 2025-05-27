@@ -42,9 +42,9 @@ module.exports = (sequelize) => {
         type: DataTypes.UUID,
         allowNull: true,
         references: {
-          model: 'AcademyCoaches',
-          key: 'id'
-        }
+          model: "AcademyCoach",
+          key: "id",
+        },
       },
       status: {
         type: DataTypes.VIRTUAL,
