@@ -12,6 +12,34 @@ const {
 } = require("../validation/notificationValidation");
 const { body } = require("express-validator"); 
 
+
+
+// Register device token for push notifications
+router.post("/device-token/register", 
+  authMiddleware, 
+  [
+    body('deviceToken')
+      .notEmpty()
+      .withMessage('Device token is required'),
+    body('deviceType')
+      .isIn(['android', 'ios', 'web'])
+      .withMessage('Device type must be android, ios, or web'),
+    handleValidationErrors
+  ],
+  notificationController.registerDeviceToken
+);
+
+// Unregister device token
+router.post("/device-token/unregister", 
+  authMiddleware, 
+  [
+    body('deviceToken')
+      .notEmpty()
+      .withMessage('Device token is required'),
+    handleValidationErrors
+  ],
+  notificationController.unregisterDeviceToken
+);
 // ============ GENERAL NOTIFICATION ROUTES ============
 
 // Get notifications for a recipient

@@ -72,6 +72,8 @@ const AcademyReview = require("./models/postgres/academy/academyReview")(sequeli
 const Notification = require("./models/postgres/notification/notification")(sequelize);
 const FeedbackReminder = require("./models/postgres/notification/feedbackReminder")(sequelize);
 const BookingNotification = require("./models/postgres/notification/bookingNotification")(sequelize);
+const AcademyInvitation = require("./models/postgres/academy/academyInvitation")(sequelize);
+const UserDeviceToken = require("./models/postgres/userDeviceToken")(sequelize);
 
 // Define Associations
 const defineAssociations = () => {
@@ -514,12 +516,12 @@ const defineAssociations = () => {
   });
   
   CoachProfile.hasMany(AcademyCoach, {
-    foreignKey: "platformCoachId",
+    foreignKey: "coachId",
     as: "academyPositions"
   });
   
   AcademyCoach.belongsTo(CoachProfile, {
-    foreignKey: "platformCoachId",
+    foreignKey: "coachId",
     as: "platformCoach"
   });
     // Many-to-Many: Academy Coach <-> Academy Batch
@@ -788,6 +790,55 @@ const defineAssociations = () => {
     },
     as: "coachBookingNotifications"
   });
+  // Academy Invitation associations
+  AcademyInvitation.belongsTo(AcademyProfile, {
+    foreignKey: "academyId",
+    as: "academy"
+  });
+
+  AcademyInvitation.belongsTo(Supplier, {
+    foreignKey: "inviterSupplierId",
+    as: "inviter"
+  });
+
+  AcademyInvitation.belongsTo(Supplier, {
+    foreignKey: "inviteeSupplierId",
+    as: "invitee"
+  });
+
+  AcademyProfile.hasMany(AcademyInvitation, {
+    foreignKey: "academyId",
+    as: "invitations"
+  });
+  User.hasMany(UserDeviceToken, {
+    foreignKey: "userId",
+    as: "deviceTokens"
+  });
+
+  UserDeviceToken.belongsTo(User, {
+    foreignKey: "userId",
+    as: "user"
+  });
+
+  Supplier.hasMany(UserDeviceToken, {
+    foreignKey: "supplierId", 
+    as: "deviceTokens"
+  });
+
+  UserDeviceToken.belongsTo(Supplier, {
+    foreignKey: "supplierId",
+    as: "supplier"
+  });
+
+  CoachProfile.hasMany(UserDeviceToken, {
+    foreignKey: "coachId",
+    as: "deviceTokens"
+  });
+
+  UserDeviceToken.belongsTo(CoachProfile, {
+    foreignKey: "coachId", 
+    as: "coach"
+  });
 };
 
 // Database Sync Function
@@ -817,7 +868,7 @@ const syncDatabase = async () => {
     // Sync all models except Day
     for (const model of models) {
       try {
-        await model.sync({ alter: false }); // Never use alter in production
+        await model.sync({ alter: true }); // Never use alter in production
         console.log(`Synced ${model.name} successfully`);
       } catch (error) {
         console.error(`Error syncing ${model.name}:`, error.message);
@@ -847,6 +898,7 @@ module.exports = {
   CoachBatch,
   AcademyProfile,
   TurfProfile,
+  UserDeviceToken,
 
   // Coach exports
   CoachPayment,
@@ -872,6 +924,8 @@ module.exports = {
   AcademyBookingPlatform,
   AcademyCoachBatch,
   AcademyCoachProgram,
+  AcademyInvitation,
+
 
   // Turf exports
   TurfGround,

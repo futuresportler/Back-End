@@ -13,35 +13,35 @@ module.exports = (sequelize) => {
         type: DataTypes.UUID,
         allowNull: false,
         references: {
-          model: 'AcademyCoaches',
-          key: 'id'
-        }
+          model: "AcademyCoach",
+          key: "id",
+        },
       },
       batchId: {
         type: DataTypes.UUID,
         allowNull: false,
         references: {
-          model: 'AcademyBatches',
-          key: 'batchId'
-        }
+          model: "AcademyBatches",
+          key: "batchId",
+        },
       },
       isPrimary: {
         type: DataTypes.BOOLEAN,
-        defaultValue: false
+        defaultValue: false,
       },
       assignedDate: {
         type: DataTypes.DATE,
-        defaultValue: DataTypes.NOW
-      }
+        defaultValue: DataTypes.NOW,
+      },
     },
     {
       timestamps: true,
       indexes: [
         {
           unique: true,
-          fields: ['academyCoachId', 'batchId']
-        }
-      ]
+          fields: ["academyCoachId", "batchId"],
+        },
+      ],
     }
   );
 };

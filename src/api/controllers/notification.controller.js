@@ -7,6 +7,85 @@ const { Notification } = require("../../database");
 const realTimeNotificationService = require("../../services/notification/realTimeNotificationService");
 const schedulerService = require("../../services/notification/schedulerService");
 
+const { UserDeviceToken } = require("../../database");
+
+const registerDeviceToken = async (req, res) => {
+  try {
+    const { deviceToken, deviceType, deviceInfo } = req.body;
+    const user = req.user;
+
+    if (!deviceToken || !deviceType) {
+      return errorResponse(res, "Device token and device type are required", null, 400);
+    }
+
+    // Determine user field based on role
+    let userField = {};
+    if (user.userId) {
+      userField.userId = user.userId;
+    } else if (user.supplierId) {
+      userField.supplierId = user.supplierId;
+    } else if (user.coachId) {
+      userField.coachId = user.coachId;
+    } else {
+      return errorResponse(res, "Invalid user type", null, 400);
+    }
+
+    // Check if token already exists
+    const existingToken = await UserDeviceToken.findOne({
+      where: { deviceToken }
+    });
+
+    if (existingToken) {
+      // Update existing token
+      await existingToken.update({
+        ...userField,
+        deviceType,
+        deviceInfo,
+        isActive: true,
+        lastUsedAt: new Date()
+      });
+      
+      successResponse(res, "Device token updated successfully", existingToken);
+    } else {
+      // Create new token
+      const newToken = await UserDeviceToken.create({
+        ...userField,
+        deviceToken,
+        deviceType,
+        deviceInfo,
+        isActive: true,
+        lastUsedAt: new Date()
+      });
+      
+      successResponse(res, "Device token registered successfully", newToken, 201);
+    }
+  } catch (error) {
+    errorResponse(res, error.message, error);
+  }
+};
+
+const unregisterDeviceToken = async (req, res) => {
+  try {
+    const { deviceToken } = req.body;
+    
+    if (!deviceToken) {
+      return errorResponse(res, "Device token is required", null, 400);
+    }
+
+    await UserDeviceToken.update(
+      { isActive: false },
+      { where: { deviceToken } }
+    );
+
+    successResponse(res, "Device token unregistered successfully");
+  } catch (error) {
+    errorResponse(res, error.message, error);
+  }
+};
+
+
+
+
 // ============ HELPER FUNCTIONS ============
 
 const isAuthorizedForRecipientType = (user, recipientType) => {
@@ -674,6 +753,8 @@ const testWebSocketConnection = async (req, res) => {
 
 
 module.exports = {
+  registerDeviceToken,
+  unregisterDeviceToken,
   // General notification methods
   getNotifications,
   markNotificationAsRead,

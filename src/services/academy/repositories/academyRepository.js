@@ -96,6 +96,7 @@ const findAcademiesNearby = async (latitude, longitude, radius) => {
   })
 }
 
+
 // Student-related repository methods
 const createStudent = async (studentData, transaction = null) => {
   return await AcademyStudent.create(studentData, { transaction })

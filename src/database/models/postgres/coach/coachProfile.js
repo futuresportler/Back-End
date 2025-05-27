@@ -123,7 +123,12 @@ module.exports = (sequelize) => {
       lastFeedbackReminderSent: {
         type: DataTypes.DATE,
         allowNull: true
-      }
+      },
+      notifications: {
+        type: DataTypes.ARRAY(DataTypes.JSON),
+        defaultValue: [],
+        allowNull: false,
+      },
     },
     {
       timestamps: true,

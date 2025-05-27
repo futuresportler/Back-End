@@ -112,8 +112,8 @@ class AcademyCoachRepository {
     });
   }
 
-  async linkToPlatformCoach(academyCoachId, platformCoachId) {
-    return await this.updateCoach(academyCoachId, { platformCoachId });
+  async linkToPlatformCoach(academyCoachId, coachId) {
+    return await this.updateCoach(academyCoachId, { coachId });
   }
 
   async syncWithPlatformCoach(academyCoachId, platformCoachData) {
