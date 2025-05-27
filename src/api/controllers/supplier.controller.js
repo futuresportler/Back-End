@@ -97,6 +97,7 @@ const getAnalyticsOverview = async (req, res) => {
     errorResponse(res, error.message, error);
   }
 };
+
 module.exports = {
   signup,
   signin,
@@ -106,5 +107,5 @@ module.exports = {
   deleteSupplier,
   setSupplierModule,
   getSupplierEntities,
-  getAnalyticsOverview
+  getAnalyticsOverview,
 }

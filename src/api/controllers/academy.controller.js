@@ -60,6 +60,33 @@ const getProfile = async (req, res) => {
   }
 };
 
+const checkAcademyPermission = async (req, res, next) => {
+  try {
+    const { academyId } = req.params;
+    const academy = await AcademyService.getAcademyProfile(academyId);
+    
+    if (!academy) {
+      return errorResponse(res, "Academy not found", null, 404);
+    }
+    
+    // Check if user is owner or accepted manager
+    if (academy.supplierId === req.user.supplierId) {
+      req.academyRole = 'owner';
+      req.academy = academy;
+      next();
+    } else if (academy.managerId === req.user.supplierId && academy.managerInvitationStatus === 'accepted') {
+      req.academyRole = 'manager';
+      req.academy = academy;
+      next();
+    } else {
+      return errorResponse(res, "Unauthorized to access this academy", null, 403);
+    }
+  } catch (error) {
+    errorResponse(res, error.message, error);
+  }
+};
+
+
 const updateProfile = async (req, res) => {
   try {
     const updated = await AcademyService.updateAcademyProfile(
@@ -128,7 +155,7 @@ const getStudent = async (req, res) => {
 
 const createStudent = async (req, res) => {
   try {
-    const student = await AcademyService.createStudent(req.body);
+    const student = await AcademyService.createStudent(req.body, req.user.supplierId);
     successResponse(res, "Student created successfully", student, 201);
   } catch (error) {
     errorResponse(res, error.message, error);
@@ -139,7 +166,8 @@ const updateStudent = async (req, res) => {
   try {
     const updated = await AcademyService.updateStudent(
       req.params.studentId,
-      req.body
+      req.body,
+      req.user.supplierId
     );
     successResponse(res, "Student updated", updated);
   } catch (error) {
@@ -159,7 +187,7 @@ const deleteStudent = async (req, res) => {
 // Batch-related controllers
 const createBatch = async (req, res) => {
   try {
-    const batch = await AcademyService.createBatch(req.body);
+    const batch = await AcademyService.createBatch(req.body,req.user.supplierId);
     successResponse(res, "Batch created successfully", batch, 201);
   } catch (error) {
     errorResponse(res, error.message, error);
@@ -859,6 +887,20 @@ const syncCoachesWithPlatform = async (req, res) => {
 };
 
 
+// Add invitation endpoints
+const inviteCoach = async (req, res) => {
+  try {
+    const { academyId } = req.params;
+    const invitation = await AcademyService.inviteCoachToAcademy(
+      academyId,
+      req.user.supplierId,
+      req.body
+    );
+    successResponse(res, "Coach invitation sent successfully", invitation, 201);
+  } catch (error) {
+    errorResponse(res, error.message, error);
+  }
+};
 module.exports = {
   createProfile,
   getMyProfiles,
@@ -930,5 +972,6 @@ module.exports = {
   getCoachSchedule,
   syncCoachesWithPlatform,
   
-
+  checkAcademyPermission,
+  inviteCoach,
 };

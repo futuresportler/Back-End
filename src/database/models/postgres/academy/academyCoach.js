@@ -19,7 +19,7 @@ module.exports = (sequelize) => {
         }
       },
       // Add coachId explicitly
-      platformCoachId: {
+      coachId: {  // ✅ Matches the referenced key
         type: DataTypes.UUID,
         allowNull: true,
         references: {
@@ -87,6 +87,32 @@ module.exports = (sequelize) => {
       profilePicture: {
         type: DataTypes.STRING,
         allowNull: true
+      },
+      notifications: {
+        type: DataTypes.ARRAY(DataTypes.JSON),
+        defaultValue: [],
+      },
+      feedbackReminders: {
+        type: DataTypes.ARRAY(DataTypes.JSON),
+        defaultValue: [],
+      },
+      invitationStatus: {
+        type: DataTypes.ENUM('pending', 'accepted', 'rejected'),
+        defaultValue: 'pending',
+        allowNull: false
+      },
+      invitedAt: {
+        type: DataTypes.DATE,
+        allowNull: true
+      },
+      acceptedAt: {
+        type: DataTypes.DATE,
+        allowNull: true
+      },
+      invitationToken: {
+        type: DataTypes.STRING,
+        allowNull: true,
+        unique: true
       }
     },
     { timestamps: true,
@@ -95,7 +121,7 @@ module.exports = (sequelize) => {
           fields: ['academyId']
         },
         {
-          fields: ['platformCoachId']
+          fields: ['coachId']
         },
         {
           fields: ['mobileNumber']
