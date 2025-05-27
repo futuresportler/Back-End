@@ -46,6 +46,22 @@ module.exports = (sequelize) => {
         type: DataTypes.STRING,
         allowNull: true,
       },
+      notificationSent: {
+        type: DataTypes.BOOLEAN,
+        defaultValue: false
+      },
+      remindersSent: {
+        type: DataTypes.INTEGER,
+        defaultValue: 0
+      },
+      expirationDate: {
+        type: DataTypes.DATE,
+        allowNull: true
+      },
+      supplierNotified: {
+        type: DataTypes.BOOLEAN,
+        defaultValue: false
+      }
     },
     { timestamps: true },
   )

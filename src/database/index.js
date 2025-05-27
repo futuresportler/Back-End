@@ -62,6 +62,18 @@ const TurfMetric = require("./models/postgres/turf/turfMetric")(sequelize);
 const TurfMonthlyMetric = require("./models/postgres/turf/turfMonthlyMetric")(sequelize);
 // Session models will be initialized dynamically in the session service
 const AcademyBookingPlatform = require("./models/postgres/academy/academyBookingPlatform")(sequelize);
+const AcademyCoachBatch = require("./models/postgres/academy/academyCoachBatch")(sequelize);
+const AcademyCoachProgram = require("./models/postgres/academy/academyCoachProgram")(sequelize);
+
+const SessionFeedback = require("./models/postgres/sessions/sessionFeedback")(sequelize);
+const BatchFeedback = require("./models/postgres/feedback/batchFeedback")(sequelize);
+const ProgramFeedback = require("./models/postgres/feedback/programFeedback")(sequelize);
+const AcademyReview = require("./models/postgres/academy/academyReview")(sequelize);
+const Notification = require("./models/postgres/notification/notification")(sequelize);
+const FeedbackReminder = require("./models/postgres/notification/feedbackReminder")(sequelize);
+const BookingNotification = require("./models/postgres/notification/bookingNotification")(sequelize);
+const AcademyInvitation = require("./models/postgres/academy/academyInvitation")(sequelize);
+const UserDeviceToken = require("./models/postgres/userDeviceToken")(sequelize);
 
 // Define Associations
 const defineAssociations = () => {
@@ -510,9 +522,332 @@ const defineAssociations = () => {
   
   AcademyCoach.belongsTo(CoachProfile, {
     foreignKey: "coachId",
-    as: "coachProfile"
+    as: "platformCoach"
+  });
+    // Many-to-Many: Academy Coach <-> Academy Batch
+  AcademyCoach.belongsToMany(AcademyBatch, {
+    through: AcademyCoachBatch,
+    foreignKey: 'academyCoachId',
+    otherKey: 'batchId',
+    as: 'batches'
+  });
+  
+  AcademyBatch.belongsToMany(AcademyCoach, {
+    through: AcademyCoachBatch,
+    foreignKey: 'batchId',
+    otherKey: 'academyCoachId',
+    as: 'coaches'
+  });
+  // Primary coach relationships
+  AcademyBatch.belongsTo(AcademyCoach, {
+    foreignKey: 'primaryCoachId',
+    as: 'primaryCoach'
   });
 
+  AcademyCoach.hasMany(AcademyBatch, {
+    foreignKey: 'primaryCoachId',
+    as: 'primaryBatches'
+  });
+
+  // Many-to-Many: Academy Coach <-> Academy Program
+  AcademyCoach.belongsToMany(AcademyProgram, {
+    through: AcademyCoachProgram,
+    foreignKey: 'academyCoachId',
+    otherKey: 'programId',
+    as: 'programs'
+  });
+  
+  AcademyProgram.belongsToMany(AcademyCoach, {
+    through: AcademyCoachProgram,
+    foreignKey: 'programId',
+    otherKey: 'academyCoachId',
+    as: 'coaches'
+  });
+    // Primary coach relationships for programs
+  AcademyProgram.belongsTo(AcademyCoach, {
+    foreignKey: 'primaryCoachId',
+    as: 'primaryCoach'
+  });
+
+  AcademyCoach.hasMany(AcademyProgram, {
+    foreignKey: 'primaryCoachId',
+    as: 'primaryPrograms'
+  });
+
+  // Junction table associations
+  AcademyCoachBatch.belongsTo(AcademyCoach, {
+    foreignKey: 'academyCoachId',
+    as: 'coach'
+  });
+
+  AcademyCoachBatch.belongsTo(AcademyBatch, {
+    foreignKey: 'batchId',
+    as: 'batch'
+  });
+
+  AcademyCoachProgram.belongsTo(AcademyCoach, {
+    foreignKey: 'academyCoachId',
+    as: 'coach'
+  });
+
+  AcademyCoachProgram.belongsTo(AcademyProgram, {
+    foreignKey: 'programId',
+    as: 'program'
+  });
+
+    AcademyProfile.hasMany(AcademyReview, {
+      foreignKey: "academyId",
+      as: "reviews",
+    });
+    AcademyReview.belongsTo(AcademyProfile, {
+      foreignKey: "academyId",
+      as: "academy",
+    });
+    User.hasMany(AcademyReview, {
+      foreignKey: "userId",
+      as: "academyReviews",
+    });
+    AcademyReview.belongsTo(User, {
+      foreignKey: "userId",
+      as: "user",
+    });
+
+    // Session Feedback Associations
+    User.hasMany(SessionFeedback, {
+      foreignKey: "userId",
+      as: "sessionFeedbacks",
+    });
+    SessionFeedback.belongsTo(User, {
+      foreignKey: "userId",
+      as: "user",
+    });
+      // Batch Feedback Associations
+  User.hasMany(BatchFeedback, {
+    foreignKey: "userId",
+    as: "batchFeedbacks",
+  });
+  BatchFeedback.belongsTo(User, {
+    foreignKey: "userId",
+    as: "user",
+  });
+
+  // Program Feedback Associations
+  AcademyProgram.hasMany(ProgramFeedback, {
+    foreignKey: "programId",
+    as: "feedbacks",
+  });
+  ProgramFeedback.belongsTo(AcademyProgram, {
+    foreignKey: "programId",
+    as: "program",
+  });
+  User.hasMany(ProgramFeedback, {
+    foreignKey: "userId",
+    as: "programFeedbacks",
+  });
+  ProgramFeedback.belongsTo(User, {
+    foreignKey: "userId",
+    as: "user",
+  });
+  
+  // Notification Associations
+  User.hasMany(Notification, {
+    foreignKey: "recipientId",
+    constraints: false,
+    scope: {
+      recipientType: 'user'
+    },
+    as: "userNotifications"
+  });
+
+  Notification.belongsTo(User, {
+    foreignKey: "recipientId",
+    constraints: false,
+    as: "userRecipient"
+  });
+
+  CoachProfile.hasMany(Notification, {
+    foreignKey: "recipientId",
+    constraints: false,
+    scope: {
+      recipientType: 'coach'
+    },
+    as: "coachNotifications"
+  });
+
+  AcademyProfile.hasMany(Notification, {
+    foreignKey: "recipientId",
+    constraints: false,
+    scope: {
+      recipientType: 'academy'
+    },
+    as: "academyNotifications"
+  });
+
+  TurfProfile.hasMany(Notification, {
+    foreignKey: "recipientId",
+    constraints: false,
+    scope: {
+      recipientType: 'turf'
+    },
+    as: "turfNotifications"
+  });
+
+  // Feedback Reminder Associations
+  CoachProfile.hasMany(FeedbackReminder, {
+    foreignKey: "coachId",
+    as: "coachFeedbackReminders"
+  });
+
+  FeedbackReminder.belongsTo(CoachProfile, {
+    foreignKey: "coachId",
+    as: "coach"
+  });
+
+  AcademyCoach.hasMany(FeedbackReminder, {
+    foreignKey: "coachId",
+    as: "academyCoachFeedbackReminders"
+  });
+
+  FeedbackReminder.belongsTo(AcademyCoach, {
+    foreignKey: "coachId",
+    as: "academyCoach"
+  });
+
+  User.hasMany(FeedbackReminder, {
+    foreignKey: "studentId",
+    as: "studentFeedbackReminders"
+  });
+
+  FeedbackReminder.belongsTo(User, {
+    foreignKey: "studentId",
+    as: "student"
+  });
+
+  AcademyBatch.hasMany(FeedbackReminder, {
+    foreignKey: "batchId",
+    as: "batchFeedbackReminders"
+  });
+
+  FeedbackReminder.belongsTo(AcademyBatch, {
+    foreignKey: "batchId",
+    as: "batch"
+  });
+
+  AcademyProgram.hasMany(FeedbackReminder, {
+    foreignKey: "programId",
+    as: "programFeedbackReminders"
+  });
+
+  FeedbackReminder.belongsTo(AcademyProgram, {
+    foreignKey: "programId",
+    as: "program"
+  });
+
+  AcademyProfile.hasMany(FeedbackReminder, {
+    foreignKey: "academyId",
+    as: "academyFeedbackReminders"
+  });
+
+  FeedbackReminder.belongsTo(AcademyProfile, {
+    foreignKey: "academyId",
+    as: "academy"
+  });
+
+  // Booking Notification Associations
+  SlotRequest.hasMany(BookingNotification, {
+    foreignKey: "requestId",
+    as: "bookingNotifications"
+  });
+
+  BookingNotification.belongsTo(SlotRequest, {
+    foreignKey: "requestId",
+    as: "slotRequest"
+  });
+
+  TurfProfile.hasMany(BookingNotification, {
+    foreignKey: "supplierId",
+    constraints: false,
+    scope: {
+      supplierType: 'turf'
+    },
+    as: "turfBookingNotifications"
+  });
+
+  AcademyProfile.hasMany(BookingNotification, {
+    foreignKey: "supplierId",
+    constraints: false,
+    scope: {
+      supplierType: 'academy'
+    },
+    as: "academyBookingNotifications"
+  });
+
+  CoachProfile.hasMany(BookingNotification, {
+    foreignKey: "supplierId",
+    constraints: false,
+    scope: {
+      supplierType: 'coach'
+    },
+    as: "coachBookingNotifications"
+  });
+  // Academy Invitation associations
+  AcademyInvitation.belongsTo(AcademyProfile, {
+    foreignKey: "academyId",
+    as: "academy"
+  });
+
+  AcademyInvitation.belongsTo(Supplier, {
+    foreignKey: "inviterSupplierId",
+    as: "inviter"
+  });
+
+  AcademyInvitation.belongsTo(Supplier, {
+    foreignKey: "inviteeSupplierId",
+    as: "invitee"
+  });
+
+  AcademyProfile.hasMany(AcademyInvitation, {
+    foreignKey: "academyId",
+    as: "invitations"
+  });
+  User.hasMany(UserDeviceToken, {
+    foreignKey: "userId",
+    as: "deviceTokens"
+  });
+
+  UserDeviceToken.belongsTo(User, {
+    foreignKey: "userId",
+    as: "user"
+  });
+
+  Supplier.hasMany(UserDeviceToken, {
+    foreignKey: "supplierId", 
+    as: "deviceTokens"
+  });
+
+  UserDeviceToken.belongsTo(Supplier, {
+    foreignKey: "supplierId",
+    as: "supplier"
+  });
+
+  CoachProfile.hasMany(UserDeviceToken, {
+    foreignKey: "coachId",
+    as: "deviceTokens"
+  });
+
+  UserDeviceToken.belongsTo(CoachProfile, {
+    foreignKey: "coachId", 
+    as: "coach"
+  });
+  AcademyStudent.belongsTo(User, {
+    foreignKey: "userId",
+    as: "user"
+  });
+
+  User.hasMany(AcademyStudent, {
+    foreignKey: "userId", 
+    as: "student"
+  });
 };
 
 // Database Sync Function
@@ -542,7 +877,7 @@ const syncDatabase = async () => {
     // Sync all models except Day
     for (const model of models) {
       try {
-        await model.sync({ alter: false }); // Never use alter in production
+        await model.sync({ alter: true }); // Never use alter in production
         console.log(`Synced ${model.name} successfully`);
       } catch (error) {
         console.error(`Error syncing ${model.name}:`, error.message);
@@ -572,6 +907,7 @@ module.exports = {
   CoachBatch,
   AcademyProfile,
   TurfProfile,
+  UserDeviceToken,
 
   // Coach exports
   CoachPayment,
@@ -595,6 +931,10 @@ module.exports = {
   AcademyProfileView,
   AcademyInquiry,
   AcademyBookingPlatform,
+  AcademyCoachBatch,
+  AcademyCoachProgram,
+  AcademyInvitation,
+
 
   // Turf exports
   TurfGround,
@@ -610,5 +950,16 @@ module.exports = {
   Year,
   User,
 
+  //feedback exports
+  SessionFeedback,
+  BatchFeedback,
+  ProgramFeedback,
+  AcademyReview,
+
+  //notification exports
+  Notification,
+  FeedbackReminder,
+  BookingNotification,
+  
   syncDatabase,
 };

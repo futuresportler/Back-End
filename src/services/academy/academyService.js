@@ -9,25 +9,13 @@ const academySearchRepository = require("./repositories/academySearchRepository"
 const academyMetricsRepository = require("./repositories/academyMetricsRepository");
 const academyFeedbackRepository = require("./repositories/academyFeedbackRepository");
 const academyBookingRepository = require("./repositories/academyBookingRepository");
+const academyCoachService = require("./academyCoachService");
+const feedbackService = require("../feedback");
+const academyInvitationService = require('./academyInvitationService');
 
 // Fix the import path - import directly from database instead of database/models
 const { AcademyStudent, AcademyProfile } = require("../../database");
 
-const createAcademyProfile = async (supplierId, profileData) => {
-  const supplier = await SupplierService.getSupplierByModule(
-    supplierId,
-    "academy"
-  );
-  if (!supplier) {
-    throw new Error("Supplier not found or not configured for academy");
-  }
-
-  return await academyRepository.createAcademyProfile({
-    ...profileData,
-    supplierId,
-    academyProfileId: uuidv4(),
-  });
-};
 
 const getAcademyProfile = async (academyProfileId, options) => {
   const profile = await academyRepository.getAcademyProfileWithDetails(
@@ -128,10 +116,55 @@ const createStudent = async (studentData) => {
   return student;
 };
 
-const updateStudent = async (studentId, updateData) => {
+// Add permission checking middleware
+const checkAcademyPermission = (requiredRole = 'owner') => {
+  return async (academyId, supplierId) => {
+    const academy = await getAcademyProfile(academyId);
+    
+    if (!academy) {
+      throw new Error("Academy not found");
+    }
+    
+    // Check ownership
+    if (academy.supplierId === supplierId) {
+      return { allowed: true, role: 'owner' };
+    }
+    
+    // Check management permission
+    if (requiredRole === 'manager' || requiredRole === 'owner') {
+      if (academy.managerId === supplierId && academy.managerInvitationStatus === 'accepted') {
+        return { allowed: true, role: 'manager' };
+      }
+    }
+    
+    // Check coach permission
+    if (requiredRole === 'coach') {
+      const { AcademyCoach } = require("../../database");
+      const coachAssignment = await AcademyCoach.findOne({
+        where: {
+          academyId,
+          supplierId,
+          invitationStatus: 'accepted'
+        }
+      });
+      
+      if (coachAssignment) {
+        return { allowed: true, role: 'coach' };
+      }
+    }
+    
+    return { allowed: false, role: null };
+  };
+};
+const updateStudent = async (studentId, updateData,supplierId) => {
   const student = await academyRepository.getStudentById(studentId);
   if (!student) throw new Error("Student not found");
 
+  // Check permissions
+  const permission = await checkAcademyPermission('manager')(student.academyId, supplierId);
+  if (!permission.allowed) {
+    throw new Error("Unauthorized to update this student");
+  }
   // Handle enrollment source changes
   if (updateData.batchId !== undefined || updateData.programId !== undefined) {
     const newBatchId =
@@ -218,7 +251,12 @@ const deleteStudent = async (studentId) => {
 };
 
 // Batch-related services
-const createBatch = async (batchData) => {
+const createBatch = async (batchData, supplierId) => {
+    const permission = await checkAcademyPermission('manager')(batchData.academyId, supplierId);
+  if (!permission.allowed) {
+    throw new Error("Unauthorized to create batches for this academy");
+  }
+  
   return await academyBatchRepository.createBatch({
     ...batchData,
     batchId: uuidv4(),
@@ -806,6 +844,82 @@ const getPopularPrograms = async (academyId, limit = 5) => {
   return { programs: result };
 };
 
+const getAcademyWithFeedback = async (academyId) => {
+  try {
+    const academy = await academyRepository.getAcademyById(academyId);
+    const [feedback, analytics] = await Promise.all([
+      feedbackService.getRecentFeedback('academy', academyId, 5),
+      feedbackService.getFeedbackAnalytics('academy', academyId)
+    ]);
+    
+    return {
+      ...academy,
+      recentFeedback: feedback,
+      feedbackAnalytics: analytics
+    };
+  } catch (error) {
+    throw new Error(`Failed to get academy with feedback: ${error.message}`);
+  }
+};
+// Update createAcademyProfile function around line 20
+const createAcademyProfile = async (supplierId, profileData) => {
+  const { manager, ...academyData } = profileData;
+  
+  const academy = await academyProfileRepository.createAcademyProfile(supplierId, {
+    ...academyData,
+    academyId: uuidv4(),
+  });
+
+  // If manager is provided, send invitation instead of creating directly
+  if (manager && manager.phoneNumber) {
+    try {
+      await academyInvitationService.inviteManager(
+        academy.academyProfileId,
+        supplierId,
+        manager
+      );
+    } catch (error) {
+      console.error('Failed to send manager invitation:', error);
+      // Don't fail academy creation if invitation fails
+    }
+  }
+
+  return academy;
+};
+
+// Add new functions for invitation management
+const inviteManager = async (academyId, inviterSupplierId, managerData) => {
+  return await academyInvitationService.inviteManager(academyId, inviterSupplierId, managerData);
+};
+
+const inviteCoach = async (academyId, inviterSupplierId, coachData) => {
+  return await academyInvitationService.inviteCoach(academyId, inviterSupplierId, coachData);
+};
+
+const acceptInvitation = async (invitationToken, supplierId) => {
+  return await academyInvitationService.acceptInvitation(invitationToken, supplierId);
+};
+
+const rejectInvitation = async (invitationToken, supplierId) => {
+  return await academyInvitationService.rejectInvitation(invitationToken, supplierId);
+};
+
+const getSupplierInvitations = async (supplierId, status = null) => {
+  return await academyInvitationService.getSupplierInvitations(supplierId, status);
+};
+
+// Add coach invitation functions (delegated to invitation service)
+const inviteCoachToAcademy = async (academyId, inviterSupplierId, coachData) => {
+  const permission = await checkAcademyPermission('manager')(academyId, inviterSupplierId);
+  if (!permission.allowed) {
+    throw new Error("Unauthorized to invite coaches to this academy");
+  }
+  
+  return await academyInvitationService.inviteCoach(academyId, inviterSupplierId, coachData);
+};
+
+
+
 module.exports = {
   createAcademyProfile,
   getAcademyProfile,
@@ -814,6 +928,14 @@ module.exports = {
   deleteAcademyProfile,
   getNearbyAcademies,
   searchAcademies,
+  //invitation management exports
+  inviteManager,
+  inviteCoach,
+  acceptInvitation,
+  rejectInvitation,
+  getSupplierInvitations,
+  checkAcademyPermission,
+  inviteCoachToAcademy,
   // Student-related exports
   getStudentsByAcademy,
   getStudentById,
@@ -861,6 +983,18 @@ module.exports = {
   getAcademyCoachFeedback,
   getBookingPlatforms,
   recordBookingPlatform,
-  getPopularPrograms
+  getPopularPrograms,
+  getAcademyWithFeedback,
+
+    // Academy Coach exports
+  academyCoachService,
+  createAcademyCoach: academyCoachService.createCoach.bind(academyCoachService),
+  getAcademyCoach: academyCoachService.getCoachById.bind(academyCoachService),
+  getAcademyCoaches: academyCoachService.getCoachesByAcademy.bind(academyCoachService),
+  updateAcademyCoach: academyCoachService.updateCoach.bind(academyCoachService),
+  deleteAcademyCoach: academyCoachService.deleteCoach.bind(academyCoachService),
+  getCoachSchedule: academyCoachService.getCoachSchedule.bind(academyCoachService),
+  getCoachBatchesAndPrograms: academyCoachService.getCoachBatchesAndPrograms.bind(academyCoachService)
+
 
 };

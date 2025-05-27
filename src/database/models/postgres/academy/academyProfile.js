@@ -168,6 +168,27 @@ module.exports = (sequelize) => {
         defaultValue: { value: 0, reason: "standard" },
         allowNull: false,
       },
+      notifications: {
+        type: DataTypes.ARRAY(DataTypes.JSON),
+        defaultValue: [],
+      },
+      bookingRequestNotifications: {
+        type: DataTypes.ARRAY(DataTypes.JSON),
+        defaultValue: [],
+      },
+      managerInvitationStatus: {
+        type: DataTypes.ENUM('pending', 'accepted', 'rejected'),
+        defaultValue: 'pending',
+        allowNull: true
+      },
+      managerInvitedAt: {
+        type: DataTypes.DATE,
+        allowNull: true
+      },
+      managerAcceptedAt: {
+        type: DataTypes.DATE,
+        allowNull: true
+      }
     },
     {
       timestamps: true,

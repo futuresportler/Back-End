@@ -38,6 +38,14 @@ module.exports = (sequelize) => {
         type: DataTypes.STRING,
         allowNull: false,
       },
+      academyCoachId: {
+        type: DataTypes.UUID,
+        allowNull: true,
+        references: {
+          model: "AcademyCoach",
+          key: "id",
+        },
+      },
       status: {
         type: DataTypes.VIRTUAL,
         get() {
@@ -89,6 +97,9 @@ module.exports = (sequelize) => {
         },
         {
           fields: ["date"],
+        },
+        {
+          fields: ["academyCoachId"],
         },
       ],
     }

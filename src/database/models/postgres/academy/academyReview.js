@@ -10,6 +10,22 @@ module.exports = (sequelize) => {
         defaultValue: DataTypes.UUIDV4,
         primaryKey: true,
       },
+      academyId: {
+        type: DataTypes.UUID,
+        allowNull: false,
+        references: {
+          model: "AcademyProfiles",
+          key: "academyId",
+        },
+      },
+      userId: {
+        type: DataTypes.UUID,
+        allowNull: false,
+        references: {
+          model: "User",
+          key: "userId",
+        },
+      },
       rating: {
         type: DataTypes.INTEGER,
         validate: { min: 1, max: 5 }

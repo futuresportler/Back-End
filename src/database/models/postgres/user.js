@@ -57,6 +57,30 @@ module.exports = (sequelize) => {
         type: DataTypes.ENUM("active", "inactive", "suspended"),
         defaultValue: "active",
       },
+      notifications: {
+        type: DataTypes.ARRAY(DataTypes.JSON),
+        defaultValue: [],
+      },
+      notificationPreferences: {
+        type: DataTypes.JSON,
+        defaultValue: {
+          email: true,
+          push: true,
+          whatsapp: false,
+          sms: false,
+          feedbackReminders: true,
+          bookingUpdates: true
+        }
+      },
+      unreadNotificationCount: {
+        type: DataTypes.INTEGER,
+        defaultValue: 0
+      },
+      role: {
+        type: DataTypes.ENUM("user", "student", "admin"),
+        defaultValue: "user",
+        allowNull: false
+      },
     },
     {
       freezeTableName: true, // 🚨 This is the magic sauce
