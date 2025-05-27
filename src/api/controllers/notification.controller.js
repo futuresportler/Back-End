@@ -95,7 +95,7 @@ const isAuthorizedForRecipientType = (user, recipientType) => {
     case 'coach':
       return user.role === 'coach' || user.role === 'individual_coach';
     case 'academy':
-      return user.role === 'academy' || user.role === 'academy_admin';
+      return user.role === 'academy' || user.role === 'owner';
     case 'turf':
       return user.role === 'turf' || user.role === 'turf_admin';
     default:
@@ -280,7 +280,7 @@ const generateFeedbackNotifications = async (req, res) => {
     const { type, entityId } = req.params;
     const options = req.body;
     // Authorization check - only academy admins and coaches can generate notifications
-    if (!['academy', 'academy_admin', 'coach', 'supplier','owner'].includes(req.user.role)) {
+    if (!['academy', 'coach', 'supplier','owner'].includes(req.user.role)) {
       return errorResponse(res, "Unauthorized to generate feedback notifications", null, 403);
     }
     
@@ -329,7 +329,7 @@ const updateFeedbackReminder = async (req, res) => {
     const { reminderId } = req.params;
     
     // Only allow coaches and academy admins to update reminders
-    if (!['coach', 'academy', 'academy_admin'].includes(req.user.role)) {
+    if (!['coach', 'academy', 'owner'].includes(req.user.role)) {
       return errorResponse(res, "Unauthorized to update feedback reminders", null, 403);
     }
     
@@ -347,7 +347,7 @@ const markFeedbackCompleted = async (req, res) => {
     const { feedbackData } = req.body;
     
     // Only allow coaches to mark feedback as completed
-    if (!['coach', 'academy_admin'].includes(req.user.role)) {
+    if (!['coach', 'owner'].includes(req.user.role)) {
       return errorResponse(res, "Unauthorized to complete feedback", null, 403);
     }
     
@@ -484,7 +484,7 @@ const sendWhatsAppNotification = async (req, res) => {
     }
     
     // Only allow admin users to send WhatsApp notifications
-    if (!['admin', 'super_admin', 'academy_admin'].includes(req.user.role)) {
+    if (!['admin', 'super_admin', 'owner'].includes(req.user.role)) {
       return errorResponse(res, "Unauthorized to send WhatsApp notifications", null, 403);
     }
     
@@ -509,7 +509,7 @@ const sendBulkWhatsAppNotifications = async (req, res) => {
     }
     
     // Only allow admin users to send bulk WhatsApp notifications
-    if (!['admin', 'super_admin'].includes(req.user.role)) {
+    if (!['admin', 'super_admin','owner'].includes(req.user.role)) {
       return errorResponse(res, "Unauthorized to send bulk WhatsApp notifications", null, 403);
     }
     
@@ -552,7 +552,8 @@ const cleanupExpiredNotifications = async (req, res) => {
 const startScheduler = async (req, res) => {
   try {
     // Only allow admin users to start scheduler
-    if (!['admin', 'super_admin'].includes(req.user.role)) {
+    console.log(req.user)
+    if (!['admin', 'super_admin','supplier','owner'].includes(req.user.role)) {
       return errorResponse(res, "Unauthorized to start scheduler", null, 403);
     }
     
@@ -599,7 +600,7 @@ const triggerFeedbackGeneration = async (req, res) => {
     const options = req.body;
     
     // Only allow admin users to trigger feedback generation
-    if (!['admin', 'super_admin', 'academy_admin'].includes(req.user.role)) {
+    if (!['admin', 'super_admin', 'owner'].includes(req.user.role)) {
       return errorResponse(res, "Unauthorized to trigger feedback generation", null, 403);
     }
     
@@ -620,7 +621,7 @@ const scheduleOneTimeNotification = async (req, res) => {
     }
     
     // Only allow admin users to schedule notifications
-    if (!['admin', 'super_admin', 'academy_admin'].includes(req.user.role)) {
+    if (!['admin', 'super_admin', 'owner'].includes(req.user.role)) {
       return errorResponse(res, "Unauthorized to schedule notifications", null, 403);
     }
     
