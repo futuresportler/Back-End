@@ -85,6 +85,8 @@ router.post(
   coachController.createBatchPayment
 );
 
+// Add promotion-related route
+router.get("/:coachProfileId/with-promotion", coachController.getProfileWithPromotion);
 
 // Analytics routes
 router.get("/:coachId/analytics/monthly", authMiddleware, coachController.getMonthlyAnalytics);

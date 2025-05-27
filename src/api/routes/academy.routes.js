@@ -185,5 +185,6 @@ router.get("/coaches/:coachId/schedule", academyController.getCoachSchedule);
 
 // Sync coaches with platform
 router.post("/:academyId/coaches/sync", authMiddleware, academyController.syncCoachesWithPlatform);
-
+// Add promotion-related route
+router.get("/:academyProfileId/with-promotion", academyController.getProfileWithPromotion);
 module.exports = router;

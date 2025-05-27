@@ -50,6 +50,9 @@ router.post(
   turfController.addReview
 );
 
+// Add promotion-related route
+router.get("/:turfProfileId/with-promotion", turfController.getProfileWithPromotion);
+
 // Analytics routes
 router.get("/:turfId/metrics/monthly", authMiddleware, turfController.getMonthlyMetrics);
 router.get("/:turfId/metrics/:monthId/utilization", authMiddleware, turfController.getUtilizationRate);
