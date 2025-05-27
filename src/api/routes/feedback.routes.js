@@ -4,8 +4,8 @@ const feedbackController = require("../controllers/feedback.controller");
 const { authMiddleware } = require("../middlewares/auth.middleware");
 const { validateCreateFeedback, validateQueryParams, validateEntityParams } = require("../validation/feedbackValidator");
 
-
-// ============ ANALYTICS ROUTES (MUST BE FIRST) ============
+// ============ ANALYTICS & OVERVIEW ROUTES ============
+// Universal analytics route for all entity types
 router.get("/analytics/:entityType/:entityId", 
   authMiddleware, 
   validateEntityParams, 
@@ -13,6 +13,7 @@ router.get("/analytics/:entityType/:entityId",
   feedbackController.getFeedbackAnalytics
 );
 
+// Recent feedback for any entity
 router.get("/recent/:entityType/:entityId", 
   authMiddleware, 
   validateEntityParams, 
@@ -20,13 +21,8 @@ router.get("/recent/:entityType/:entityId",
   feedbackController.getRecentFeedback
 );
 
-// ============ ACADEMY FEEDBACK ROUTES ============
-router.get("/academy/:academyId/overview", 
-  authMiddleware, 
-  validateQueryParams, 
-  feedbackController.getAcademyFeedback
-);
-
+// ============ HIERARCHICAL FEEDBACK ROUTES ============
+// Academy's sub-entities feedback
 router.get("/academy/:academyId/coaches", 
   authMiddleware, 
   validateQueryParams, 
@@ -51,13 +47,7 @@ router.get("/academy/:academyId/programs",
   feedbackController.getAcademyProgramFeedback
 );
 
-// ============ COACH FEEDBACK ROUTES ============
-router.get("/coach/:coachId/overview", 
-  authMiddleware, 
-  validateQueryParams, 
-  feedbackController.getCoachFeedback
-);
-
+// Coach's sub-entities feedback
 router.get("/coach/:coachId/students", 
   authMiddleware, 
   validateQueryParams, 
@@ -70,66 +60,20 @@ router.get("/coach/:coachId/batches",
   feedbackController.getCoachBatchFeedback
 );
 
-// ============ ENTITY-SPECIFIC ROUTES ============
-router.get("/entity/student/:studentId", 
+// ============ DIRECT ENTITY FEEDBACK ROUTES ============
+router.get("/entity/:entityType/:entityId", 
   authMiddleware, 
+  validateEntityParams,
   validateQueryParams, 
-  feedbackController.getStudentFeedback
-);
-
-router.get("/entity/batch/:batchId", 
-  authMiddleware, 
-  validateQueryParams, 
-  feedbackController.getBatchFeedback
-);
-
-router.get("/entity/program/:programId", 
-  authMiddleware, 
-  validateQueryParams, 
-  feedbackController.getProgramFeedback
-);
-
-router.get("/entity/session/:sessionId", 
-  authMiddleware, 
-  validateQueryParams, 
-  feedbackController.getSessionFeedback
+  feedbackController.getEntityFeedback
 );
 
 // ============ CREATE FEEDBACK ROUTES ============
-router.post("/academy/:academyId", 
+router.post("/entity/:entityType/:entityId", 
   authMiddleware, 
+  validateEntityParams,
   validateCreateFeedback, 
-  feedbackController.createAcademyFeedback
-);
-
-router.post("/coach/:coachId", 
-  authMiddleware, 
-  validateCreateFeedback, 
-  feedbackController.createCoachFeedback
-);
-
-router.post("/entity/student/:studentId", 
-  authMiddleware, 
-  validateCreateFeedback, 
-  feedbackController.createStudentFeedback
-);
-
-router.post("/entity/batch/:batchId", 
-  authMiddleware, 
-  validateCreateFeedback, 
-  feedbackController.createBatchFeedback
-);
-
-router.post("/entity/program/:programId", 
-  authMiddleware, 
-  validateCreateFeedback, 
-  feedbackController.createProgramFeedback
-);
-
-router.post("/entity/session/:sessionId", 
-  authMiddleware, 
-  validateCreateFeedback, 
-  feedbackController.createSessionFeedback
+  feedbackController.createEntityFeedback
 );
 
 module.exports = router;

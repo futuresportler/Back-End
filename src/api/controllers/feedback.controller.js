@@ -4,17 +4,30 @@ const {
   errorResponse,
 } = require("../../common/utils/response");
 
-// ============ GET FEEDBACK CONTROLLERS ============
+// ============ UNIVERSAL ENTITY FEEDBACK CONTROLLER ============
 
-const getAcademyFeedback = async (req, res) => {
+const getEntityFeedback = async (req, res) => {
   try {
-    const { academyId } = req.params;
-    const feedback = await feedbackService.getAcademyFeedback(academyId, req.query);
-    successResponse(res, "Academy feedback fetched successfully", feedback);
+    const { entityType, entityId } = req.params;
+    const feedback = await feedbackService.getEntityFeedback(entityType, entityId, req.query);
+    successResponse(res, `${entityType} feedback fetched successfully`, feedback);
   } catch (error) {
     errorResponse(res, error.message, error);
   }
 };
+
+const createEntityFeedback = async (req, res) => {
+  try {
+    const { entityType, entityId } = req.params;
+    const { userId } = req.user;
+    const feedback = await feedbackService.createEntityFeedback(entityType, entityId, req.body, userId);
+    successResponse(res, `${entityType} feedback created successfully`, feedback, 201);
+  } catch (error) {
+    errorResponse(res, error.message, error);
+  }
+};
+
+// ============ HIERARCHICAL FEEDBACK CONTROLLERS ============
 
 const getAcademyCoachFeedback = async (req, res) => {
   try {
@@ -56,16 +69,6 @@ const getAcademyProgramFeedback = async (req, res) => {
   }
 };
 
-const getCoachFeedback = async (req, res) => {
-  try {
-    const { coachId } = req.params;
-    const feedback = await feedbackService.getCoachFeedback(coachId, req.query);
-    successResponse(res, "Coach feedback fetched successfully", feedback);
-  } catch (error) {
-    errorResponse(res, error.message, error);
-  }
-};
-
 const getCoachStudentFeedback = async (req, res) => {
   try {
     const { coachId } = req.params;
@@ -81,115 +84,6 @@ const getCoachBatchFeedback = async (req, res) => {
     const { coachId } = req.params;
     const feedback = await feedbackService.getCoachBatchFeedback(coachId, req.query);
     successResponse(res, "Coach batch feedback fetched successfully", feedback);
-  } catch (error) {
-    errorResponse(res, error.message, error);
-  }
-};
-
-const getStudentFeedback = async (req, res) => {
-  try {
-    const { studentId } = req.params;
-    const feedback = await feedbackService.getStudentFeedback(studentId, req.query);
-    successResponse(res, "Student feedback fetched successfully", feedback);
-  } catch (error) {
-    errorResponse(res, error.message, error);
-  }
-};
-
-const getBatchFeedback = async (req, res) => {
-  try {
-    const { batchId } = req.params;
-    const { batchType = 'academy' } = req.query;
-    const feedback = await feedbackService.getBatchFeedback(batchId, batchType, req.query);
-    successResponse(res, "Batch feedback fetched successfully", feedback);
-  } catch (error) {
-    errorResponse(res, error.message, error);
-  }
-};
-
-const getProgramFeedback = async (req, res) => {
-  try {
-    const { programId } = req.params;
-    const feedback = await feedbackService.getProgramFeedback(programId, req.query);
-    successResponse(res, "Program feedback fetched successfully", feedback);
-  } catch (error) {
-    errorResponse(res, error.message, error);
-  }
-};
-
-const getSessionFeedback = async (req, res) => {
-  try {
-    const { sessionId } = req.params;
-    const feedback = await feedbackService.getSessionFeedback(sessionId, req.query);
-    successResponse(res, "Session feedback fetched successfully", feedback);
-  } catch (error) {
-    errorResponse(res, error.message, error);
-  }
-};
-
-// ============ CREATE FEEDBACK CONTROLLERS ============
-
-const createAcademyFeedback = async (req, res) => {
-  try {
-    const { academyId } = req.params;
-    const { userId } = req.user;
-    const feedback = await feedbackService.createAcademyFeedback(academyId, req.body, userId);
-    successResponse(res, "Academy feedback created successfully", feedback, 201);
-  } catch (error) {
-    errorResponse(res, error.message, error);
-  }
-};
-
-const createCoachFeedback = async (req, res) => {
-  try {
-    const { coachId } = req.params;
-    const { userId } = req.user;
-    const feedback = await feedbackService.createCoachFeedback(coachId, req.body, userId);
-    successResponse(res, "Coach feedback created successfully", feedback, 201);
-  } catch (error) {
-    errorResponse(res, error.message, error);
-  }
-};
-
-const createStudentFeedback = async (req, res) => {
-  try {
-    const { studentId } = req.params;
-    const { userId } = req.user;
-    const feedback = await feedbackService.createStudentFeedback(studentId, req.body, userId);
-    successResponse(res, "Student feedback created successfully", feedback, 201);
-  } catch (error) {
-    errorResponse(res, error.message, error);
-  }
-};
-
-const createBatchFeedback = async (req, res) => {
-  try {
-    const { batchId } = req.params;
-    const { userId } = req.user;
-    const feedback = await feedbackService.createBatchFeedback(batchId, req.body, userId);
-    successResponse(res, "Batch feedback created successfully", feedback, 201);
-  } catch (error) {
-    errorResponse(res, error.message, error);
-  }
-};
-
-const createProgramFeedback = async (req, res) => {
-  try {
-    const { programId } = req.params;
-    const { userId } = req.user;
-    const feedback = await feedbackService.createProgramFeedback(programId, req.body, userId);
-    successResponse(res, "Program feedback created successfully", feedback, 201);
-  } catch (error) {
-    errorResponse(res, error.message, error);
-  }
-};
-
-const createSessionFeedback = async (req, res) => {
-  try {
-    const { sessionId } = req.params;
-    const { userId } = req.user;
-    const feedback = await feedbackService.createSessionFeedback(sessionId, req.body, userId);
-    successResponse(res, "Session feedback created successfully", feedback, 201);
   } catch (error) {
     errorResponse(res, error.message, error);
   }
@@ -219,29 +113,19 @@ const getRecentFeedback = async (req, res) => {
 };
 
 module.exports = {
-  // Get feedback exports
-  getAcademyFeedback,
+  // Universal entity controllers
+  getEntityFeedback,
+  createEntityFeedback,
+  
+  // Hierarchical feedback controllers
   getAcademyCoachFeedback,
   getAcademyStudentFeedback,
   getAcademyBatchFeedback,
   getAcademyProgramFeedback,
-  getCoachFeedback,
   getCoachStudentFeedback,
   getCoachBatchFeedback,
-  getStudentFeedback,
-  getBatchFeedback,
-  getProgramFeedback,
-  getSessionFeedback,
   
-  // Create feedback exports
-  createAcademyFeedback,
-  createCoachFeedback,
-  createStudentFeedback,
-  createBatchFeedback,
-  createProgramFeedback,
-  createSessionFeedback,
-  
-  // Analytics exports
+  // Analytics controllers
   getFeedbackAnalytics,
   getRecentFeedback,
 };
