@@ -95,7 +95,7 @@ class PromotionRepository {
       attributes: [
         'serviceType',
         'promotionPlan',
-        [sequelize.fn('COUNT', sequelize.col('promotionTransactionId')), 'count'],
+        [sequelize.fn('COUNT', sequelize.col('promotion_transaction_id')), 'count'],
         [sequelize.fn('SUM', sequelize.col('amount')), 'totalAmount']
       ],
       group: ['serviceType', 'promotionPlan'],

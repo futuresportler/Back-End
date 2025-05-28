@@ -22,7 +22,7 @@ router.post(
 
 // Get supplier promotions
 router.get(
-  "/",
+  "/supplier",
   authMiddleware,
   validateGetPromotions,
   promotionController.getSupplierPromotions
