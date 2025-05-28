@@ -9,6 +9,7 @@ module.exports = (sequelize) => {
         defaultValue: DataTypes.UUIDV4,
         primaryKey: true,
         allowNull: false,
+        unique: true
       },
       academyId: {
         type: DataTypes.UUID,
@@ -122,9 +123,15 @@ module.exports = (sequelize) => {
         },
         {
           fields: ['coachId']
+          
         },
         {
           fields: ['mobileNumber']
+        },
+        {
+          fields: ['id'],
+          unique: true,
+          name: 'academy_coaches_id_unique'  // Add explicit unique index for id
         }
       ] }
   );

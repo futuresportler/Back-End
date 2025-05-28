@@ -16,7 +16,7 @@ const feedbackRoutes = require("./routes/feedback.routes");
 const notificationRoutes = require("./routes/notification.routes");
 const invitationRoutes = require("./routes/invitation.routes");
 const promotionRoutes = require("./routes/promotion.routes");
-
+const userBookingRoutes = require("./routes/booking.routes");
 // Mount routes
 router.use("/users", userRoutes);
 router.use("/suppliers", supplierRoutes);
@@ -32,4 +32,5 @@ router.use("/feedback", feedbackRoutes);
 router.use("/notifications", notificationRoutes);
 router.use("/invitations", invitationRoutes);
 router.use("/promotions", promotionRoutes);
+router.use("/bookings", userBookingRoutes);
 module.exports = router;

@@ -74,6 +74,14 @@ module.exports = (sequelize) => {
         type: DataTypes.TEXT,
         allowNull: true,
       },
+      academyCoachId: {
+        type: DataTypes.UUID,
+        allowNull: true,
+        references: {
+          model: "AcademyCoaches",
+          key: "id",
+        },
+      },
     },
     {
       timestamps: true,
