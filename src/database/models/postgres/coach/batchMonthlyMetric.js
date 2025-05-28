@@ -67,6 +67,10 @@ module.exports = (sequelize) => {
         type: DataTypes.INTEGER,
         defaultValue: 0,
       },
+      studentProgress: {
+        type: DataTypes.DECIMAL(5, 2),
+        defaultValue: 0,
+      },
       utilization: {
         type: DataTypes.DECIMAL(5, 2),
         defaultValue: 0,
