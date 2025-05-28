@@ -138,6 +138,173 @@ class AcademyMetricsRepository {
     return await AcademyMetric.findAll(options);
   }
 
+
+  async incrementMetricCounter(academyId, monthId, dayId, field, amount = 1){
+    try {
+      // Update daily metric
+      const [dailyMetric, dailyCreated] = await AcademyMetric.findOrCreate({
+        where: { academyId, dayId, monthId },
+        defaults: {
+          academyId,
+          dayId,
+          monthId,
+          totalSessions: 0,
+          completedSessions: 0,
+          cancelledSessions: 0,
+          totalRevenue: 0,
+          newStudents: 0,
+          activeStudents: 0
+        }
+      });
+
+      dailyMetric[field] = (dailyMetric[field] || 0) + amount;
+      await dailyMetric.save();
+
+      return dailyMetric;
+    } catch (error) {
+      console.error('Error incrementing academy metric counter:', error);
+      throw error;
+    }
+  };
+
+  async incrementBatchMetricCounter(batchId, monthId, field, amount = 1){
+    try {
+      const batch = await AcademyBatch.findByPk(batchId);
+      if (!batch) throw new Error('Batch not found');
+
+      // Check if BatchMonthlyMetric model exists, if not use a generic approach
+      let metric;
+      try {
+        const BatchMonthlyMetric = require('../../../database/models/postgres/academy/batchMonthlyMetric')(sequelize);
+        [metric] = await BatchMonthlyMetric.findOrCreate({
+          where: { batchId, monthId, academyId: batch.academyId },
+          defaults: {
+            batchId,
+            monthId,
+            academyId: batch.academyId,
+            totalSessions: 0,
+            completedSessions: 0,
+            cancelledSessions: 0,
+            totalRevenue: 0
+          }
+        });
+      } catch (modelError) {
+        // If model doesn't exist, aggregate to academy level
+        return await incrementMetricCounter(batch.academyId, monthId, null, field, amount);
+      }
+
+      metric[field] = (metric[field] || 0) + amount;
+      await metric.save();
+      
+      return metric;
+    } catch (error) {
+      console.error('Error incrementing academy batch metric counter:', error);
+      throw error;
+    }
+  };
+
+  async incrementProgramMetricCounter(programId, monthId, field, amount = 1){
+    try {
+      const program = await AcademyProgram.findByPk(programId);
+      if (!program) throw new Error('Program not found');
+
+      // Check if ProgramMonthlyMetric model exists
+      let metric;
+      try {
+        const ProgramMonthlyMetric = require('../../../database/models/postgres/academy/programMonthlyMetric')(sequelize);
+        [metric] = await ProgramMonthlyMetric.findOrCreate({
+          where: { programId, monthId, academyId: program.academyId },
+          defaults: {
+            programId,
+            monthId,
+            academyId: program.academyId,
+            totalSessions: 0,
+            completedSessions: 0,
+            cancelledSessions: 0,
+            totalRevenue: 0
+          }
+        });
+      } catch (modelError) {
+        // If model doesn't exist, aggregate to academy level
+        return await incrementMetricCounter(program.academyId, monthId, null, field, amount);
+      }
+
+      metric[field] = (metric[field] || 0) + amount;
+      await metric.save();
+      
+      return metric;
+    } catch (error) {
+      console.error('Error incrementing academy program metric counter:', error);
+      throw error;
+    }
+  };
+
+  async recalculateMetricsFromSessions(academyId, monthId){
+    try {
+      // Get all sessions for this academy and month
+      const batchSessions = await AcademyBatchSession.findAll({
+        include: [{
+          model: AcademyBatch,
+          where: { academyId }
+        }],
+        where: { monthId }
+      });
+
+      const programSessions = await AcademyProgramSession.findAll({
+        include: [{
+          model: AcademyProgram,
+          where: { academyId }
+        }],
+        where: { monthId }
+      });
+
+      const allSessions = [...batchSessions, ...programSessions];
+      
+      const metrics = {
+        totalSessions: allSessions.length,
+        completedSessions: allSessions.filter(s => s.status === 'completed').length,
+        cancelledSessions: allSessions.filter(s => s.status === 'cancelled').length
+      };
+
+      // Calculate revenue from fees
+      const fees = await AcademyFee.findAll({
+        where: { academyId, monthId }
+      });
+      metrics.totalRevenue = fees.reduce((sum, fee) => sum + (fee.amount || 0), 0);
+
+      // Update daily metrics (aggregate by day)
+      const dayGroups = {};
+      allSessions.forEach(session => {
+        if (!dayGroups[session.dayId]) {
+          dayGroups[session.dayId] = {
+            totalSessions: 0,
+            completedSessions: 0,
+            cancelledSessions: 0
+          };
+        }
+        dayGroups[session.dayId].totalSessions++;
+        if (session.status === 'completed') dayGroups[session.dayId].completedSessions++;
+        if (session.status === 'cancelled') dayGroups[session.dayId].cancelledSessions++;
+      });
+
+      // Update each day's metrics
+      for (const [dayId, dayMetrics] of Object.entries(dayGroups)) {
+        const [metric, created] = await AcademyMetric.findOrCreate({
+          where: { academyId, dayId: parseInt(dayId), monthId },
+          defaults: { academyId, dayId: parseInt(dayId), monthId, ...dayMetrics }
+        });
+
+        if (!created) {
+          await metric.update(dayMetrics);
+        }
+      }
+
+      return metrics;
+    } catch (error) {
+      console.error('Error recalculating academy metrics from sessions:', error);
+      throw error;
+    }
+  };
   async calculateConversionRate(academyId, monthId) {
     // Get the month dates
     const month = await Month.findByPk(monthId);

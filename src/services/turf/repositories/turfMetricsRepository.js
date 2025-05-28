@@ -342,6 +342,129 @@ class TurfMetricsRepository {
     return groundMetrics;
   }
 
+
+  sync incrementMetricCounter(turfId, monthId, dayId, field, amount = 1){
+    try {
+      // Update daily metric
+      const [dailyMetric, dailyCreated] = await TurfMetric.findOrCreate({
+        where: { turfId, dayId, monthId },
+        defaults: {
+          turfId,
+          dayId,
+          monthId,
+          totalBookings: 0,
+          completedBookings: 0,
+          cancelledBookings: 0,
+          totalRevenue: 0,
+          occupancyRate: 0
+        }
+      });
+
+      dailyMetric[field] = (dailyMetric[field] || 0) + amount;
+      await dailyMetric.save();
+
+      // Update monthly metric
+      const [monthlyMetric, monthlyCreated] = await TurfMonthlyMetric.findOrCreate({
+        where: { turfId, monthId },
+        defaults: {
+          turfId,
+          monthId,
+          totalBookings: 0,
+          completedBookings: 0,
+          cancelledBookings: 0,
+          totalRevenue: 0,
+          averageOccupancyRate: 0
+        }
+      });
+
+      monthlyMetric[field] = (monthlyMetric[field] || 0) + amount;
+      await monthlyMetric.save();
+
+      return { dailyMetric, monthlyMetric };
+    } catch (error) {
+      console.error('Error incrementing turf metric counter:', error);
+      throw error;
+    }
+  };
+
+  async recalculateMetricsFromBookings(turfId, monthId){
+    try {
+      // Get all slot requests for this turf and month
+      const slotRequests = await SlotRequest.findAll({
+        include: [{
+          model: TurfSlot,
+          include: [{
+            model: TurfGround,
+            where: { turfId }
+          }]
+        }],
+        where: { monthId }
+      });
+
+      const metrics = {
+        totalBookings: slotRequests.length,
+        completedBookings: slotRequests.filter(r => r.status === 'completed').length,
+        cancelledBookings: slotRequests.filter(r => r.status === 'cancelled').length
+      };
+
+      // Calculate revenue from payments
+      const payments = await TurfPayment.findAll({
+        include: [{
+          model: SlotRequest,
+          include: [{
+            model: TurfSlot,
+            include: [{
+              model: TurfGround,
+              where: { turfId }
+            }]
+          }]
+        }],
+        where: { monthId }
+      });
+      metrics.totalRevenue = payments.reduce((sum, payment) => sum + (payment.amount || 0), 0);
+
+      // Update monthly metric
+      const [monthlyMetric, created] = await TurfMonthlyMetric.findOrCreate({
+        where: { turfId, monthId },
+        defaults: { turfId, monthId, ...metrics }
+      });
+
+      if (!created) {
+        await monthlyMetric.update(metrics);
+      }
+
+      // Update daily metrics (aggregate by day)
+      const dayGroups = {};
+      slotRequests.forEach(request => {
+        if (!dayGroups[request.dayId]) {
+          dayGroups[request.dayId] = {
+            totalBookings: 0,
+            completedBookings: 0,
+            cancelledBookings: 0
+          };
+        }
+        dayGroups[request.dayId].totalBookings++;
+        if (request.status === 'completed') dayGroups[request.dayId].completedBookings++;
+        if (request.status === 'cancelled') dayGroups[request.dayId].cancelledBookings++;
+      });
+
+      for (const [dayId, dayMetrics] of Object.entries(dayGroups)) {
+        const [metric, created] = await TurfMetric.findOrCreate({
+          where: { turfId, dayId: parseInt(dayId), monthId },
+          defaults: { turfId, dayId: parseInt(dayId), monthId, ...dayMetrics }
+        });
+
+        if (!created) {
+          await metric.update(dayMetrics);
+        }
+      }
+
+      return monthlyMetric;
+    } catch (error) {
+      console.error('Error recalculating turf metrics from bookings:', error);
+      throw error;
+    }
+  };
   // Update all metrics for a turf
   async updateAllMetrics(turfId, monthId) {
     // Get month boundaries
