@@ -4,17 +4,6 @@ const { Op } = require("sequelize");
 const moment = require("moment");
 const SessionRepository = require('./repositories/sessionRepository');
 // Session models
-const {
-  AcademyBatchSession,
-  AcademyProgramSession,
-  CoachSession,
-  TurfSession,
-  AcademyBatchSessionRequest,
-  AcademyProgramSessionRequest,
-  CoachSessionRequest,
-  TurfSessionRequest,
-} = require("../../database/models/postgres/sessions/sessionRequests");
-
 /**
  * Get the appropriate session and request models based on service type
  * @param {string} service - Service type ('academy_batch', 'academy_program', 'coach', 'turf')
@@ -25,17 +14,21 @@ const getModels = (service) => {
     case "academy_batch":
       return {
         Session: AcademyBatchSession,
-        Request: AcademyBatchSessionRequest,
+        // Request: AcademyBatchSessionRequest,
       };
     case "academy_program":
       return {
         Session: AcademyProgramSession,
-        Request: AcademyProgramSessionRequest,
+        // Request: AcademyProgramSessionRequest,
       };
     case "coach":
-      return { Session: CoachSession, Request: CoachSessionRequest };
+      return { Session: CoachSession, 
+        // Request: CoachSessionRequest 
+      };
     case "turf":
-      return { Session: TurfSession, Request: TurfSessionRequest };
+      return { Session: TurfSession, 
+        // Request: TurfSessionRequest 
+      };
     default:
       throw new Error(`Invalid service type: ${service}`);
   }

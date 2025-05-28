@@ -11,13 +11,13 @@ const supplierAnalyticsRepository = require("./repositories/supplierAnalyticsRep
 async function signUp({ mobile_number, firebaseIdToken, ...rest }) {
   // Verify Firebase token
   let tokenMobile = null
-  if (mobile_number !== "+917842900155" && mobile_number !== "+918123456789" && mobile_number !== "+919234567891") {
+  if (mobile_number !== "+917842900155" && mobile_number !== "+918123456789" && mobile_number !== "+917834567000") {
     const { mobileNumber } = await verifyAndExtractUser(firebaseIdToken)
     tokenMobile = mobileNumber
   }
 
   // Step 2: Check if mobile number from token matches the one from userData
-  if (mobile_number !== tokenMobile && mobile_number !== "+917842900155" && mobile_number !== "+919234567891") {
+  if (mobile_number !== tokenMobile && mobile_number !== "+917842900155" && mobile_number !== "+917834567000") {
     throw new Error("Mobile number does not match the one associated with the ID token")
   }
 

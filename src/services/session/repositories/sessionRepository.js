@@ -8,6 +8,15 @@ const {
   AcademyProgramSession,
   CoachSession,
   TurfSession,
+  User,
+  CoachProfile,
+  CoachBatch,
+  AcademyProfile,
+  AcademyBatch,
+  AcademyProgram,
+  TurfProfile,
+  TurfGround
+
 } = require("../../../database/index");
 
 class SessionRepository {
@@ -54,34 +63,37 @@ class SessionRepository {
   }
 
   // Coach booking methods
-  async findCoachBookingsByUserId(userId) {
-    try {
-      return await this.CoachSession.findAll({
-        where: { 
-          user_id: userId 
-        },
-        include: [
-          {
-            model: sequelize.models.CoachBatch,
-            as: 'batch',
-            attributes: ['id', 'name', 'description', 'sport'],
-            include: [
-              {
-                model: sequelize.models.CoachProfile,
-                as: 'coach',
-                attributes: ['id', 'name', 'sport', 'experience', 'specialization', 'location']
-              }
-            ]
-          }
-        ],
-        order: [['date', 'DESC'], ['start_time', 'DESC']]
-      });
-    } catch (err) {
-      error('Error finding coach bookings by user ID:', err);
-      return [];
-    }
+// Remove all other findCoachBookingsByUserId methods and keep only this one:
+async findCoachBookingsByUserId(userId) {
+  try {
+    return await CoachSession.findAll({
+      where: { 
+        user_id: userId 
+      },
+      include: [
+        {
+          model: CoachBatch,
+          as: 'batch',
+          attributes: ['batchId', 'batchName', 'description', 'curriculum'], // Use 'batchId' not 'id'
+          required: false,
+          include: [
+            {
+              model: CoachProfile,
+              as: 'coach',
+              attributes: ['coachId', 'name', 'sportsCoached', 'experienceYears', 'sportsCoached', 'city'], // Use 'coachId' not 'id'
+              required: false
+            }
+          ]
+        }
+      ],
+      order: [['date', 'DESC'], ['start_time', 'DESC']]
+    });
+  } catch (err) {
+    console.error('Detailed error in findCoachBookingsByUserId:', err.message);
+    error('Error finding coach bookings by user ID:', err);
+    return [];
   }
-
+}
   async findUserCoachSessions(userId, coachId) {
     try {
       return await this.CoachSession.findAll({
@@ -91,12 +103,12 @@ class SessionRepository {
         },
         include: [
           {
-            model: sequelize.models.CoachBatch,
+            model: CoachBatch,
             as: 'batch',
             attributes: ['id', 'name', 'description', 'sport'],
             include: [
               {
-                model: sequelize.models.CoachProfile,
+                model: CoachProfile,
                 as: 'coach',
                 attributes: ['id', 'name', 'sport', 'experience', 'specialization', 'location']
               }
@@ -110,59 +122,9 @@ class SessionRepository {
       return [];
     }
   }
-
-  async findCoachSessionsByCoachId(coachId) {
-    try {
-      return await this.CoachSession.findAll({
-        where: { coach_id: coachId },
-        include: [
-          {
-            model: sequelize.models.User,
-            as: 'user',
-            attributes: ['id', 'name', 'email', 'phone']
-          },
-          {
-            model: sequelize.models.CoachBatch,
-            as: 'batch',
-            attributes: ['id', 'name', 'description']
-          }
-        ],
-        order: [['date', 'DESC'], ['start_time', 'DESC']]
-      });
-    } catch (err) {
-      error('Error finding coach sessions by coach ID:', err);
-      return [];
-    }
-  }
+  // Coach booking methods
 
   // Academy booking methods - Academy Batch Sessions
-  async findAcademyBatchBookingsByUserId(userId) {
-    try {
-      return await this.AcademyBatchSession.findAll({
-        where: { 
-          user_id: userId 
-        },
-        include: [
-          {
-            model: sequelize.models.AcademyBatch,
-            as: 'batch',
-            attributes: ['id', 'name', 'description', 'sport'],
-            include: [
-              {
-                model: sequelize.models.AcademyProfile,
-                as: 'academy',
-                attributes: ['id', 'name', 'sport', 'location', 'description']
-              }
-            ]
-          }
-        ],
-        order: [['date', 'DESC'], ['start_time', 'DESC']]
-      });
-    } catch (err) {
-      error('Error finding academy batch bookings by user ID:', err);
-      return [];
-    }
-  }
 
   async findUserAcademyBatchSessions(userId, batchId) {
     try {
@@ -173,12 +135,12 @@ class SessionRepository {
         },
         include: [
           {
-            model: sequelize.models.AcademyBatch,
+            model: AcademyBatch,
             as: 'batch',
             attributes: ['id', 'name', 'description', 'sport'],
             include: [
               {
-                model: sequelize.models.AcademyProfile,
+                model: AcademyProfile,
                 as: 'academy',
                 attributes: ['id', 'name', 'sport', 'location', 'description']
               }
@@ -192,35 +154,7 @@ class SessionRepository {
       return [];
     }
   }
-
   // Academy booking methods - Academy Program Sessions
-  async findAcademyProgramBookingsByUserId(userId) {
-    try {
-      return await this.AcademyProgramSession.findAll({
-        where: { 
-          user_id: userId 
-        },
-        include: [
-          {
-            model: sequelize.models.AcademyProgram,
-            as: 'program',
-            attributes: ['id', 'name', 'description', 'sport'],
-            include: [
-              {
-                model: sequelize.models.AcademyProfile,
-                as: 'academy',
-                attributes: ['id', 'name', 'sport', 'location', 'description']
-              }
-            ]
-          }
-        ],
-        order: [['date', 'DESC'], ['start_time', 'DESC']]
-      });
-    } catch (err) {
-      error('Error finding academy program bookings by user ID:', err);
-      return [];
-    }
-  }
 
   async findUserAcademyProgramSessions(userId, programId) {
     try {
@@ -231,12 +165,12 @@ class SessionRepository {
         },
         include: [
           {
-            model: sequelize.models.AcademyProgram,
+            model: AcademyProgram,
             as: 'program',
             attributes: ['id', 'name', 'description', 'sport'],
             include: [
               {
-                model: sequelize.models.AcademyProfile,
+                model: AcademyProfile,
                 as: 'academy',
                 attributes: ['id', 'name', 'sport', 'location', 'description']
               }
@@ -284,7 +218,7 @@ class SessionRepository {
           },
           include: [
             {
-              model: sequelize.models.AcademyBatch,
+              model: AcademyBatch,
               as: 'batch',
               attributes: ['id', 'name', 'description', 'sport']
             }
@@ -297,7 +231,7 @@ class SessionRepository {
           },
           include: [
             {
-              model: sequelize.models.AcademyProgram,
+              model: AcademyProgram,
               as: 'program',
               attributes: ['id', 'name', 'description', 'sport']
             }
@@ -321,33 +255,6 @@ class SessionRepository {
   }
 
   // Turf booking methods
-  async findTurfBookingsByUserId(userId) {
-    try {
-      return await this.TurfSession.findAll({
-        where: { 
-          user_id: userId 
-        },
-        include: [
-          {
-            model: sequelize.models.TurfGround,
-            as: 'ground',
-            attributes: ['id', 'name', 'type', 'size', 'sport'],
-            include: [
-              {
-                model: sequelize.models.TurfProfile,
-                as: 'turf',
-                attributes: ['id', 'name', 'location', 'description']
-              }
-            ]
-          }
-        ],
-        order: [['date', 'DESC'], ['start_time', 'DESC']]
-      });
-    } catch (err) {
-      error('Error finding turf bookings by user ID:', err);
-      return [];
-    }
-  }
 
   async findUserTurfSessions(userId, turfId) {
     try {
@@ -358,12 +265,12 @@ class SessionRepository {
         },
         include: [
           {
-            model: sequelize.models.TurfGround,
+            model: TurfGround,
             as: 'ground',
             attributes: ['id', 'name', 'type', 'size', 'sport'],
             include: [
               {
-                model: sequelize.models.TurfProfile,
+                model: TurfProfile,
                 as: 'turf',
                 attributes: ['id', 'name', 'location', 'description']
               }
@@ -384,12 +291,12 @@ class SessionRepository {
         where: { turf_id: turfId },
         include: [
           {
-            model: sequelize.models.User,
+            model: User,
             as: 'user',
             attributes: ['id', 'name', 'email', 'phone']
           },
           {
-            model: sequelize.models.TurfGround,
+            model: TurfGround,
             as: 'ground',
             attributes: ['id', 'name', 'type', 'size']
           }
@@ -443,12 +350,12 @@ class SessionRepository {
           },
           include: [
             {
-              model: sequelize.models.CoachBatch,
+              model: CoachBatch,
               as: 'batch',
               attributes: ['id', 'name', 'description'],
               include: [
                 {
-                  model: sequelize.models.CoachProfile,
+                  model: CoachProfile,
                   as: 'coach',
                   attributes: ['id', 'name', 'sport', 'location']
                 }
@@ -467,12 +374,12 @@ class SessionRepository {
           },
           include: [
             {
-              model: sequelize.models.AcademyBatch,
+              model: AcademyBatch,
               as: 'batch',
               attributes: ['id', 'name', 'description'],
               include: [
                 {
-                  model: sequelize.models.AcademyProfile,
+                  model: AcademyProfile,
                   as: 'academy',
                   attributes: ['id', 'name', 'sport', 'location']
                 }
@@ -491,12 +398,12 @@ class SessionRepository {
           },
           include: [
             {
-              model: sequelize.models.AcademyProgram,
+              model: AcademyProgram,
               as: 'program',
               attributes: ['id', 'name', 'description'],
               include: [
                 {
-                  model: sequelize.models.AcademyProfile,
+                  model: AcademyProfile,
                   as: 'academy',
                   attributes: ['id', 'name', 'sport', 'location']
                 }
@@ -515,12 +422,12 @@ class SessionRepository {
           },
           include: [
             {
-              model: sequelize.models.TurfGround,
+              model: TurfGround,
               as: 'ground',
               attributes: ['id', 'name', 'type', 'size'],
               include: [
                 {
-                  model: sequelize.models.TurfProfile,
+                  model: TurfProfile,
                   as: 'turf',
                   attributes: ['id', 'name', 'location']
                 }
@@ -563,12 +470,12 @@ class SessionRepository {
           },
           include: [
             {
-              model: sequelize.models.CoachBatch,
+              model: CoachBatch,
               as: 'batch',
               attributes: ['id', 'name', 'description'],
               include: [
                 {
-                  model: sequelize.models.CoachProfile,
+                  model: CoachProfile,
                   as: 'coach',
                   attributes: ['id', 'name', 'sport', 'location']
                 }
@@ -585,12 +492,12 @@ class SessionRepository {
           },
           include: [
             {
-              model: sequelize.models.AcademyBatch,
+              model: AcademyBatch,
               as: 'batch',
               attributes: ['id', 'name', 'description'],
               include: [
                 {
-                  model: sequelize.models.AcademyProfile,
+                  model: AcademyProfile,
                   as: 'academy',
                   attributes: ['id', 'name', 'sport', 'location']
                 }
@@ -607,12 +514,12 @@ class SessionRepository {
           },
           include: [
             {
-              model: sequelize.models.AcademyProgram,
+              model: AcademyProgram,
               as: 'program',
               attributes: ['id', 'name', 'description'],
               include: [
                 {
-                  model: sequelize.models.AcademyProfile,
+                  model: AcademyProfile,
                   as: 'academy',
                   attributes: ['id', 'name', 'sport', 'location']
                 }
@@ -629,12 +536,12 @@ class SessionRepository {
           },
           include: [
             {
-              model: sequelize.models.TurfGround,
+              model: TurfGround,
               as: 'ground',
               attributes: ['id', 'name', 'type', 'size'],
               include: [
                 {
-                  model: sequelize.models.TurfProfile,
+                  model: TurfProfile,
                   as: 'turf',
                   attributes: ['id', 'name', 'location']
                 }
@@ -813,6 +720,103 @@ class SessionRepository {
       throw err;
     }
   }
+
+// Academy booking methods - Academy Batch Sessions
+async findAcademyBatchBookingsByUserId(userId) {
+  try {
+    return await AcademyBatchSession.findAll({
+      where: { 
+        user_id: userId 
+      },
+      include: [
+        {
+          model: AcademyBatch,
+          as: 'batch',
+          attributes: ['batchId', 'batchName', 'description', 'sport'], // Changed 'id' to 'batchId' and 'name' to 'batchName'
+          required: false,
+          include: [
+            {
+              model: AcademyProfile,
+              as: 'academy',
+              attributes: ['academyId', 'name', 'sports', 'city', 'description'], // Changed 'id' to 'academyId' and 'sport' to 'sports'
+              required: false
+            }
+          ]
+        }
+      ],
+      order: [['date', 'DESC'], ['start_time', 'DESC']]
+    });
+  } catch (err) {
+    console.error('Detailed error in findAcademyBatchBookingsByUserId:', err.message);
+    error('Error finding academy batch bookings by user ID:', err);
+    return [];
+  }
+}
+
+// Academy Program Sessions
+async findAcademyProgramBookingsByUserId(userId) {
+  try {
+    return await AcademyProgramSession.findAll({
+      where: { 
+        user_id: userId 
+      },
+      include: [
+        {
+          model: AcademyProgram,
+          as: 'program',
+          attributes: ['programId', 'programName', 'description', 'sport'], // Changed 'id' to 'programId' and 'name' to 'programName'
+          required: false,
+          include: [
+            {
+              model: AcademyProfile,
+              as: 'academy',
+              attributes: ['academyId', 'name', 'sports', 'city', 'description'], // Changed 'id' to 'academyId' and 'sport' to 'sports'
+              required: false
+            }
+          ]
+        }
+      ],
+      order: [['date', 'DESC'], ['start_time', 'DESC']]
+    });
+  } catch (err) {
+    console.error('Detailed error in findAcademyProgramBookingsByUserId:', err.message);
+    error('Error finding academy program bookings by user ID:', err);
+    return [];
+  }
+}
+
+
+// Turf booking methods
+async findTurfBookingsByUserId(userId) {
+  try {
+    return await TurfSession.findAll({
+      where: { 
+        user_id: userId 
+      },
+      include: [
+        {
+          model: TurfGround,
+          as: 'ground',
+          attributes: ['groundId', 'name', 'sportType', 'dimensions', 'capacity'], // Changed 'id' to 'groundId' and 'type' to 'sportType'
+          required: false,
+          include: [
+            {
+              model: TurfProfile,
+              as: 'turf',
+              attributes: ['turfId', 'name', 'city', 'description'], // Changed 'id' to 'turfId' and 'location' to 'city'
+              required: false
+            }
+          ]
+        }
+      ],
+      order: [['date', 'DESC'], ['start_time', 'DESC']]
+    });
+  } catch (err) {
+    console.error('Detailed error in findTurfBookingsByUserId:', err.message);
+    error('Error finding turf bookings by user ID:', err);
+    return [];
+  }
+}
 }
 
 module.exports = new SessionRepository();
