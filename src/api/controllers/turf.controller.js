@@ -311,6 +311,15 @@ const refreshMetrics = async (req, res) => {
   }
 };
 
+const getProfileWithPromotion = async (req, res) => {
+  try {
+    const profile = await turfService.getTurfWithPromotionStatus(req.params.turfProfileId);
+    successResponse(res, "Turf profile with promotion status fetched", profile);
+  } catch (error) {
+    errorResponse(res, error.message, error);
+  }
+};
+
 module.exports = {
   createProfile,
   getMyProfiles,
@@ -323,6 +332,7 @@ module.exports = {
   handleBookingRequest,
   addReview,
   getAllTurfs,
+  getProfileWithPromotion,
   // Ground-related controller methods
   createGround,
   getGrounds,

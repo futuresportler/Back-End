@@ -344,6 +344,17 @@ const refreshAnalytics = async (req, res) => {
     errorResponse(res, error.message, error);
   }
 };
+
+
+const getProfileWithPromotion = async (req, res) => {
+  try {
+    const profile = await coachService.getCoachWithPromotionStatus(req.params.coachProfileId);
+    successResponse(res, "Coach profile with promotion status fetched", profile);
+  } catch (error) {
+    errorResponse(res, error.message, error);
+  }
+};
+
 module.exports = {
   getMyProfile,
   getProfile,
@@ -352,6 +363,8 @@ module.exports = {
   getNearbyCoaches,
   addCertification,
   getAllCoaches,
+
+  getProfileWithPromotion, 
 
   // Add the new batch controller functions
   createBatch,

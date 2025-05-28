@@ -88,15 +88,20 @@ const searchTurfs = async (filters) => {
     if (sortBy === "priority") {
       orderClause = `ORDER BY ("TurfProfile"."priority"->>'value')::numeric DESC`;
     } else if (sortBy === "rating") {
-      orderClause = `ORDER BY "TurfProfile"."rating" DESC`;
+      orderClause = `ORDER BY ("TurfProfile"."priority"->>'value')::numeric DESC, "TurfProfile"."rating" DESC`;
     } else if (sortBy === "price") {
-      orderClause = `ORDER BY "TurfProfile"."hourlyRate" ASC`;
+      orderClause = `ORDER BY ("TurfProfile"."priority"->>'value')::numeric DESC, "TurfProfile"."hourlyRate" ASC`;
     } else if (sortBy === "distance" && latitude && longitude) {
-      orderClause = `ORDER BY ST_Distance(
+      orderClause = `ORDER BY ("TurfProfile"."priority"->>'value')::numeric DESC, ST_Distance(
         "supplier"."location",
         ST_SetSRID(ST_MakePoint(:longitude, :latitude), 4326)
       ) ASC`;
+    } else {
+        orderClause = `ORDER BY ("TurfProfile"."priority"->>'value')::numeric DESC, "TurfProfile"."rating" DESC`;
     }
+    orderClause += `, "TurfProfile"."turfId" ASC`;
+
+  
 
     // Always add a secondary sort by priority and then by id for consistent results
     if (sortBy !== "priority") {
@@ -129,6 +134,7 @@ const searchTurfs = async (filters) => {
     const query = `
       SELECT 
         "TurfProfile".*,
+        "TurfProfile"."priority",
         "supplier"."email" AS "supplier.email",
         "supplier"."mobile_number" AS "supplier.mobile_number",
         "supplier"."profilePicture" AS "supplier.profilePicture"
@@ -150,8 +156,15 @@ const searchTurfs = async (filters) => {
       nest: true,
     });
 
-    return {
-      turfs,
+    return  {
+      turfs: turfs.map(turf => ({
+        ...turf,
+        promotionStatus: {
+          isPromoted: turf.priority?.value > 0,
+          plan: turf.priority?.plan || "none",
+          expiresAt: turf.priority?.expiresAt
+        }
+      })),
       pagination: {
         total: count,
         page: Number.parseInt(page),

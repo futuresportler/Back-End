@@ -74,6 +74,7 @@ const FeedbackReminder = require("./models/postgres/notification/feedbackReminde
 const BookingNotification = require("./models/postgres/notification/bookingNotification")(sequelize);
 const AcademyInvitation = require("./models/postgres/academy/academyInvitation")(sequelize);
 const UserDeviceToken = require("./models/postgres/userDeviceToken")(sequelize);
+const PromotionTransaction = require("./models/postgres/promotion/promotionTransaction")(sequelize);
 
 // Define Associations
 const defineAssociations = () => {
@@ -960,6 +961,9 @@ module.exports = {
   Notification,
   FeedbackReminder,
   BookingNotification,
+
+  //promotion
+  PromotionTransaction,
   
   syncDatabase,
 };

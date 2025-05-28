@@ -6,28 +6,42 @@ const searchAcademies = async (filters) => {
     city,
     sport,
     minRating,
-    ageGroup,
-    classType,
-    // Removed minPrice and maxPrice as they don't exist in the model
-    facilities,
+    maxFee,
     page = 1,
     limit = 20,
     latitude,
     longitude,
     radius = 5000,
     sortBy = "priority",
+    searchTerm
   } = filters;
 
   try {
-    console.log("Starting search with filters:", filters);
-
-    // Use direct SQL query to avoid Sequelize ORM issues with JSON fields
-    let query = `
-      SELECT 
-        a.*,
-        s.email AS "supplier.email",
-        s.mobile_number AS "supplier.mobile_number",
-        s.profile_picture AS "supplier.profilePicture"
+    // Base query for academies
+    let baseQuery = `
+      SELECT DISTINCT
+        a."academyId",
+        a."name",
+        a."description", 
+        a."sports",
+        a."facilities",
+        a."images",
+        a."timings",
+        a."contactInfo",
+        a."rating",
+        a."reviews",
+        a."totalStudents",
+        a."experienceYears",
+        a."certifications",
+        a."achievements",
+        a."feeStructure",
+        a."priority",
+        s."name" as "supplierName",
+        s."email" as "supplierEmail",
+        s."mobile_number" as "supplierMobile",
+        s."city" as "supplierCity",
+        s."state" as "supplierState",
+        s."location" as "supplierLocation"
       FROM 
         "AcademyProfiles" a
       LEFT JOIN 
@@ -52,7 +66,7 @@ const searchAcademies = async (filters) => {
 
     // Add city filter
     if (city) {
-      conditions.push(`a."city" ILIKE $${params.length + 1}`);
+      conditions.push(`s."city" ILIKE $${params.length + 1}`);
       params.push(`%${city}%`);
     }
 
@@ -70,39 +84,28 @@ const searchAcademies = async (filters) => {
       params.push(minRating);
     }
 
-    // Add age group filter - using the correct JSON query syntax
-    if (ageGroup) {
-      // Use the ->> operator to get the value as text
-      conditions.push(`(a."ageGroups"->$${params.length + 1})::text = 'true'`);
-      params.push(ageGroup);
+    // Add fee filter
+    if (maxFee) {
+      conditions.push(`(a."feeStructure"->>'monthly')::numeric <= $${params.length + 1}`);
+      params.push(maxFee);
     }
 
-    // Add class type filter - using the correct JSON query syntax
-    if (classType) {
-      conditions.push(`(a."classTypes"->$${params.length + 1})::text = 'true'`);
-      params.push(classType);
+    // Add search term filter
+    if (searchTerm) {
+      conditions.push(`(
+        a."name" ILIKE $${params.length + 1} OR 
+        a."description" ILIKE $${params.length + 1}
+      )`);
+      params.push(`%${searchTerm}%`);
     }
 
-    // Add facilities filter
-    if (facilities && facilities.length > 0) {
-      const facilitiesArray = Array.isArray(facilities)
-        ? facilities
-        : facilities.split(",");
-      conditions.push(
-        `a."facilities" && ARRAY[$${params.length + 1}]::VARCHAR(255)[]`
-      );
-      params.push(facilitiesArray);
-    }
-
-    // Add location-based search if coordinates are provided
-    if (latitude && longitude) {
+    // Add distance filter
+    if (latitude && longitude && radius) {
       conditions.push(`
         ST_DWithin(
           s."location",
-          ST_SetSRID(ST_MakePoint(${params.length + 1}, ${
-        params.length + 2
-      }), 4326),
-          ${params.length + 3}
+          ST_SetSRID(ST_MakePoint($${params.length + 1}, $${params.length + 2}), 4326),
+          $${params.length + 3}
         )
       `);
       params.push(longitude, latitude, radius);
@@ -110,69 +113,69 @@ const searchAcademies = async (filters) => {
 
     // Add conditions to queries
     if (conditions.length > 0) {
-      const conditionsStr = conditions.join(" AND ");
-      query += ` AND ${conditionsStr}`;
-      countQuery += ` AND ${conditionsStr}`;
+      const whereClause = ` AND ${conditions.join(" AND ")}`;
+      baseQuery += whereClause;
+      countQuery += whereClause;
     }
 
-    // Add order clause
+    // Add ORDER BY clause with priority first
+    let orderClause = `ORDER BY (a."priority"->>'value')::numeric DESC`;
+
     if (sortBy === "priority") {
-      query += ` ORDER BY (a."priority"->>'value')::numeric DESC`;
+      // Priority is already first
     } else if (sortBy === "rating") {
-      query += ` ORDER BY a."rating" DESC`;
+      orderClause += `, a."rating" DESC`;
+    } else if (sortBy === "name") {
+      orderClause += `, a."name" ASC`;
     } else if (sortBy === "distance" && latitude && longitude) {
-      query += ` ORDER BY ST_Distance(
+      orderClause += `, ST_Distance(
         s."location",
-        ST_SetSRID(ST_MakePoint($${params.length + 1}, $${
-        params.length + 2
-      }), 4326)
+        ST_SetSRID(ST_MakePoint($${params.length + 1}, $${params.length + 2}), 4326)
       ) ASC`;
       params.push(longitude, latitude);
     }
 
-    // Always add a secondary sort by priority and then by id for consistent results
-    if (sortBy !== "priority") {
-      query += query.includes("ORDER BY")
-        ? `, (a."priority"->>'value')::numeric DESC`
-        : ` ORDER BY (a."priority"->>'value')::numeric DESC`;
-    }
-    query += `, a."academyId" ASC`;
+    // Always add academy ID for consistent ordering
+    orderClause += `, a."academyId" ASC`;
 
     // Add pagination
-    query += ` LIMIT $${params.length + 1} OFFSET $${params.length + 2}`;
-    const paginationParams = [...params, limit, (page - 1) * limit];
+    const offset = (page - 1) * limit;
+    baseQuery += ` ${orderClause} LIMIT $${params.length + 1} OFFSET $${params.length + 2}`;
+    params.push(limit, offset);
 
-    console.log("Count Query:", countQuery);
-    console.log("Main Query:", query);
-    console.log("Params:", params);
+    // Execute queries
+    const [academies, countResult] = await Promise.all([
+      sequelize.query(baseQuery, {
+        bind: params,
+        type: sequelize.QueryTypes.SELECT
+      }),
+      sequelize.query(countQuery, {
+        bind: params.slice(0, -2), // Remove limit and offset for count
+        type: sequelize.QueryTypes.SELECT
+      })
+    ]);
 
-    // Execute count query
-    const countResult = await sequelize.query(countQuery, {
-      bind: params,
-      type: sequelize.QueryTypes.SELECT,
-      plain: true,
-    });
-
-    const count = Number.parseInt(countResult.count);
-
-    // Execute main query
-    const academies = await sequelize.query(query, {
-      bind: paginationParams,
-      type: sequelize.QueryTypes.SELECT,
-      nest: true,
-    });
+    const total = parseInt(countResult[0].count);
 
     return {
-      academies,
+      academies: academies.map(academy => ({
+        ...academy,
+        promotionStatus: {
+          isPromoted: academy.priority?.value > 0,
+          plan: academy.priority?.plan || "none",
+          expiresAt: academy.priority?.expiresAt
+        }
+      })),
       pagination: {
-        total: count,
-        page: Number.parseInt(page),
-        limit: Number.parseInt(limit),
-        pages: Math.ceil(count / limit),
-      },
+        total,
+        page: parseInt(page),
+        limit: parseInt(limit),
+        pages: Math.ceil(total / limit)
+      }
     };
+
   } catch (error) {
-    console.error("Error in searchAcademies repository:", error);
+    console.error("Error in searchAcademies:", error);
     throw error;
   }
 };

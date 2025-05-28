@@ -918,7 +918,22 @@ const inviteCoachToAcademy = async (academyId, inviterSupplierId, coachData) => 
   return await academyInvitationService.inviteCoach(academyId, inviterSupplierId, coachData);
 };
 
+const getAcademyWithPromotionStatus = async (academyProfileId, options) => {
+  const profile = await academyRepository.getAcademyProfileWithDetails(
+    academyProfileId,
+    options
+  );
+  if (!profile) throw new Error("Academy profile not found");
 
+  return {
+    ...profile.toJSON(),
+    promotionStatus: {
+      isPromoted: profile.priority?.value > 0,
+      plan: profile.priority?.plan || "none", 
+      expiresAt: profile.priority?.expiresAt
+    }
+  };
+};
 
 module.exports = {
   createAcademyProfile,
@@ -928,6 +943,9 @@ module.exports = {
   deleteAcademyProfile,
   getNearbyAcademies,
   searchAcademies,
+
+  getAcademyWithPromotionStatus, // Add this line
+
   //invitation management exports
   inviteManager,
   inviteCoach,
