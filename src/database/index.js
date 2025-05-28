@@ -79,6 +79,7 @@ const CoachSession = require("./models/postgres/sessions/coachSession")(sequeliz
 const TurfSession = require("./models/postgres/sessions/turfSession")(sequelize);
 const AcademyBatchSession = require("./models/postgres/sessions/academyBatchSession")(sequelize);
 const AcademyProgramSession = require("./models/postgres/sessions/academyProgramSession")(sequelize);
+const UserFavorite = require("./models/postgres/userFavorite")(sequelize); 
 
 // Define Associations
 const defineAssociations = () => {
@@ -1031,6 +1032,45 @@ const defineAssociations = () => {
     as: "programSessions",
   });
 
+  // User Favorite Associations
+  User.hasMany(UserFavorite, {
+    foreignKey: "userId",
+    as: "favorites"
+  });
+
+  UserFavorite.belongsTo(User, {
+    foreignKey: "userId",
+    as: "user"
+  });
+
+  Supplier.hasMany(UserFavorite, {
+    foreignKey: "supplierId",
+    as: "userFavorites"
+  });
+
+  UserFavorite.belongsTo(Supplier, {
+    foreignKey: "supplierId",
+    as: "supplier"
+  });
+
+  // Polymorphic associations for different entity types
+  UserFavorite.belongsTo(AcademyProfile, {
+    foreignKey: "entityId",
+    constraints: false,
+    as: "academy"
+  });
+
+  UserFavorite.belongsTo(CoachProfile, {
+    foreignKey: "entityId",
+    constraints: false,
+    as: "coach"
+  });
+
+  UserFavorite.belongsTo(TurfProfile, {
+    foreignKey: "entityId",
+    constraints: false,
+    as: "turf"
+  });
 };
 
 // Database Sync Function
@@ -1091,6 +1131,7 @@ module.exports = {
   AcademyProfile,
   TurfProfile,
   UserDeviceToken,
+  UserFavorite,
 
   // Coach exports
   CoachPayment,
