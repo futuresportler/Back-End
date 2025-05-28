@@ -1,4 +1,4 @@
-const userService = require("../../services/user/index");
+const {userService} = require("../../services/user");
 const {
   successResponse,
   errorResponse,

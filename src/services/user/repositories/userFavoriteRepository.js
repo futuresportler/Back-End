@@ -50,7 +50,7 @@ class UserFavoriteRepository {
           required: false,
           attributes: [
             "academyId", "name", "description", "sports", 
-            "rating", "reviews", "images", "city", "address"
+            "rating", "reviewsCount", "photos", "city", "address"
           ],
           include: [{
             model: Supplier,
@@ -63,8 +63,8 @@ class UserFavoriteRepository {
           as: "coach",
           required: false,
           attributes: [
-            "coachId", "name", "bio", "sports", "experienceYears",
-            "rating", "reviews", "hourlyRate", "images", "city"
+            "coachId", "name", "bio", "sportsCoached", "experienceYears",
+            "rating", "totalReviews", "hourlyRate", "photos", "city"
           ],
           include: [{
             model: Supplier,
@@ -77,8 +77,8 @@ class UserFavoriteRepository {
           as: "turf",
           required: false,
           attributes: [
-            "turfId", "name", "description", "sports", 
-            "rating", "reviews", "images", "city", "address"
+            "turfId", "name", "description", "sportsAvailable", 
+            "rating", "totalReviews", "images", "city", "fullAddress"
           ],
           include: [{
             model: Supplier,
