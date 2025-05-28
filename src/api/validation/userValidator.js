@@ -1,4 +1,4 @@
-const { body, param } = require("express-validator");
+const { body, param ,query } = require("express-validator");
 const Joi = require("joi");
 
 // Validation rules using express-validator

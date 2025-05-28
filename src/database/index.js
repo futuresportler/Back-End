@@ -1131,7 +1131,7 @@ module.exports = {
   AcademyProfile,
   TurfProfile,
   UserDeviceToken,
-  UserFavorite
+  UserFavorite,
 
   // Coach exports
   CoachPayment,

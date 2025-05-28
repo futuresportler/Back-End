@@ -1,4 +1,6 @@
-module.exports = (sequelize, DataTypes) => {
+const { DataTypes } = require("sequelize")
+
+module.exports = (sequelize) => {
   const UserFavorite = sequelize.define(
     "UserFavorite",
     {
@@ -11,7 +13,7 @@ module.exports = (sequelize, DataTypes) => {
         type: DataTypes.UUID,
         allowNull: false,
         references: {
-          model: "Users",
+          model: "User",
           key: "userId",
         },
       },

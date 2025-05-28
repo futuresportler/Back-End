@@ -66,7 +66,7 @@ router.post(
   validateAddFavorite,
   validateRequest,
   authMiddleware,
-  userFavoriteController.addToFavorites
+  userController.addToFavorites
 );
 
 router.delete(
@@ -74,7 +74,7 @@ router.delete(
   validateRemoveFavorite,
   validateRequest,
   authMiddleware,
-  userFavoriteController.removeFromFavorites
+  userController.removeFromFavorites
 );
 
 router.get(
@@ -82,7 +82,7 @@ router.get(
   validateGetFavorites,
   validateRequest,
   authMiddleware,
-  userFavoriteController.getUserFavorites
+  userController.getUserFavorites
 );
 
 router.get(
@@ -90,14 +90,14 @@ router.get(
   validateCheckFavorite,
   validateRequest,
   authMiddleware,
-  userFavoriteController.checkIsFavorite
+  userController.checkIsFavorite
 );
 
 
 router.get(
   "/favorites/stats",
   authMiddleware,
-  userFavoriteController.getFavoriteStats
+  userController.getFavoriteStats
 );
 
 module.exports = router;
