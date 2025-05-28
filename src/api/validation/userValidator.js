@@ -67,9 +67,48 @@ const validateOTPVerification = [
     .withMessage("OTP must be 6 digits"),
 ];
 
+const validateAddFavorite = [
+  body("entityType")
+    .isIn(["academy", "coach", "turf"])
+    .withMessage("Entity type must be 'academy', 'coach', or 'turf'"),
+  body("entityId")
+    .isUUID()
+    .withMessage("Entity ID must be a valid UUID"),
+];
+
+const validateRemoveFavorite = [
+  param("entityType")
+    .isIn(["academy", "coach", "turf"])
+    .withMessage("Entity type must be 'academy', 'coach', or 'turf'"),
+  param("entityId")
+    .isUUID()
+    .withMessage("Entity ID must be a valid UUID"),
+];
+
+const validateCheckFavorite = [
+  param("entityType")
+    .isIn(["academy", "coach", "turf"])
+    .withMessage("Entity type must be 'academy', 'coach', or 'turf'"),
+  param("entityId")
+    .isUUID()
+    .withMessage("Entity ID must be a valid UUID"),
+];
+
+const validateGetFavorites = [
+  query("entityType")
+    .optional()
+    .isIn(["academy", "coach", "turf"])
+    .withMessage("Entity type must be 'academy', 'coach', or 'turf'"),
+];
+
 module.exports = {
   validateCreateUser,
   validateUpdateUser,
   validateRequest,
   validateOTPVerification,
+
+  validateAddFavorite,
+  validateRemoveFavorite,
+  validateCheckFavorite,
+  validateGetFavorites,
 };

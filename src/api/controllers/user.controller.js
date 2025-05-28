@@ -5,6 +5,7 @@ const {
 } = require("../../common/utils/response");
 const { verifyAndExtractUser } = require("../../config/otp");
 const { fatal } = require("../../config/logging");
+const { userFavoriteService } = require("../../services/user");
 
 const getUserById = async (req, res) => {
   try {
@@ -161,6 +162,69 @@ const handleOAuthSignIn = async (req, res) => {
   }
 };
 
+const addToFavorites = async (req, res) => {
+  try {
+    const { entityType, entityId } = req.body;
+    const userId = req.user.userId;
+
+    const favorite = await userFavoriteService.addToFavorites(userId, entityType, entityId);
+    
+    successResponse(res, "Added to favorites successfully", favorite, 201);
+  } catch (error) {
+    errorResponse(res, error.message, error);
+  }
+};
+
+const removeFromFavorites = async (req, res) => {
+  try {
+    const { entityType, entityId } = req.params;
+    const userId = req.user.userId;
+
+    await userFavoriteService.removeFromFavorites(userId, entityType, entityId);
+    
+    successResponse(res, "Removed from favorites successfully");
+  } catch (error) {
+    errorResponse(res, error.message, error);
+  }
+};
+
+const getUserFavorites = async (req, res) => {
+  try {
+    const userId = req.user.userId;
+    const { entityType } = req.query;
+
+    const favorites = await userFavoriteService.getUserFavorites(userId, entityType);
+    
+    successResponse(res, "Favorites fetched successfully", favorites);
+  } catch (error) {
+    errorResponse(res, error.message, error);
+  }
+};
+
+const checkIsFavorite = async (req, res) => {
+  try {
+    const { entityType, entityId } = req.params;
+    const userId = req.user.userId;
+
+    const isFavorite = await userFavoriteService.checkIsFavorite(userId, entityType, entityId);
+    
+    successResponse(res, "Favorite status checked", { isFavorite });
+  } catch (error) {
+    errorResponse(res, error.message, error);
+  }
+};
+
+const getFavoriteStats = async (req, res) => {
+  try {
+    const userId = req.user.userId;
+
+    const stats = await userFavoriteService.getFavoriteStats(userId);
+    
+    successResponse(res, "Favorite statistics fetched", stats);
+  } catch (error) {
+    errorResponse(res, error.message, error);
+  }
+};
 module.exports = {
   getUserById,
   signup,
@@ -175,4 +239,10 @@ module.exports = {
   forgotPasswordOTPVerify,
   resetPassword,
   handleOAuthSignIn,
+
+  addToFavorites,
+  removeFromFavorites,
+  getUserFavorites,
+  checkIsFavorite,
+  getFavoriteStats
 };

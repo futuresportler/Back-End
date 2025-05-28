@@ -12,6 +12,10 @@ const {
   validateRequest,
   validateOTPRequest,
   validateOTPVerification,
+  validateAddFavorite,
+  validateRemoveFavorite,
+  validateCheckFavorite,
+  validateGetFavorites,
 } = require("../validation/userValidator");
 const auth = require("../../config/firebase");
 
@@ -54,5 +58,46 @@ router.post("/reset-password", authMiddleware, userController.resetPassword);
 
 //OAuth authentication
 router.post("/oauth", userController.handleOAuthSignIn);
+
+
+// Favorites routes - Add these before module.exports
+router.post(
+  "/favorites",
+  validateAddFavorite,
+  validateRequest,
+  authMiddleware,
+  userFavoriteController.addToFavorites
+);
+
+router.delete(
+  "/favorites/:entityType/:entityId",
+  validateRemoveFavorite,
+  validateRequest,
+  authMiddleware,
+  userFavoriteController.removeFromFavorites
+);
+
+router.get(
+  "/favorites",
+  validateGetFavorites,
+  validateRequest,
+  authMiddleware,
+  userFavoriteController.getUserFavorites
+);
+
+router.get(
+  "/favorites/:entityType/:entityId/check",
+  validateCheckFavorite,
+  validateRequest,
+  authMiddleware,
+  userFavoriteController.checkIsFavorite
+);
+
+
+router.get(
+  "/favorites/stats",
+  authMiddleware,
+  userFavoriteController.getFavoriteStats
+);
 
 module.exports = router;
