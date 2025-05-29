@@ -1,5 +1,5 @@
 // models/postgres/coach/monthlyStudentProgress.js
-const { DataTypes } = require("sequelize")
+const { DataTypes } = require("sequelize");
 
 module.exports = (sequelize) => {
   return sequelize.define(
@@ -44,6 +44,49 @@ module.exports = (sequelize) => {
         type: DataTypes.JSON,
         defaultValue: {},
       },
+      // Add comprehensive score tracking
+      sportScores: {
+        type: DataTypes.JSON,
+        defaultValue: {},
+        allowNull: false,
+        comment: "Sport-specific scores and flags for the month",
+        // Structure: {
+        //   "football": {
+        //     technique: { score: 8.5, flag: "excellent", notes: "Great ball control" },
+        //     fitness: { score: 7.0, flag: "good", notes: "Improving stamina" },
+        //     teamwork: { score: 9.0, flag: "outstanding", notes: "Natural leader" },
+        //     overall: { score: 8.2, flag: "excellent" }
+        //   },
+        //   "basketball": { ... }
+        // }
+      },
+      scoreFlags: {
+        type: DataTypes.ARRAY(DataTypes.JSON),
+        defaultValue: [],
+        allowNull: false,
+        comment: "Achievement flags and milestones reached during the month",
+        // Structure: [
+        //   { sport: "football", flag: "first_goal", date: "2024-01-15", description: "Scored first goal in match" },
+        //   { sport: "football", flag: "technique_improvement", level: "significant", date: "2024-01-20" }
+        // ]
+      },
+      scoreMetrics: {
+        type: DataTypes.JSON,
+        defaultValue: {},
+        allowNull: false,
+        comment: "Detailed metrics and assessments for scoring",
+        // Structure: {
+        //   assessmentDate: "2024-01-31",
+        //   assessedBy: "coachId",
+        //   methodology: "practical_assessment",
+        //   categories: {
+        //     technical: { weight: 0.3, maxScore: 10 },
+        //     physical: { weight: 0.25, maxScore: 10 },
+        //     tactical: { weight: 0.25, maxScore: 10 },
+        //     mental: { weight: 0.2, maxScore: 10 }
+        //   }
+        // }
+      },
       performanceRating: {
         type: DataTypes.INTEGER,
         validate: { min: 1, max: 10 },
@@ -76,6 +119,6 @@ module.exports = (sequelize) => {
         allowNull: true,
       },
     },
-    { timestamps: true },
-  )
-}
+    { timestamps: true }
+  );
+};

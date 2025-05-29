@@ -1,5 +1,5 @@
 // src/database/models/postgres/coach/monthlyCoachMetric.js
-const { DataTypes } = require("sequelize")
+const { DataTypes } = require("sequelize");
 
 module.exports = (sequelize) => {
   return sequelize.define(
@@ -75,23 +75,28 @@ module.exports = (sequelize) => {
       batchMetrics: {
         type: DataTypes.JSON,
         defaultValue: {},
-        // Structure: { 
-        //   "batchId1": { 
+        // Structure: {
+        //   "batchId1": {
         //     name: "Batch Name",
-        //     sessions: 10, 
-        //     revenue: 5000, 
+        //     sessions: 10,
+        //     revenue: 5000,
         //     students: 8,
         //     rating: 4.5,
         //     utilization: 80
-        //   } 
+        //   }
         // }
       },
       // Revenue breakdown by day of week
       dailyRevenue: {
         type: DataTypes.JSON,
         defaultValue: {
-          "Monday": 0, "Tuesday": 0, "Wednesday": 0, 
-          "Thursday": 0, "Friday": 0, "Saturday": 0, "Sunday": 0
+          Monday: 0,
+          Tuesday: 0,
+          Wednesday: 0,
+          Thursday: 0,
+          Friday: 0,
+          Saturday: 0,
+          Sunday: 0,
         },
       },
       // Sessions breakdown by hour of day
@@ -111,7 +116,7 @@ module.exports = (sequelize) => {
       },
       totalRevenue: {
         type: DataTypes.DECIMAL(10, 2),
-        defaultValue: 0.00,
+        defaultValue: 0.0,
         allowNull: false,
       },
       totalSessions: {
@@ -121,21 +126,68 @@ module.exports = (sequelize) => {
       },
       utilization: {
         type: DataTypes.DECIMAL(5, 2),
-        defaultValue: 0.00,
+        defaultValue: 0.0,
         allowNull: false,
         comment: "Percentage of available time slots that were booked",
       },
       bookingSources: {
-      type: DataTypes.JSON,
+        type: DataTypes.JSON,
         defaultValue: {
-          "website": 0,
-          "app": 0, 
-          "direct": 0,
-          "partners": 0,
-          "other": 0
+          website: 0,
+          app: 0,
+          direct: 0,
+          partners: 0,
+          other: 0,
         },
-      allowNull: false,
-    },
+        allowNull: false,
+      },
+      // Add coach performance metrics based on student scores
+      coachingEffectiveness: {
+        type: DataTypes.JSON,
+        defaultValue: {},
+        allowNull: false,
+        comment:
+          "Coach effectiveness metrics based on student score improvements",
+        // Structure: {
+        //   averageStudentImprovement: 0.8,
+        //   studentsImproved: 85, // percentage
+        //   strongestCategories: ["teamwork", "technique"],
+        //   focusAreas: ["fitness", "game_understanding"],
+        //   studentSatisfactionScore: 8.7
+        // }
+      },
+      scoreBasedInsights: {
+        type: DataTypes.JSON,
+        defaultValue: {},
+        allowNull: false,
+        comment: "Insights derived from student scoring patterns",
+        // Structure: {
+        //   teachingStrengths: ["technical_skills", "motivation"],
+        //   improvementOpportunities: ["fitness_coaching", "tactical_awareness"],
+        //   studentProgressDistribution: {
+        //     "rapid_improvement": 20,
+        //     "steady_progress": 65,
+        //     "needs_attention": 15
+        //   },
+        //   recommendedActions: [
+        //     "Focus more on fitness drills",
+        //     "Implement advanced tactical sessions"
+        //   ]
+        // }
+      },
+      achievementsMilestones: {
+        type: DataTypes.JSON,
+        defaultValue: {},
+        allowNull: false,
+        comment: "Coach achievements and milestones based on student success",
+        // Structure: {
+        //   studentsAchievements: 145,
+        //   coachBadgesEarned: ["improvement_specialist", "technique_master"],
+        //   milestones: [
+        //     { milestone: "50_students_improved", date: "2024-01-15" }
+        //   ]
+        // }
+      },
     },
     {
       timestamps: true,
@@ -146,5 +198,5 @@ module.exports = (sequelize) => {
         },
       ],
     }
-  )
-}
+  );
+};

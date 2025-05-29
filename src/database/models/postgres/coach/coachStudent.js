@@ -58,7 +58,6 @@ module.exports = (sequelize) => {
       grades: {
         type: DataTypes.JSON,
         defaultValue: {},
-
       },
       guardianName: {
         type: DataTypes.STRING,
@@ -83,6 +82,47 @@ module.exports = (sequelize) => {
       coachFeedback: {
         type: DataTypes.JSONB,
         defaultValue: [],
+      },
+      // Add current score tracking
+      currentScores: {
+        type: DataTypes.JSON,
+        defaultValue: {},
+        allowNull: false,
+        comment: "Current/latest scores for quick access",
+        // Structure: {
+        //   "football": {
+        //     overall: 8.2,
+        //     lastUpdated: "2024-01-31",
+        //     breakdown: {
+        //       technique: 8.5,
+        //       fitness: 7.0,
+        //       teamwork: 9.0,
+        //       gameUnderstanding: 8.0
+        //     }
+        //   }
+        // }
+      },
+      achievementFlags: {
+        type: DataTypes.ARRAY(DataTypes.STRING),
+        defaultValue: [],
+        allowNull: false,
+        comment: "Current achievement flags and milestones",
+        // Example: ["first_goal", "technique_master", "leadership_badge", "fitness_level_3"]
+      },
+      scoreHistory: {
+        type: DataTypes.JSON,
+        defaultValue: {},
+        allowNull: false,
+        comment: "Score progression summary",
+        // Structure: {
+        //   "football": {
+        //     initialScore: 5.0,
+        //     currentScore: 8.2,
+        //     improvement: 3.2,
+        //     trend: "improving", // "improving", "stable", "declining"
+        //     lastThreeMonths: [7.5, 7.8, 8.2]
+        //   }
+        // }
       },
       notes: {
         type: DataTypes.TEXT,

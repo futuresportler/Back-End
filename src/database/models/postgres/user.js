@@ -69,17 +69,47 @@ module.exports = (sequelize) => {
           whatsapp: false,
           sms: false,
           feedbackReminders: true,
-          bookingUpdates: true
-        }
+          bookingUpdates: true,
+        },
       },
       unreadNotificationCount: {
         type: DataTypes.INTEGER,
-        defaultValue: 0
+        defaultValue: 0,
       },
       role: {
         type: DataTypes.ENUM("user", "student", "admin"),
         defaultValue: "user",
-        allowNull: false
+        allowNull: false,
+      },
+      // Add score tracking for users enrolled in coach programs
+      currentScores: {
+        type: DataTypes.JSON,
+        defaultValue: {},
+        allowNull: false,
+        comment: "Current scores for users enrolled in coach programs",
+        // Structure: {
+        //   "football": {
+        //     overall: 8.2,
+        //     lastUpdated: "2024-01-31",
+        //     breakdown: {
+        //       technique: 8.5,
+        //       fitness: 7.0,
+        //       teamwork: 9.0
+        //     }
+        //   }
+        // }
+      },
+      achievementFlags: {
+        type: DataTypes.ARRAY(DataTypes.STRING),
+        defaultValue: [],
+        allowNull: false,
+        comment: "Achievement flags for coach program students",
+      },
+      scoreHistory: {
+        type: DataTypes.JSON,
+        defaultValue: {},
+        allowNull: false,
+        comment: "Score progression history for coach program students",
       },
     },
     {

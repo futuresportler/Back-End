@@ -1,5 +1,5 @@
 // models/postgres/academyStudent.js
-const { DataTypes } = require("sequelize")
+const { DataTypes } = require("sequelize");
 
 module.exports = (sequelize) => {
   return sequelize.define(
@@ -50,11 +50,59 @@ module.exports = (sequelize) => {
       achievements: DataTypes.ARRAY(DataTypes.STRING),
       skillsAssessment: DataTypes.JSON,
       coachFeedback: DataTypes.ARRAY(DataTypes.JSON),
+      currentScores: {
+        type: DataTypes.JSON,
+        defaultValue: {},
+        allowNull: false,
+        comment: "Current scores across all sports and programs",
+        // Structure: {
+        //   programId1: {
+        //     sport: "football",
+        //     overall: 8.2,
+        //     lastUpdated: "2024-01-31",
+        //     breakdown: {
+        //       technique: 8.5,
+        //       fitness: 7.0,
+        //       teamwork: 9.0
+        //     }
+        //   },
+        //   batchId1: { ... }
+        // }
+      },
+      achievementBadges: {
+        type: DataTypes.ARRAY(DataTypes.JSON),
+        defaultValue: [],
+        allowNull: false,
+        comment: "Academy-specific achievement badges and certifications",
+        // Structure: [
+        //   {
+        //     badge: "monthly_champion",
+        //     sport: "football",
+        //     level: "intermediate",
+        //     earnedDate: "2024-01-31",
+        //     programId: "uuid"
+        //   }
+        // ]
+      },
+      scoreTrends: {
+        type: DataTypes.JSON,
+        defaultValue: {},
+        allowNull: false,
+        comment: "Score trends and analytics",
+        // Structure: {
+        //   "football": {
+        //     monthlyProgression: [6.0, 6.5, 7.2, 8.2],
+        //     improvementRate: 0.8, // points per month
+        //     strongAreas: ["teamwork", "game_understanding"],
+        //     improvementAreas: ["fitness", "technique"]
+        //   }
+        // }
+      },
       status: {
         type: DataTypes.ENUM("active", "inactive", "graduated"),
         defaultValue: "active",
       },
     },
-    { timestamps: true },
-  )
-}
+    { timestamps: true }
+  );
+};

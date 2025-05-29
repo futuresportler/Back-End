@@ -22,7 +22,8 @@ const CoachMetric = require("./models/postgres/coach/coachMetric")(sequelize);
 const CoachStudent = require("./models/postgres/coach/coachStudent")(sequelize);
 const MonthlyCoachMetric =
   require("./models/postgres/coach/monthlyCoachMetric")(sequelize);
-const BatchMonthlyMetric = require("./models/postgres/coach/batchMonthlyMetric")(sequelize);
+const BatchMonthlyMetric =
+  require("./models/postgres/coach/batchMonthlyMetric")(sequelize);
 const MonthlyStudentProgress =
   require("./models/postgres/coach/monthlyStudentProgress")(sequelize);
 
@@ -47,8 +48,11 @@ const AcademyStudent = require("./models/postgres/academy/academyStudent")(
   sequelize
 );
 const AcademyFee = require("./models/postgres/academy/academyFee")(sequelize);
-const AcademyProfileView = require("./models/postgres/academy/academyProfileView")(sequelize);
-const AcademyInquiry = require("./models/postgres/academy/academyInquiry")(sequelize);
+const AcademyProfileView =
+  require("./models/postgres/academy/academyProfileView")(sequelize);
+const AcademyInquiry = require("./models/postgres/academy/academyInquiry")(
+  sequelize
+);
 const MonthlyStudentMetric =
   require("./models/postgres/academy/monthlyStudentMetric")(sequelize);
 
@@ -59,29 +63,56 @@ const TurfReview = require("./models/postgres/turf/turfReview")(sequelize);
 const TurfPayment = require("./models/postgres/turf/turfPayment")(sequelize);
 const SlotRequest = require("./models/postgres/turf/slotRequest")(sequelize);
 const TurfMetric = require("./models/postgres/turf/turfMetric")(sequelize);
-const TurfMonthlyMetric = require("./models/postgres/turf/turfMonthlyMetric")(sequelize);
+const TurfMonthlyMetric = require("./models/postgres/turf/turfMonthlyMetric")(
+  sequelize
+);
 // Session models will be initialized dynamically in the session service
-const AcademyBookingPlatform = require("./models/postgres/academy/academyBookingPlatform")(sequelize);
-const AcademyCoachBatch = require("./models/postgres/academy/academyCoachBatch")(sequelize);
-const AcademyCoachProgram = require("./models/postgres/academy/academyCoachProgram")(sequelize);
+const AcademyBookingPlatform =
+  require("./models/postgres/academy/academyBookingPlatform")(sequelize);
+const AcademyCoachBatch =
+  require("./models/postgres/academy/academyCoachBatch")(sequelize);
+const AcademyCoachProgram =
+  require("./models/postgres/academy/academyCoachProgram")(sequelize);
 
-const SessionFeedback = require("./models/postgres/sessions/sessionFeedback")(sequelize);
-const BatchFeedback = require("./models/postgres/feedback/batchFeedback")(sequelize);
-const ProgramFeedback = require("./models/postgres/feedback/programFeedback")(sequelize);
-const AcademyReview = require("./models/postgres/academy/academyReview")(sequelize);
-const Notification = require("./models/postgres/notification/notification")(sequelize);
-const FeedbackReminder = require("./models/postgres/notification/feedbackReminder")(sequelize);
-const BookingNotification = require("./models/postgres/notification/bookingNotification")(sequelize);
-const AcademyInvitation = require("./models/postgres/academy/academyInvitation")(sequelize);
+const SessionFeedback = require("./models/postgres/sessions/sessionFeedback")(
+  sequelize
+);
+const BatchFeedback = require("./models/postgres/feedback/batchFeedback")(
+  sequelize
+);
+const ProgramFeedback = require("./models/postgres/feedback/programFeedback")(
+  sequelize
+);
+const AcademyReview = require("./models/postgres/academy/academyReview")(
+  sequelize
+);
+const Notification = require("./models/postgres/notification/notification")(
+  sequelize
+);
+const FeedbackReminder =
+  require("./models/postgres/notification/feedbackReminder")(sequelize);
+const BookingNotification =
+  require("./models/postgres/notification/bookingNotification")(sequelize);
+const AcademyInvitation =
+  require("./models/postgres/academy/academyInvitation")(sequelize);
 const UserDeviceToken = require("./models/postgres/userDeviceToken")(sequelize);
-const PromotionTransaction = require("./models/postgres/promotion/promotionTransaction")(sequelize);
-const CoachSession = require("./models/postgres/sessions/coachSession")(sequelize);
-const TurfSession = require("./models/postgres/sessions/turfSession")(sequelize);
-const AcademyBatchSession = require("./models/postgres/sessions/academyBatchSession")(sequelize);
-const AcademyProgramSession = require("./models/postgres/sessions/academyProgramSession")(sequelize);
-const UserFavorite = require("./models/postgres/userFavorite")(sequelize); 
-const ProgramMonthlyMetric = require("./models/postgres/academy/programMonthlyMetric")(sequelize);
-const AcademyBatchMonthlyMetric = require("./models/postgres/coach/batchMonthlyMetric")(sequelize);
+const PromotionTransaction =
+  require("./models/postgres/promotion/promotionTransaction")(sequelize);
+const CoachSession = require("./models/postgres/sessions/coachSession")(
+  sequelize
+);
+const TurfSession = require("./models/postgres/sessions/turfSession")(
+  sequelize
+);
+const AcademyBatchSession =
+  require("./models/postgres/sessions/academyBatchSession")(sequelize);
+const AcademyProgramSession =
+  require("./models/postgres/sessions/academyProgramSession")(sequelize);
+const UserFavorite = require("./models/postgres/userFavorite")(sequelize);
+const ProgramMonthlyMetric =
+  require("./models/postgres/academy/programMonthlyMetric")(sequelize);
+const AcademyBatchMonthlyMetric =
+  require("./models/postgres/coach/batchMonthlyMetric")(sequelize);
 
 // Define Associations
 const defineAssociations = () => {
@@ -202,40 +233,40 @@ const defineAssociations = () => {
     foreignKey: "batchId",
     as: "students",
   });
-    // Academy Profile View Associations
-  AcademyProfile.hasMany(AcademyProfileView, { 
+  // Academy Profile View Associations
+  AcademyProfile.hasMany(AcademyProfileView, {
     foreignKey: "academyId",
-    as: "profileViews"
+    as: "profileViews",
   });
-  AcademyProfileView.belongsTo(AcademyProfile, { 
+  AcademyProfileView.belongsTo(AcademyProfile, {
     foreignKey: "academyId",
-    as: "academy"
+    as: "academy",
   });
   User.hasMany(AcademyProfileView, {
     foreignKey: "userId",
-    as: "academyViews"
+    as: "academyViews",
   });
   AcademyProfileView.belongsTo(User, {
     foreignKey: "userId",
-    as: "viewer"
+    as: "viewer",
   });
 
   // Academy Inquiry Associations
   AcademyProfile.hasMany(AcademyInquiry, {
     foreignKey: "academyId",
-    as: "inquiries"
+    as: "inquiries",
   });
   AcademyInquiry.belongsTo(AcademyProfile, {
     foreignKey: "academyId",
-    as: "academy"
+    as: "academy",
   });
   AcademyProgram.hasMany(AcademyInquiry, {
     foreignKey: "programId",
-    as: "inquiries"
+    as: "inquiries",
   });
   AcademyInquiry.belongsTo(AcademyProgram, {
     foreignKey: "programId",
-    as: "program"
+    as: "program",
   });
   // Fee Relationships
   AcademyFee.belongsTo(AcademyProfile, { foreignKey: "academyId" });
@@ -330,7 +361,6 @@ const defineAssociations = () => {
   // Metric Relationships
   TurfMetric.belongsTo(Day, { foreignKey: "dayId" });
   TurfMetric.belongsTo(Month, { foreignKey: "monthId" });
-
 
   Month.hasMany(TurfMonthlyMetric, {
     foreignKey: "monthId",
@@ -509,127 +539,127 @@ const defineAssociations = () => {
   });
 
   BatchMonthlyMetric.belongsTo(CoachProfile, {
-      foreignKey: "coachId",
-      as: "coach",
+    foreignKey: "coachId",
+    as: "coach",
   });
-   // Academy Coach associations
+  // Academy Coach associations
   AcademyProfile.hasMany(AcademyCoach, {
     foreignKey: "academyId",
-    as: "coaches"
+    as: "coaches",
   });
-  
+
   AcademyCoach.belongsTo(AcademyProfile, {
     foreignKey: "academyId",
-    as: "academy"
+    as: "academy",
   });
-  
+
   CoachProfile.hasMany(AcademyCoach, {
     foreignKey: "coachId",
-    as: "academyPositions"
+    as: "academyPositions",
   });
-  
+
   AcademyCoach.belongsTo(CoachProfile, {
     foreignKey: "coachId",
-    as: "platformCoach"
+    as: "platformCoach",
   });
-    // Many-to-Many: Academy Coach <-> Academy Batch
+  // Many-to-Many: Academy Coach <-> Academy Batch
   AcademyCoach.belongsToMany(AcademyBatch, {
     through: AcademyCoachBatch,
-    foreignKey: 'coachId',
-    otherKey: 'batchId',
-    as: 'batches'
+    foreignKey: "coachId",
+    otherKey: "batchId",
+    as: "batches",
   });
-  
+
   AcademyBatch.belongsToMany(AcademyCoach, {
     through: AcademyCoachBatch,
-    foreignKey: 'batchId',
-    otherKey: 'coachId',
-    as: 'coaches'
+    foreignKey: "batchId",
+    otherKey: "coachId",
+    as: "coaches",
   });
   // Primary coach relationships
   AcademyBatch.belongsTo(AcademyCoach, {
-    foreignKey: 'primaryCoachId',
-    as: 'primaryCoach'
+    foreignKey: "primaryCoachId",
+    as: "primaryCoach",
   });
 
   AcademyCoach.hasMany(AcademyBatch, {
-    foreignKey: 'primaryCoachId',
-    as: 'primaryBatches'
+    foreignKey: "primaryCoachId",
+    as: "primaryBatches",
   });
 
   // Many-to-Many: Academy Coach <-> Academy Program
   AcademyCoach.belongsToMany(AcademyProgram, {
     through: AcademyCoachProgram,
-    foreignKey: 'coachId',
-    otherKey: 'programId',
-    as: 'programs'
+    foreignKey: "coachId",
+    otherKey: "programId",
+    as: "programs",
   });
-  
+
   AcademyProgram.belongsToMany(AcademyCoach, {
     through: AcademyCoachProgram,
-    foreignKey: 'programId',
-    otherKey: 'coachId',
-    as: 'coaches'
+    foreignKey: "programId",
+    otherKey: "coachId",
+    as: "coaches",
   });
-    // Primary coach relationships for programs
+  // Primary coach relationships for programs
   AcademyProgram.belongsTo(AcademyCoach, {
-    foreignKey: 'primaryCoachId',
-    as: 'primaryCoach'
+    foreignKey: "primaryCoachId",
+    as: "primaryCoach",
   });
 
   AcademyCoach.hasMany(AcademyProgram, {
-    foreignKey: 'primaryCoachId',
-    as: 'primaryPrograms'
+    foreignKey: "primaryCoachId",
+    as: "primaryPrograms",
   });
 
   // Junction table associations
   AcademyCoachBatch.belongsTo(AcademyCoach, {
-    foreignKey: 'coachId',
-    as: 'coach'
+    foreignKey: "coachId",
+    as: "coach",
   });
 
   AcademyCoachBatch.belongsTo(AcademyBatch, {
-    foreignKey: 'batchId',
-    as: 'batch'
+    foreignKey: "batchId",
+    as: "batch",
   });
 
   AcademyCoachProgram.belongsTo(AcademyCoach, {
-    foreignKey: 'coachId',
-    as: 'coach'
+    foreignKey: "coachId",
+    as: "coach",
   });
 
   AcademyCoachProgram.belongsTo(AcademyProgram, {
-    foreignKey: 'programId',
-    as: 'program'
+    foreignKey: "programId",
+    as: "program",
   });
 
-    AcademyProfile.hasMany(AcademyReview, {
-      foreignKey: "academyId",
-      as: "reviews",
-    });
-    AcademyReview.belongsTo(AcademyProfile, {
-      foreignKey: "academyId",
-      as: "academy",
-    });
-    User.hasMany(AcademyReview, {
-      foreignKey: "userId",
-      as: "academyReviews",
-    });
-    AcademyReview.belongsTo(User, {
-      foreignKey: "userId",
-      as: "user",
-    });
+  AcademyProfile.hasMany(AcademyReview, {
+    foreignKey: "academyId",
+    as: "reviews",
+  });
+  AcademyReview.belongsTo(AcademyProfile, {
+    foreignKey: "academyId",
+    as: "academy",
+  });
+  User.hasMany(AcademyReview, {
+    foreignKey: "userId",
+    as: "academyReviews",
+  });
+  AcademyReview.belongsTo(User, {
+    foreignKey: "userId",
+    as: "user",
+  });
 
-    // Session Feedback Associations
-    User.hasMany(SessionFeedback, {
-      foreignKey: "userId",
-      as: "sessionFeedbacks",
-    });
-    SessionFeedback.belongsTo(User, {
-      foreignKey: "userId",
-      as: "user",
-    });
-      // Batch Feedback Associations
+  // Session Feedback Associations
+  User.hasMany(SessionFeedback, {
+    foreignKey: "userId",
+    as: "sessionFeedbacks",
+  });
+  SessionFeedback.belongsTo(User, {
+    foreignKey: "userId",
+    as: "user",
+  });
+  // Batch Feedback Associations
   User.hasMany(BatchFeedback, {
     foreignKey: "userId",
     as: "batchFeedbacks",
@@ -656,368 +686,368 @@ const defineAssociations = () => {
     foreignKey: "userId",
     as: "user",
   });
-  
+
   // Notification Associations
   User.hasMany(Notification, {
     foreignKey: "recipientId",
     constraints: false,
     scope: {
-      recipientType: 'user'
+      recipientType: "user",
     },
-    as: "userNotifications"
+    as: "userNotifications",
   });
 
   Notification.belongsTo(User, {
     foreignKey: "recipientId",
     constraints: false,
-    as: "userRecipient"
+    as: "userRecipient",
   });
 
   CoachProfile.hasMany(Notification, {
     foreignKey: "recipientId",
     constraints: false,
     scope: {
-      recipientType: 'coach'
+      recipientType: "coach",
     },
-    as: "coachNotifications"
+    as: "coachNotifications",
   });
 
   AcademyProfile.hasMany(Notification, {
     foreignKey: "recipientId",
     constraints: false,
     scope: {
-      recipientType: 'academy'
+      recipientType: "academy",
     },
-    as: "academyNotifications"
+    as: "academyNotifications",
   });
 
   TurfProfile.hasMany(Notification, {
     foreignKey: "recipientId",
     constraints: false,
     scope: {
-      recipientType: 'turf'
+      recipientType: "turf",
     },
-    as: "turfNotifications"
+    as: "turfNotifications",
   });
 
   // Feedback Reminder Associations
   CoachProfile.hasMany(FeedbackReminder, {
     foreignKey: "coachId",
-    as: "coachFeedbackReminders"
+    as: "coachFeedbackReminders",
   });
 
   FeedbackReminder.belongsTo(CoachProfile, {
     foreignKey: "coachId",
-    as: "coach"
+    as: "coach",
   });
 
   AcademyCoach.hasMany(FeedbackReminder, {
     foreignKey: "coachId",
-    as: "academyCoachFeedbackReminders"
+    as: "academyCoachFeedbackReminders",
   });
 
   FeedbackReminder.belongsTo(AcademyCoach, {
     foreignKey: "coachId",
-    as: "academyCoach"
+    as: "academyCoach",
   });
 
   User.hasMany(FeedbackReminder, {
     foreignKey: "studentId",
-    as: "studentFeedbackReminders"
+    as: "studentFeedbackReminders",
   });
 
   FeedbackReminder.belongsTo(User, {
     foreignKey: "studentId",
-    as: "student"
+    as: "student",
   });
 
   AcademyBatch.hasMany(FeedbackReminder, {
     foreignKey: "batchId",
-    as: "batchFeedbackReminders"
+    as: "batchFeedbackReminders",
   });
 
   FeedbackReminder.belongsTo(AcademyBatch, {
     foreignKey: "batchId",
-    as: "batch"
+    as: "batch",
   });
 
   AcademyProgram.hasMany(FeedbackReminder, {
     foreignKey: "programId",
-    as: "programFeedbackReminders"
+    as: "programFeedbackReminders",
   });
 
   FeedbackReminder.belongsTo(AcademyProgram, {
     foreignKey: "programId",
-    as: "program"
+    as: "program",
   });
 
   AcademyProfile.hasMany(FeedbackReminder, {
     foreignKey: "academyId",
-    as: "academyFeedbackReminders"
+    as: "academyFeedbackReminders",
   });
 
   FeedbackReminder.belongsTo(AcademyProfile, {
     foreignKey: "academyId",
-    as: "academy"
+    as: "academy",
   });
 
   // Booking Notification Associations
   SlotRequest.hasMany(BookingNotification, {
     foreignKey: "requestId",
-    as: "bookingNotifications"
+    as: "bookingNotifications",
   });
 
   BookingNotification.belongsTo(SlotRequest, {
     foreignKey: "requestId",
-    as: "slotRequest"
+    as: "slotRequest",
   });
 
   TurfProfile.hasMany(BookingNotification, {
     foreignKey: "supplierId",
     constraints: false,
     scope: {
-      supplierType: 'turf'
+      supplierType: "turf",
     },
-    as: "turfBookingNotifications"
+    as: "turfBookingNotifications",
   });
 
   AcademyProfile.hasMany(BookingNotification, {
     foreignKey: "supplierId",
     constraints: false,
     scope: {
-      supplierType: 'academy'
+      supplierType: "academy",
     },
-    as: "academyBookingNotifications"
+    as: "academyBookingNotifications",
   });
 
   CoachProfile.hasMany(BookingNotification, {
     foreignKey: "supplierId",
     constraints: false,
     scope: {
-      supplierType: 'coach'
+      supplierType: "coach",
     },
-    as: "coachBookingNotifications"
+    as: "coachBookingNotifications",
   });
   // Academy Invitation associations
   AcademyInvitation.belongsTo(AcademyProfile, {
     foreignKey: "academyId",
-    as: "academy"
+    as: "academy",
   });
 
   AcademyInvitation.belongsTo(Supplier, {
     foreignKey: "inviterSupplierId",
-    as: "inviter"
+    as: "inviter",
   });
 
   AcademyInvitation.belongsTo(Supplier, {
     foreignKey: "inviteeSupplierId",
-    as: "invitee"
+    as: "invitee",
   });
 
   AcademyProfile.hasMany(AcademyInvitation, {
     foreignKey: "academyId",
-    as: "invitations"
+    as: "invitations",
   });
   User.hasMany(UserDeviceToken, {
     foreignKey: "userId",
-    as: "deviceTokens"
+    as: "deviceTokens",
   });
 
   UserDeviceToken.belongsTo(User, {
     foreignKey: "userId",
-    as: "user"
+    as: "user",
   });
 
   Supplier.hasMany(UserDeviceToken, {
-    foreignKey: "supplierId", 
-    as: "deviceTokens"
+    foreignKey: "supplierId",
+    as: "deviceTokens",
   });
 
   UserDeviceToken.belongsTo(Supplier, {
     foreignKey: "supplierId",
-    as: "supplier"
+    as: "supplier",
   });
 
   CoachProfile.hasMany(UserDeviceToken, {
     foreignKey: "coachId",
-    as: "deviceTokens"
+    as: "deviceTokens",
   });
 
   UserDeviceToken.belongsTo(CoachProfile, {
-    foreignKey: "coachId", 
-    as: "coach"
+    foreignKey: "coachId",
+    as: "coach",
   });
   AcademyStudent.belongsTo(User, {
     foreignKey: "userId",
-    as: "user"
+    as: "user",
   });
 
   User.hasMany(AcademyStudent, {
-    foreignKey: "userId", 
-    as: "student"
+    foreignKey: "userId",
+    as: "student",
   });
-    // Coach Session associations
+  // Coach Session associations
   CoachSession.belongsTo(CoachBatch, {
-    foreignKey: 'batch_id',
-    targetKey: 'batchId', // CoachBatch primary key
-    as: 'batch'
+    foreignKey: "batch_id",
+    targetKey: "batchId", // CoachBatch primary key
+    as: "batch",
   });
 
   CoachSession.belongsTo(CoachProfile, {
-    foreignKey: 'coach_id',
-    targetKey: 'coachId', // CoachProfile primary key
-    as: 'coach'
+    foreignKey: "coach_id",
+    targetKey: "coachId", // CoachProfile primary key
+    as: "coach",
   });
 
   CoachSession.belongsTo(User, {
-    foreignKey: 'user_id',
-    targetKey: 'userId', // User primary key
-    as: 'user'
+    foreignKey: "user_id",
+    targetKey: "userId", // User primary key
+    as: "user",
   });
   // Academy Batch Session associations
   AcademyBatchSession.belongsTo(AcademyBatch, {
-    foreignKey: 'batch_id',
-    targetKey: 'batchId', // AcademyBatch primary key
-    as: 'batch'
+    foreignKey: "batch_id",
+    targetKey: "batchId", // AcademyBatch primary key
+    as: "batch",
   });
 
   AcademyBatchSession.belongsTo(AcademyProfile, {
-    foreignKey: 'academy_id',
-    targetKey: 'academyId', // AcademyProfile primary key
-    as: 'academy'
+    foreignKey: "academy_id",
+    targetKey: "academyId", // AcademyProfile primary key
+    as: "academy",
   });
 
   AcademyBatchSession.belongsTo(User, {
-    foreignKey: 'user_id',
-    targetKey: 'userId', // User primary key
-    as: 'user'
+    foreignKey: "user_id",
+    targetKey: "userId", // User primary key
+    as: "user",
   });
   AcademyBatchSession.belongsTo(AcademyCoach, {
     foreignKey: "academyCoachId",
-    as: "academyCoach"
+    as: "academyCoach",
   });
   // Academy Program Session associations
-    AcademyProgramSession.belongsTo(AcademyProgram, {
-    foreignKey: 'program_id',
-    targetKey: 'programId', // AcademyProgram primary key
-    as: 'program'
+  AcademyProgramSession.belongsTo(AcademyProgram, {
+    foreignKey: "program_id",
+    targetKey: "programId", // AcademyProgram primary key
+    as: "program",
   });
 
   AcademyProgramSession.belongsTo(AcademyProfile, {
-    foreignKey: 'academy_id',
-    targetKey: 'academyId', // AcademyProfile primary key
-    as: 'academy'
+    foreignKey: "academy_id",
+    targetKey: "academyId", // AcademyProfile primary key
+    as: "academy",
   });
 
   AcademyProgramSession.belongsTo(User, {
-    foreignKey: 'user_id',
-    targetKey: 'userId', // User primary key
-    as: 'user'
+    foreignKey: "user_id",
+    targetKey: "userId", // User primary key
+    as: "user",
   });
   AcademyProgramSession.belongsTo(AcademyCoach, {
     foreignKey: "academyCoachId",
-    as: "academyCoach"
+    as: "academyCoach",
   });
   // Turf Session associations
-    TurfSession.belongsTo(TurfGround, {
-    foreignKey: 'ground_id',
-    targetKey: 'groundId', // TurfGround primary key
-    as: 'ground'
+  TurfSession.belongsTo(TurfGround, {
+    foreignKey: "ground_id",
+    targetKey: "groundId", // TurfGround primary key
+    as: "ground",
   });
 
   TurfSession.belongsTo(TurfProfile, {
-    foreignKey: 'turf_id',
-    targetKey: 'turfId', // TurfProfile primary key
-    as: 'turf'
+    foreignKey: "turf_id",
+    targetKey: "turfId", // TurfProfile primary key
+    as: "turf",
   });
 
   TurfSession.belongsTo(User, {
-    foreignKey: 'user_id',
-    targetKey: 'userId', // User primary key
-    as: 'user'
+    foreignKey: "user_id",
+    targetKey: "userId", // User primary key
+    as: "user",
   });
   TurfSession.belongsTo(AcademyCoach, {
     foreignKey: "academyCoachId",
-    as: "academyCoach"
+    as: "academyCoach",
   });
-    // Academy Batch associations
+  // Academy Batch associations
   AcademyBatch.belongsTo(AcademyProfile, {
     foreignKey: "academyId",
-    as: "academy"
+    as: "academy",
   });
-    // Academy Program associations
+  // Academy Program associations
   AcademyProgram.belongsTo(AcademyProfile, {
     foreignKey: "academyId",
-    as: "academy"
+    as: "academy",
   });
-  
+
   // Coach Session Associations
 
   CoachBatch.hasMany(CoachSession, {
-    foreignKey: 'batchId',
-    as: 'sessions'
+    foreignKey: "batchId",
+    as: "sessions",
   });
 
   CoachProfile.hasMany(CoachSession, {
-    foreignKey: 'coachId',
-    as: 'sessions'
+    foreignKey: "coachId",
+    as: "sessions",
   });
 
   User.hasMany(CoachSession, {
-    foreignKey: 'userId',
-    as: 'coachSessions'
+    foreignKey: "userId",
+    as: "coachSessions",
   });
 
   // Academy Batch Session Associations
 
   AcademyBatch.hasMany(AcademyBatchSession, {
-    foreignKey: 'batchId',
-    as: 'sessions'
+    foreignKey: "batchId",
+    as: "sessions",
   });
 
   AcademyProfile.hasMany(AcademyBatchSession, {
-    foreignKey: 'academyId',
-    as: 'batchSessions'
+    foreignKey: "academyId",
+    as: "batchSessions",
   });
 
   User.hasMany(AcademyBatchSession, {
-    foreignKey: 'userId',
-    as: 'academyBatchSessions'
+    foreignKey: "userId",
+    as: "academyBatchSessions",
   });
 
   // Academy Program Session Associations
   AcademyProgram.hasMany(AcademyProgramSession, {
-    foreignKey: 'programId',
-    as: 'sessions'
+    foreignKey: "programId",
+    as: "sessions",
   });
 
   AcademyProfile.hasMany(AcademyProgramSession, {
-    foreignKey: 'academyId',
-    as: 'programSessions'
+    foreignKey: "academyId",
+    as: "programSessions",
   });
 
   User.hasMany(AcademyProgramSession, {
-    foreignKey: 'userId',
-    as: 'academyProgramSessions'
+    foreignKey: "userId",
+    as: "academyProgramSessions",
   });
 
   // Turf Session Associations
 
   TurfGround.hasMany(TurfSession, {
-    foreignKey: 'groundId',
-    as: 'sessions'
+    foreignKey: "groundId",
+    as: "sessions",
   });
 
   TurfProfile.hasMany(TurfSession, {
-    foreignKey: 'turfId',
-    as: 'sessions'
+    foreignKey: "turfId",
+    as: "sessions",
   });
 
   User.hasMany(TurfSession, {
-    foreignKey: 'userId',
-    as: 'turfSessions'
+    foreignKey: "userId",
+    as: "turfSessions",
   });
-  
+
   // AcademyCoach associations with session models
   AcademyCoach.hasMany(TurfSession, {
     foreignKey: "academyCoachId",
@@ -1037,84 +1067,153 @@ const defineAssociations = () => {
   // User Favorite Associations
   User.hasMany(UserFavorite, {
     foreignKey: "userId",
-    as: "favorites"
+    as: "favorites",
   });
 
   UserFavorite.belongsTo(User, {
     foreignKey: "userId",
-    as: "user"
+    as: "user",
   });
 
   Supplier.hasMany(UserFavorite, {
     foreignKey: "supplierId",
-    as: "userFavorites"
+    as: "userFavorites",
   });
 
   UserFavorite.belongsTo(Supplier, {
     foreignKey: "supplierId",
-    as: "supplier"
+    as: "supplier",
   });
 
   // Polymorphic associations for different entity types
   UserFavorite.belongsTo(AcademyProfile, {
     foreignKey: "entityId",
     constraints: false,
-    as: "academy"
+    as: "academy",
   });
 
   UserFavorite.belongsTo(CoachProfile, {
     foreignKey: "entityId",
     constraints: false,
-    as: "coach"
+    as: "coach",
   });
 
   UserFavorite.belongsTo(TurfProfile, {
     foreignKey: "entityId",
     constraints: false,
-    as: "turf"
+    as: "turf",
   });
 
-  // ...existing code...
+  // Score-related associations
+  MonthlyStudentProgress.belongsTo(User, {
+    foreignKey: "userId",
+    as: "student",
+  });
 
-const ProgramMonthlyMetric = require("./models/postgres/academy/programMonthlyMetric")(sequelize);
+  MonthlyStudentProgress.belongsTo(CoachProfile, {
+    foreignKey: "coachId",
+    as: "coach",
+  });
 
-  // Program Monthly Metric Associations
-  AcademyProgram.hasMany(ProgramMonthlyMetric, {
-    foreignKey: "programId",
+  MonthlyStudentProgress.belongsTo(Month, {
+    foreignKey: "monthId",
+    as: "month",
+  });
+
+  User.hasMany(MonthlyStudentProgress, {
+    foreignKey: "userId",
+    as: "monthlyProgress",
+  });
+
+  CoachProfile.hasMany(MonthlyStudentProgress, {
+    foreignKey: "coachId",
+    as: "studentProgress",
+  });
+
+  // Monthly Student Metric associations for academy students
+  MonthlyStudentMetric.belongsTo(AcademyStudent, {
+    foreignKey: "studentId",
+    as: "student",
+  });
+
+  MonthlyStudentMetric.belongsTo(Month, {
+    foreignKey: "monthId",
+    as: "month",
+  });
+
+  AcademyStudent.hasMany(MonthlyStudentMetric, {
+    foreignKey: "studentId",
     as: "monthlyMetrics",
   });
+
+  // Batch Monthly Metric associations for score tracking
+  BatchMonthlyMetric.belongsTo(CoachBatch, {
+    foreignKey: "batchId",
+    as: "batch",
+  });
+
+  BatchMonthlyMetric.belongsTo(CoachProfile, {
+    foreignKey: "coachId",
+    as: "coach",
+  });
+
+  BatchMonthlyMetric.belongsTo(Month, {
+    foreignKey: "monthId",
+    as: "month",
+  });
+
+  CoachBatch.hasMany(BatchMonthlyMetric, {
+    foreignKey: "batchId",
+    as: "scoreMetrics",
+  });
+
+  // Monthly Coach Metric associations for effectiveness tracking
+  MonthlyCoachMetric.belongsTo(CoachProfile, {
+    foreignKey: "coachId",
+    as: "coach",
+  });
+
+  MonthlyCoachMetric.belongsTo(Month, {
+    foreignKey: "monthId",
+    as: "month",
+  });
+
+  CoachProfile.hasMany(MonthlyCoachMetric, {
+    foreignKey: "coachId",
+    as: "effectivenessMetrics",
+  });
+
+  // Program Monthly Metric associations for score tracking
   ProgramMonthlyMetric.belongsTo(AcademyProgram, {
     foreignKey: "programId",
     as: "program",
   });
-  Month.hasMany(ProgramMonthlyMetric, {
-    foreignKey: "monthId",
-    as: "programMonthlyMetrics",
-  });
+
   ProgramMonthlyMetric.belongsTo(Month, {
     foreignKey: "monthId",
     as: "month",
   });
 
-  // Academy Batch Monthly Metric Associations
-  AcademyBatch.hasMany(AcademyBatchMonthlyMetric, {
-    foreignKey: "batchId",
-    as: "monthlyMetrics",
+  AcademyProgram.hasMany(ProgramMonthlyMetric, {
+    foreignKey: "programId",
+    as: "scoreMetrics",
   });
+
+  // Academy Batch Monthly Metric associations
   AcademyBatchMonthlyMetric.belongsTo(AcademyBatch, {
     foreignKey: "batchId",
     as: "batch",
   });
-  Month.hasMany(AcademyBatchMonthlyMetric, {
-    foreignKey: "monthId",
-    as: "academyBatchMonthlyMetrics",
-  });
+
   AcademyBatchMonthlyMetric.belongsTo(Month, {
     foreignKey: "monthId",
     as: "month",
   });
 
-
+  AcademyBatch.hasMany(AcademyBatchMonthlyMetric, {
+    foreignKey: "batchId",
+    as: "scoreMetrics",
+  });
 };
 
 // Database Sync Function
@@ -1136,11 +1235,11 @@ const syncDatabase = async () => {
       );
     }
 
-        // Skip the Day model entirely in sync
+    // Skip the Day model entirely in sync
     const models = Object.values(sequelize.models).filter(
-      model => model.name !== 'Day'
+      (model) => model.name !== "Day"
     );
-    
+
     // Sync all models except Day
     for (const model of models) {
       try {
@@ -1153,7 +1252,7 @@ const syncDatabase = async () => {
     // Sync models individually with force:false, alter:false first to create tables safely
     // console.log("Creating tables if they don't exist...");
     // await sequelize.sync({ force: false, alter: false });
-        
+
     // // Then try to sync Year and Month models first to establish their relationship
     // console.log("Syncing time models...");
     // await Year.sync({ alter: true });
@@ -1186,7 +1285,6 @@ module.exports = {
   MonthlyStudentProgress,
   BatchMonthlyMetric,
 
-
   // Academy exports
   AcademyFee,
   AcademyBatch,
@@ -1205,8 +1303,6 @@ module.exports = {
 
   ProgramMonthlyMetric,
   AcademyBatchMonthlyMetric,
-
-
 
   // Turf exports
   TurfGround,
@@ -1238,9 +1334,9 @@ module.exports = {
   AcademyBatchSession,
   AcademyProgramSession,
   TurfSession,
-  
+
   //promotion
   PromotionTransaction,
-  
+
   syncDatabase,
 };
