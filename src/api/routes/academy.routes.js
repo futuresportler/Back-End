@@ -24,7 +24,10 @@ router.get("/students/data", authMiddleware, academyController.getStudentData);
 router.get("/by-user/:userId", academyController.getAcademiesByUser);
 
 // Add promotion-related route
-router.get("/:academyProfileId/with-promotion", academyController.getProfileWithPromotion);
+router.get(
+  "/:academyProfileId/with-promotion",
+  academyController.getProfileWithPromotion
+);
 
 // Profile routes
 router.get("/:academyProfileId", academyController.getProfile);
