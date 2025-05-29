@@ -11,11 +11,11 @@ const academyFeedbackRepository = require("./repositories/academyFeedbackReposit
 const academyBookingRepository = require("./repositories/academyBookingRepository");
 const academyCoachService = require("./academyCoachService");
 const feedbackService = require("../feedback");
-const academyInvitationService = require('./academyInvitationService');
+const academyInvitationService = require("./academyInvitationService");
+const scoreService = require("../score/scoreService");
 
 // Fix the import path - import directly from database instead of database/models
 const { AcademyStudent, AcademyProfile } = require("../../database");
-
 
 const getAcademyProfile = async (academyProfileId, options) => {
   const profile = await academyRepository.getAcademyProfileWithDetails(
@@ -117,51 +117,57 @@ const createStudent = async (studentData) => {
 };
 
 // Add permission checking middleware
-const checkAcademyPermission = (requiredRole = 'owner') => {
+const checkAcademyPermission = (requiredRole = "owner") => {
   return async (academyId, supplierId) => {
     const academy = await getAcademyProfile(academyId);
-    
+
     if (!academy) {
       throw new Error("Academy not found");
     }
-    
+
     // Check ownership
     if (academy.supplierId === supplierId) {
-      return { allowed: true, role: 'owner' };
+      return { allowed: true, role: "owner" };
     }
-    
+
     // Check management permission
-    if (requiredRole === 'manager' || requiredRole === 'owner') {
-      if (academy.managerId === supplierId && academy.managerInvitationStatus === 'accepted') {
-        return { allowed: true, role: 'manager' };
+    if (requiredRole === "manager" || requiredRole === "owner") {
+      if (
+        academy.managerId === supplierId &&
+        academy.managerInvitationStatus === "accepted"
+      ) {
+        return { allowed: true, role: "manager" };
       }
     }
-    
+
     // Check coach permission
-    if (requiredRole === 'coach') {
+    if (requiredRole === "coach") {
       const { AcademyCoach } = require("../../database");
       const coachAssignment = await AcademyCoach.findOne({
         where: {
           academyId,
           supplierId,
-          invitationStatus: 'accepted'
-        }
+          invitationStatus: "accepted",
+        },
       });
-      
+
       if (coachAssignment) {
-        return { allowed: true, role: 'coach' };
+        return { allowed: true, role: "coach" };
       }
     }
-    
+
     return { allowed: false, role: null };
   };
 };
-const updateStudent = async (studentId, updateData,supplierId) => {
+const updateStudent = async (studentId, updateData, supplierId) => {
   const student = await academyRepository.getStudentById(studentId);
   if (!student) throw new Error("Student not found");
 
   // Check permissions
-  const permission = await checkAcademyPermission('manager')(student.academyId, supplierId);
+  const permission = await checkAcademyPermission("manager")(
+    student.academyId,
+    supplierId
+  );
   if (!permission.allowed) {
     throw new Error("Unauthorized to update this student");
   }
@@ -252,11 +258,14 @@ const deleteStudent = async (studentId) => {
 
 // Batch-related services
 const createBatch = async (batchData, supplierId) => {
-    const permission = await checkAcademyPermission('manager')(batchData.academyId, supplierId);
+  const permission = await checkAcademyPermission("manager")(
+    batchData.academyId,
+    supplierId
+  );
   if (!permission.allowed) {
     throw new Error("Unauthorized to create batches for this academy");
   }
-  
+
   return await academyBatchRepository.createBatch({
     ...batchData,
     batchId: uuidv4(),
@@ -633,22 +642,22 @@ const recordProfileView = async (academyId, viewData = {}) => {
   const view = await academyMetricsRepository.recordProfileView({
     viewId: uuidv4(),
     academyId,
-    ...viewData
+    ...viewData,
   });
-  
+
   // Increment the monthly metrics counter for views
   try {
     const now = new Date();
     const currentMonth = await sequelize.models.Month.findOne({
       where: {
         monthNumber: now.getMonth() + 1,
-        year: now.getFullYear()
-      }
+        year: now.getFullYear(),
+      },
     });
-    
+
     if (currentMonth) {
       await academyMetricsRepository.incrementMetricCounter(
-        academyId, 
+        academyId,
         currentMonth.monthId,
         "profileViews"
       );
@@ -656,7 +665,7 @@ const recordProfileView = async (academyId, viewData = {}) => {
   } catch (err) {
     console.error("Error updating monthly metrics:", err);
   }
-  
+
   return view;
 };
 
@@ -664,7 +673,7 @@ const recordProfileView = async (academyId, viewData = {}) => {
 const createInquiry = async (inquiryData) => {
   return await academyMetricsRepository.createInquiry({
     inquiryId: uuidv4(),
-    ...inquiryData
+    ...inquiryData,
   });
 };
 // Mark inquiry as converted when student enrolls
@@ -672,25 +681,25 @@ const convertInquiryToStudent = async (inquiryId, studentId) => {
   const inquiry = await academyMetricsRepository.updateInquiry(inquiryId, {
     status: "enrolled",
     convertedToStudent: true,
-    convertedStudentId: studentId
+    convertedStudentId: studentId,
   });
-  
+
   // Update metrics for the current month
   const now = new Date();
   const currentMonth = await sequelize.models.Month.findOne({
     where: {
       monthNumber: now.getMonth() + 1,
-      year: now.getFullYear()
-    }
+      year: now.getFullYear(),
+    },
   });
-  
+
   if (currentMonth) {
     await academyMetricsRepository.calculateConversionRate(
-      inquiry.academyId, 
+      inquiry.academyId,
       currentMonth.monthId
     );
   }
-  
+
   return inquiry;
 };
 // Get monthly metrics
@@ -702,26 +711,31 @@ const getMonthlyMetrics = async (academyId, filters = {}) => {
 const getProgramMonthlyMetrics = async (programId, monthId) => {
   const program = await academyProgramRepository.getProgramById(programId);
   if (!program) throw new Error("Program not found");
-  
+
   const metric = await academyMetricsRepository.getOrCreateMonthlyMetric(
     program.academyId,
     monthId
   );
-  
+
   // Return the program specific metrics from the JSON field
-  return metric.programMetrics[programId] || {
-    totalBookings: 0,
-    completedSessions: 0,
-    revenue: 0,
-    students: 0,
-    rating: 0,
-    reviews: 0
-  };
+  return (
+    metric.programMetrics[programId] || {
+      totalBookings: 0,
+      completedSessions: 0,
+      revenue: 0,
+      students: 0,
+      rating: 0,
+      reviews: 0,
+    }
+  );
 };
 
 // Get conversion rate
 const getConversionRate = async (academyId, monthId) => {
-  return await academyMetricsRepository.calculateConversionRate(academyId, monthId);
+  return await academyMetricsRepository.calculateConversionRate(
+    academyId,
+    monthId
+  );
 };
 
 // Add this function to the file, before the module.exports
@@ -729,7 +743,7 @@ const getAcademyCoachFeedback = async (academyId) => {
   // Verify academy exists
   const academy = await academyRepository.findAcademyProfileById(academyId);
   if (!academy) throw new Error("Academy not found");
-  
+
   return await academyFeedbackRepository.getAcademyCoachFeedback(academyId);
 };
 
@@ -741,29 +755,39 @@ const getBookingPlatforms = async (academyId, period = 3) => {
   }
 
   // Get booking platform data
-  const bookingData = await academyBookingRepository.getBookingPlatforms(academyId, period);
-  
+  const bookingData = await academyBookingRepository.getBookingPlatforms(
+    academyId,
+    period
+  );
+
   // Calculate total bookings and percentages
   const totalBookings = bookingData.reduce((sum, platform) => {
     return sum + parseInt(platform.dataValues.totalBookings);
   }, 0);
-  
+
   // Format the response data
-  const platforms = bookingData.map(platform => {
+  const platforms = bookingData.map((platform) => {
     const count = parseInt(platform.dataValues.totalBookings);
     return {
       name: platform.platformName,
       count: count,
-      percentage: totalBookings ? parseFloat(((count / totalBookings) * 100).toFixed(1)) : 0
+      percentage: totalBookings
+        ? parseFloat(((count / totalBookings) * 100).toFixed(1))
+        : 0,
     };
   });
 
   return {
     platforms,
-    totalBookings
+    totalBookings,
   };
 };
-const recordBookingPlatform = async (academyId, platformName, monthId = null, count = 1) => {
+const recordBookingPlatform = async (
+  academyId,
+  platformName,
+  monthId = null,
+  count = 1
+) => {
   // Validate that academy exists
   const academy = await academyRepository.findAcademyProfileById(academyId);
   if (!academy) {
@@ -776,10 +800,10 @@ const recordBookingPlatform = async (academyId, platformName, monthId = null, co
     const currentMonth = await sequelize.models.Month.findOne({
       where: {
         monthNumber: now.getMonth() + 1,
-        year: now.getFullYear()
-      }
+        year: now.getFullYear(),
+      },
     });
-    
+
     if (currentMonth) {
       monthId = currentMonth.monthId;
     }
@@ -789,7 +813,7 @@ const recordBookingPlatform = async (academyId, platformName, monthId = null, co
     academyId,
     monthId,
     platformName,
-    count
+    count,
   });
 };
 
@@ -798,49 +822,73 @@ const getPopularPrograms = async (academyId, limit = 5) => {
   // Verify academy exists
   const academy = await academyRepository.findAcademyProfileById(academyId);
   if (!academy) throw new Error("Academy not found");
-  
+
   // Get popular programs
-  const programs = await academyProgramRepository.getPopularProgramsByAcademy(academyId, limit);
-  
+  const programs = await academyProgramRepository.getPopularProgramsByAcademy(
+    academyId,
+    limit
+  );
+
   // Get fee records for revenue calculation
   const lastThreeMonths = new Date();
   lastThreeMonths.setMonth(lastThreeMonths.getMonth() - 3);
-  
+
   // Calculate and format response
-  const result = await Promise.all(programs.map(async (program) => {
-    // Get revenue data - optional if you have academy fee data
-    const fees = await academyFeeRepository.getFeesByProgram(program.programId, {
-      createdAfter: lastThreeMonths,
-      status: 'paid'
-    });
-    
-    // Calculate total revenue from fees
-    const revenue = fees.reduce((total, fee) => total + Number(fee.totalAmount), 0);
-    
-    // Count enrollments
-    const enrollments = program.enrolledStudents ? program.enrolledStudents.length : 0;
-    
-    // Calculate growth - compare with previous period
-    // This is simplified - you might want to implement a more sophisticated approach
-    const prevPeriodFees = await academyFeeRepository.getFeesByProgram(program.programId, {
-      createdAfter: new Date(lastThreeMonths.setMonth(lastThreeMonths.getMonth() - 3)),
-      createdBefore: lastThreeMonths,
-      status: 'paid'
-    });
-    
-    const prevRevenue = prevPeriodFees.reduce((total, fee) => total + Number(fee.totalAmount), 0);
-    const growth = prevRevenue > 0 ? Math.round(((revenue - prevRevenue) / prevRevenue) * 100) : 0;
-    
-    return {
-      id: program.programId,
-      name: program.programName,
-      enrollments,
-      revenue,
-      growth,
-      sport: program.sport
-    };
-  }));
-  
+  const result = await Promise.all(
+    programs.map(async (program) => {
+      // Get revenue data - optional if you have academy fee data
+      const fees = await academyFeeRepository.getFeesByProgram(
+        program.programId,
+        {
+          createdAfter: lastThreeMonths,
+          status: "paid",
+        }
+      );
+
+      // Calculate total revenue from fees
+      const revenue = fees.reduce(
+        (total, fee) => total + Number(fee.totalAmount),
+        0
+      );
+
+      // Count enrollments
+      const enrollments = program.enrolledStudents
+        ? program.enrolledStudents.length
+        : 0;
+
+      // Calculate growth - compare with previous period
+      // This is simplified - you might want to implement a more sophisticated approach
+      const prevPeriodFees = await academyFeeRepository.getFeesByProgram(
+        program.programId,
+        {
+          createdAfter: new Date(
+            lastThreeMonths.setMonth(lastThreeMonths.getMonth() - 3)
+          ),
+          createdBefore: lastThreeMonths,
+          status: "paid",
+        }
+      );
+
+      const prevRevenue = prevPeriodFees.reduce(
+        (total, fee) => total + Number(fee.totalAmount),
+        0
+      );
+      const growth =
+        prevRevenue > 0
+          ? Math.round(((revenue - prevRevenue) / prevRevenue) * 100)
+          : 0;
+
+      return {
+        id: program.programId,
+        name: program.programName,
+        enrollments,
+        revenue,
+        growth,
+        sport: program.sport,
+      };
+    })
+  );
+
   return { programs: result };
 };
 
@@ -848,14 +896,14 @@ const getAcademyWithFeedback = async (academyId) => {
   try {
     const academy = await academyRepository.getAcademyById(academyId);
     const [feedback, analytics] = await Promise.all([
-      feedbackService.getRecentFeedback('academy', academyId, 5),
-      feedbackService.getFeedbackAnalytics('academy', academyId)
+      feedbackService.getRecentFeedback("academy", academyId, 5),
+      feedbackService.getFeedbackAnalytics("academy", academyId),
     ]);
-    
+
     return {
       ...academy,
       recentFeedback: feedback,
-      feedbackAnalytics: analytics
+      feedbackAnalytics: analytics,
     };
   } catch (error) {
     throw new Error(`Failed to get academy with feedback: ${error.message}`);
@@ -864,11 +912,14 @@ const getAcademyWithFeedback = async (academyId) => {
 // Update createAcademyProfile function around line 20
 const createAcademyProfile = async (supplierId, profileData) => {
   const { manager, ...academyData } = profileData;
-  
-  const academy = await academyProfileRepository.createAcademyProfile(supplierId, {
-    ...academyData,
-    academyId: uuidv4(),
-  });
+
+  const academy = await academyProfileRepository.createAcademyProfile(
+    supplierId,
+    {
+      ...academyData,
+      academyId: uuidv4(),
+    }
+  );
 
   // If manager is provided, send invitation instead of creating directly
   if (manager && manager.phoneNumber) {
@@ -879,7 +930,7 @@ const createAcademyProfile = async (supplierId, profileData) => {
         manager
       );
     } catch (error) {
-      console.error('Failed to send manager invitation:', error);
+      console.error("Failed to send manager invitation:", error);
       // Don't fail academy creation if invitation fails
     }
   }
@@ -889,33 +940,61 @@ const createAcademyProfile = async (supplierId, profileData) => {
 
 // Add new functions for invitation management
 const inviteManager = async (academyId, inviterSupplierId, managerData) => {
-  return await academyInvitationService.inviteManager(academyId, inviterSupplierId, managerData);
+  return await academyInvitationService.inviteManager(
+    academyId,
+    inviterSupplierId,
+    managerData
+  );
 };
 
 const inviteCoach = async (academyId, inviterSupplierId, coachData) => {
-  return await academyInvitationService.inviteCoach(academyId, inviterSupplierId, coachData);
+  return await academyInvitationService.inviteCoach(
+    academyId,
+    inviterSupplierId,
+    coachData
+  );
 };
 
 const acceptInvitation = async (invitationToken, supplierId) => {
-  return await academyInvitationService.acceptInvitation(invitationToken, supplierId);
+  return await academyInvitationService.acceptInvitation(
+    invitationToken,
+    supplierId
+  );
 };
 
 const rejectInvitation = async (invitationToken, supplierId) => {
-  return await academyInvitationService.rejectInvitation(invitationToken, supplierId);
+  return await academyInvitationService.rejectInvitation(
+    invitationToken,
+    supplierId
+  );
 };
 
 const getSupplierInvitations = async (supplierId, status = null) => {
-  return await academyInvitationService.getSupplierInvitations(supplierId, status);
+  return await academyInvitationService.getSupplierInvitations(
+    supplierId,
+    status
+  );
 };
 
 // Add coach invitation functions (delegated to invitation service)
-const inviteCoachToAcademy = async (academyId, inviterSupplierId, coachData) => {
-  const permission = await checkAcademyPermission('manager')(academyId, inviterSupplierId);
+const inviteCoachToAcademy = async (
+  academyId,
+  inviterSupplierId,
+  coachData
+) => {
+  const permission = await checkAcademyPermission("manager")(
+    academyId,
+    inviterSupplierId
+  );
   if (!permission.allowed) {
     throw new Error("Unauthorized to invite coaches to this academy");
   }
-  
-  return await academyInvitationService.inviteCoach(academyId, inviterSupplierId, coachData);
+
+  return await academyInvitationService.inviteCoach(
+    academyId,
+    inviterSupplierId,
+    coachData
+  );
 };
 
 const getAcademyWithPromotionStatus = async (academyProfileId, options) => {
@@ -929,15 +1008,220 @@ const getAcademyWithPromotionStatus = async (academyProfileId, options) => {
     ...profile.toJSON(),
     promotionStatus: {
       isPromoted: profile.priority?.value > 0,
-      plan: profile.priority?.plan || "none", 
-      expiresAt: profile.priority?.expiresAt
-    }
+      plan: profile.priority?.plan || "none",
+      expiresAt: profile.priority?.expiresAt,
+    },
   };
 };
 const refreshMetrics = async (academyId, monthId) => {
   // You can call recalculateMetricsFromSessions and calculateConversionRate for full refresh
-  await academyMetricsRepository.recalculateMetricsFromSessions(academyId, monthId);
+  await academyMetricsRepository.recalculateMetricsFromSessions(
+    academyId,
+    monthId
+  );
   await academyMetricsRepository.calculateConversionRate(academyId, monthId);
+};
+
+// Add score-related methods
+const updateStudentScore = async (
+  academyId,
+  studentId,
+  scoreData,
+  assessorId
+) => {
+  try {
+    // Verify student belongs to this academy
+    const student = await academyRepository.getStudentById(studentId);
+    if (!student || student.academyId !== academyId) {
+      throw new Error("Student not found in this academy");
+    }
+
+    // Update scores using score service
+    const result = await scoreService.updateStudentScore(
+      studentId,
+      "academy",
+      scoreData,
+      assessorId,
+      "academy_coach"
+    );
+
+    // Check and award automatic achievements
+    const achievements = await scoreService.checkAndAwardAutoAchievements(
+      studentId,
+      "academy",
+      scoreData.currentScores || scoreData.sportScores
+    );
+
+    return {
+      ...result,
+      achievements,
+    };
+  } catch (error) {
+    throw new Error(`Failed to update student score: ${error.message}`);
+  }
+};
+
+const getStudentScoreAnalytics = async (academyId, studentId, months = 6) => {
+  // Verify student belongs to this academy
+  const student = await academyRepository.getStudentById(studentId);
+  if (!student || student.academyId !== academyId) {
+    throw new Error("Student not found in this academy");
+  }
+
+  return await scoreService.getStudentScoreAnalytics(
+    studentId,
+    "academy",
+    months
+  );
+};
+
+const getBatchScoreAnalytics = async (academyId, batchId) => {
+  // Verify batch belongs to this academy
+  const batch = await academyBatchRepository.getBatchById(batchId);
+  if (!batch || batch.academyId !== academyId) {
+    throw new Error("Batch not found in this academy");
+  }
+
+  return await scoreService.getBatchScoreAnalytics(batchId);
+};
+
+const getProgramScoreAnalytics = async (academyId, programId) => {
+  // Verify program belongs to this academy
+  const program = await academyProgramRepository.getProgramById(programId);
+  if (!program || program.academyId !== academyId) {
+    throw new Error("Program not found in this academy");
+  }
+
+  return await scoreService.getProgramScoreAnalytics(programId);
+};
+
+const getStudentsWithScoreAnalytics = async (academyId, filters = {}) => {
+  return await academyRepository.getStudentsWithScoreAnalytics(
+    academyId,
+    filters
+  );
+};
+
+const awardStudentAchievement = async (academyId, studentId, achievement) => {
+  // Verify student belongs to this academy
+  const student = await academyRepository.getStudentById(studentId);
+  if (!student || student.academyId !== academyId) {
+    throw new Error("Student not found in this academy");
+  }
+
+  return await scoreService.awardAchievement(studentId, "academy", achievement);
+};
+
+const getAcademyScoreOverview = async (academyId) => {
+  const students = await getStudentsWithScoreAnalytics(academyId, {
+    includeScoreTrends: true,
+  });
+
+  if (students.length === 0) {
+    return {
+      totalStudents: 0,
+      averageScore: 0,
+      scoreDistribution: {},
+      topPerformers: [],
+      insights: ["No students found for analysis"],
+    };
+  }
+
+  // Calculate overall academy metrics
+  const studentsWithScores = students.filter(
+    (s) => s.currentScores && typeof s.currentScores.overall === "number"
+  );
+
+  const totalScore = studentsWithScores.reduce(
+    (sum, student) => sum + (student.currentScores.overall || 0),
+    0
+  );
+
+  const averageScore =
+    studentsWithScores.length > 0
+      ? (totalScore / studentsWithScores.length).toFixed(2)
+      : 0;
+
+  const scoreDistribution = {
+    excellent: studentsWithScores.filter((s) => s.currentScores.overall >= 8.5)
+      .length,
+    good: studentsWithScores.filter(
+      (s) => s.currentScores.overall >= 7.0 && s.currentScores.overall < 8.5
+    ).length,
+    average: studentsWithScores.filter(
+      (s) => s.currentScores.overall >= 5.0 && s.currentScores.overall < 7.0
+    ).length,
+    needsWork: studentsWithScores.filter((s) => s.currentScores.overall < 5.0)
+      .length,
+  };
+
+  const topPerformers = studentsWithScores
+    .sort(
+      (a, b) => (b.currentScores.overall || 0) - (a.currentScores.overall || 0)
+    )
+    .slice(0, 10)
+    .map((student) => ({
+      studentId: student.studentId,
+      name: student.name,
+      score: student.currentScores.overall,
+      sport: student.sport,
+      achievements: student.achievementBadges?.length || 0,
+    }));
+
+  const insights = [];
+
+  if (scoreDistribution.excellent > students.length * 0.3) {
+    insights.push("Academy demonstrates excellent overall performance");
+  }
+
+  if (scoreDistribution.needsWork > students.length * 0.2) {
+    insights.push("Consider implementing additional support programs");
+  }
+
+  if (parseFloat(averageScore) > 8.0) {
+    insights.push("Academy maintains high performance standards");
+  }
+
+  return {
+    totalStudents: students.length,
+    studentsWithScores: studentsWithScores.length,
+    averageScore: parseFloat(averageScore),
+    scoreDistribution,
+    topPerformers,
+    insights,
+  };
+};
+
+const bulkUpdateStudentScores = async (
+  academyId,
+  studentsScoreData,
+  assessorId
+) => {
+  // Verify all students belong to this academy
+  const studentIds = studentsScoreData.map((s) => s.studentId);
+  const students = await AcademyStudent.findAll({
+    where: {
+      studentId: { [Op.in]: studentIds },
+      academyId,
+    },
+  });
+
+  if (students.length !== studentIds.length) {
+    throw new Error("Some students not found in this academy");
+  }
+
+  // Prepare data for bulk update
+  const studentsData = studentsScoreData.map((studentScore) => ({
+    studentId: studentScore.studentId,
+    studentType: "academy",
+    scoreData: studentScore.scoreData,
+  }));
+
+  return await scoreService.bulkUpdateScores(
+    studentsData,
+    assessorId,
+    "academy_coach"
+  );
 };
 
 module.exports = {
@@ -1010,15 +1294,26 @@ module.exports = {
   getAcademyWithFeedback,
   refreshMetrics,
 
-    // Academy Coach exports
+  // Academy Coach exports
   academyCoachService,
   createAcademyCoach: academyCoachService.createCoach.bind(academyCoachService),
   getAcademyCoach: academyCoachService.getCoachById.bind(academyCoachService),
-  getAcademyCoaches: academyCoachService.getCoachesByAcademy.bind(academyCoachService),
+  getAcademyCoaches:
+    academyCoachService.getCoachesByAcademy.bind(academyCoachService),
   updateAcademyCoach: academyCoachService.updateCoach.bind(academyCoachService),
   deleteAcademyCoach: academyCoachService.deleteCoach.bind(academyCoachService),
-  getCoachSchedule: academyCoachService.getCoachSchedule.bind(academyCoachService),
-  getCoachBatchesAndPrograms: academyCoachService.getCoachBatchesAndPrograms.bind(academyCoachService)
+  getCoachSchedule:
+    academyCoachService.getCoachSchedule.bind(academyCoachService),
+  getCoachBatchesAndPrograms:
+    academyCoachService.getCoachBatchesAndPrograms.bind(academyCoachService),
 
-
+  // score-related exports
+  updateStudentScore,
+  getStudentScoreAnalytics,
+  getBatchScoreAnalytics,
+  getProgramScoreAnalytics,
+  getStudentsWithScoreAnalytics,
+  awardStudentAchievement,
+  getAcademyScoreOverview,
+  bulkUpdateStudentScores,
 };

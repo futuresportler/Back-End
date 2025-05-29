@@ -5,7 +5,7 @@ const { SupplierService } = require("../supplier/index");
 // Add this import at the top of the file
 const coachSearchRepository = require("./repositories/coachSearchRepository");
 const coachAnalyticsRepository = require("./repositories/coachAnalyticsRepository");
-const feedbackService = require("../feedback");
+const scoreService = require("../score/scoreService");
 
 const getCoachProfile = async (coachProfileId) => {
   const profile = await coachRepository.findCoachProfileById(coachProfileId);
@@ -459,16 +459,22 @@ const getMonthlyAnalytics = async (coachId, filters = {}) => {
 
 // Get monthly analytics for a specific batch
 const getBatchMonthlyAnalytics = async (batchId, filters = {}) => {
-  return await coachAnalyticsRepository.getBatchMonthlyMetrics(batchId, filters);
+  return await coachAnalyticsRepository.getBatchMonthlyMetrics(
+    batchId,
+    filters
+  );
 };
 
 // Get detailed analytics for a specific month
 const getDetailedMonthlyAnalytics = async (coachId, monthId) => {
-  const metrics = await coachAnalyticsRepository.getOrCreateMonthlyMetric(coachId, monthId);
-  
+  const metrics = await coachAnalyticsRepository.getOrCreateMonthlyMetric(
+    coachId,
+    monthId
+  );
+
   // Get the batch breakdown from the metrics
   const batchBreakdown = metrics.batchMetrics || {};
-  
+
   // Format the response
   return {
     overview: {
@@ -480,22 +486,25 @@ const getDetailedMonthlyAnalytics = async (coachId, monthId) => {
       totalReviews: metrics.totalReviews,
       activeStudents: metrics.activeStudents,
       newStudents: metrics.newStudents,
-      utilization: metrics.utilization
+      utilization: metrics.utilization,
     },
     growth: {
       growthRate: metrics.growthRate,
-      retentionRate: metrics.retentionRate
+      retentionRate: metrics.retentionRate,
     },
     distribution: {
       hourlySessionDistribution: metrics.hourlySessionDistribution,
-      dailyRevenue: metrics.dailyRevenue
+      dailyRevenue: metrics.dailyRevenue,
     },
-    batches: batchBreakdown
+    batches: batchBreakdown,
   };
 };
 const getDetailedBatchAnalytics = async (batchId, monthId) => {
-  const metrics = await coachAnalyticsRepository.getOrCreateBatchMonthlyMetric(batchId, monthId);
-  
+  const metrics = await coachAnalyticsRepository.getOrCreateBatchMonthlyMetric(
+    batchId,
+    monthId
+  );
+
   // Format the response
   return {
     overview: {
@@ -507,14 +516,14 @@ const getDetailedBatchAnalytics = async (batchId, monthId) => {
       totalReviews: metrics.totalReviews,
       activeStudents: metrics.activeStudents,
       newStudents: metrics.newStudents,
-      utilization: metrics.utilization
+      utilization: metrics.utilization,
     },
     distribution: {
-      dailyRevenue: metrics.dailyRevenue
+      dailyRevenue: metrics.dailyRevenue,
     },
     performance: {
-      attendanceRate: metrics.attendanceRate
-    }
+      attendanceRate: metrics.attendanceRate,
+    },
   };
 };
 
@@ -527,14 +536,14 @@ const getCoachWithFeedback = async (coachId) => {
   try {
     const coach = await coachRepository.getCoachById(coachId);
     const [feedback, analytics] = await Promise.all([
-      feedbackService.getRecentFeedback('coach', coachId, 5),
-      feedbackService.getFeedbackAnalytics('coach', coachId)
+      feedbackService.getRecentFeedback("coach", coachId, 5),
+      feedbackService.getFeedbackAnalytics("coach", coachId),
     ]);
-    
+
     return {
       ...coach,
       recentFeedback: feedback,
-      feedbackAnalytics: analytics
+      feedbackAnalytics: analytics,
     };
   } catch (error) {
     throw new Error(`Failed to get coach with feedback: ${error.message}`);
@@ -551,8 +560,8 @@ const getCoachWithPromotionStatus = async (coachProfileId) => {
     promotionStatus: {
       isPromoted: profile.priority?.value > 0,
       plan: profile.priority?.plan || "none",
-      expiresAt: profile.priority?.expiresAt
-    }
+      expiresAt: profile.priority?.expiresAt,
+    },
   };
 };
 // Add the new function to the module.exports
@@ -565,7 +574,6 @@ module.exports = {
   addCoachCertification,
   searchCoaches, // Add this line
   getCoachWithFeedback,
-
 
   // Student management
   addStudent,
@@ -604,6 +612,13 @@ module.exports = {
   getBatchMonthlyAnalytics,
   getDetailedMonthlyAnalytics,
   getDetailedBatchAnalytics,
-  refreshAnalytics
+  refreshAnalytics,
 
+  // Score methods
+  updateStudentScore,
+  getStudentScoreHistory,
+  getBatchScoreAnalytics,
+  getCoachEffectivenessReport,
+  getStudentsWithScores,
+  bulkUpdateStudentScores,
 };

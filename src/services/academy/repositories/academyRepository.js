@@ -7,6 +7,7 @@ const {
   AcademyProgram,
   AcademyCoach,
   AcademyFee,
+  MonthlyStudentMetric,
 } = require("../../../database");
 const { Op } = require("sequelize");
 
@@ -20,7 +21,7 @@ async function getAcademyProfileWithDetails(
     includeCoaches = false,
     includeStudents = false,
     includeFees = false,
-  } = {},
+  } = {}
 ) {
   const include = [];
 
@@ -54,26 +55,196 @@ async function getAcademyProfileWithDetails(
 
 // Student-related repository methods
 const createStudent = async (studentData, transaction = null) => {
-  return await AcademyStudent.create(studentData, { transaction });
+  // Initialize score fields for new students
+  const studentWithScores = {
+    ...studentData,
+    currentScores: studentData.currentScores || {},
+    achievementBadges: studentData.achievementBadges || [],
+    scoreTrends: studentData.scoreTrends || {},
+  };
+
+  return await AcademyStudent.create(studentWithScores, { transaction });
 };
 
 const updateStudent = async (studentId, updateData, transaction = null) => {
   const student = await AcademyStudent.findByPk(studentId, { transaction });
   if (!student) return null;
+
+  // Merge score data if provided
+  if (updateData.currentScores) {
+    updateData.currentScores = {
+      ...student.currentScores,
+      ...updateData.currentScores,
+    };
+  }
+
+  if (updateData.scoreTrends) {
+    updateData.scoreTrends = {
+      ...student.scoreTrends,
+      ...updateData.scoreTrends,
+    };
+  }
+
   return await student.update(updateData, { transaction });
+};
+
+// Add method to get students with score data
+const getStudentsWithScoreAnalytics = async (academyId, filters = {}) => {
+  const { includeScoreTrends = false, sport = null } = filters;
+
+  const where = { academyId };
+
+  if (sport) {
+    where.sport = sport;
+  }
+
+  const attributes = [
+    "studentId",
+    "name",
+    "sport",
+    "currentScores",
+    "achievementBadges",
+    "status",
+  ];
+
+  if (includeScoreTrends) {
+    attributes.push("scoreTrends");
+  }
+
+  return await AcademyStudent.findAll({
+    where,
+    attributes,
+    include: [
+      {
+        model: AcademyBatch,
+        as: "batch",
+        attributes: ["batchId", "batchName"],
+      },
+      {
+        model: AcademyProgram,
+        as: "program",
+        attributes: ["programId", "programName"],
+      },
+    ],
+    order: [
+      [
+        sequelize.literal(`("currentScores"->>'overall')::float`),
+        "DESC NULLS LAST",
+      ],
+    ],
+  });
+};
+
+// Add method to update student scores
+const updateStudentScores = async (studentId, scoreData, monthId) => {
+  const transaction = await sequelize.transaction();
+
+  try {
+    const student = await AcademyStudent.findByPk(studentId, { transaction });
+    if (!student) {
+      throw new Error("Student not found");
+    }
+
+    // Update current scores
+    const updatedScores = {
+      ...student.currentScores,
+      ...scoreData.currentScores,
+    };
+
+    // Update score trends
+    const updatedTrends = {
+      ...student.scoreTrends,
+      ...scoreData.scoreTrends,
+    };
+
+    await student.update(
+      {
+        currentScores: updatedScores,
+        scoreTrends: updatedTrends,
+        achievementBadges:
+          scoreData.achievementBadges || student.achievementBadges,
+      },
+      { transaction }
+    );
+
+    // Update monthly metrics
+    await updateMonthlyStudentScoreMetric(
+      studentId,
+      scoreData,
+      monthId,
+      transaction
+    );
+
+    await transaction.commit();
+    return student;
+  } catch (error) {
+    await transaction.rollback();
+    throw error;
+  }
+};
+
+// Helper method to update monthly score metrics
+const updateMonthlyStudentScoreMetric = async (
+  studentId,
+  scoreData,
+  monthId,
+  transaction
+) => {
+  const [metric, created] = await MonthlyStudentMetric.findOrCreate({
+    where: { studentId, monthId },
+    defaults: {
+      averageScores: scoreData.averageScores || {},
+      scoreImprovements: scoreData.scoreImprovements || {},
+      achievementsEarned: scoreData.achievementsEarned || [],
+    },
+    transaction,
+  });
+
+  if (!created && scoreData.averageScores) {
+    await metric.update(
+      {
+        averageScores: scoreData.averageScores,
+        scoreImprovements:
+          scoreData.scoreImprovements || metric.scoreImprovements,
+        achievementsEarned: [
+          ...(metric.achievementsEarned || []),
+          ...(scoreData.achievementsEarned || []),
+        ],
+      },
+      { transaction }
+    );
+  }
+
+  return metric;
 };
 
 const getStudentById = async (studentId) => {
   return await AcademyStudent.findByPk(studentId, {
     include: [
-      { model: AcademyBatch, as: "batch", attributes: ["batchId", "batchName"] },
-      { model: AcademyProgram, as: "program", attributes: ["programId", "programName"] },
+      {
+        model: AcademyBatch,
+        as: "batch",
+        attributes: ["batchId", "batchName"],
+      },
+      {
+        model: AcademyProgram,
+        as: "program",
+        attributes: ["programId", "programName"],
+      },
     ],
   });
 };
 
 const getStudentsByAcademy = async (academyId, filters = {}) => {
-  const { name, sport, status, batchId, programId, page = 1, limit = 20 } = filters;
+  const {
+    name,
+    sport,
+    status,
+    batchId,
+    programId,
+    page = 1,
+    limit = 20,
+  } = filters;
 
   const where = { academyId };
 
@@ -104,8 +275,16 @@ const getStudentsByAcademy = async (academyId, filters = {}) => {
     limit: Number.parseInt(limit),
     offset: Number.parseInt(offset),
     include: [
-      { model: AcademyBatch, as: "batch", attributes: ["batchId", "batchName"] },
-      { model: AcademyProgram, as: "program", attributes: ["programId", "programName"] },
+      {
+        model: AcademyBatch,
+        as: "batch",
+        attributes: ["batchId", "batchName"],
+      },
+      {
+        model: AcademyProgram,
+        as: "program",
+        attributes: ["programId", "programName"],
+      },
     ],
     order: [["createdAt", "DESC"]],
   });
@@ -195,7 +374,7 @@ const findAllAcademyProfiles = async (filters = {}) => {
 
   if (sport) {
     whereClause["sports"] = {
-      [Op.contains]: [sport]
+      [Op.contains]: [sport],
     };
   }
 
@@ -209,21 +388,21 @@ const findAllAcademyProfiles = async (filters = {}) => {
         sequelize.where(
           sequelize.cast(sequelize.json("feeStructure.monthly"), "integer"),
           { [Op.lte]: maxFee }
-        )
-      ]
+        ),
+      ],
     };
   }
 
   if (searchTerm) {
     whereClause[Op.or] = [
       { name: { [Op.iLike]: `%${searchTerm}%` } },
-      { description: { [Op.iLike]: `%${searchTerm}%` } }
+      { description: { [Op.iLike]: `%${searchTerm}%` } },
     ];
   }
 
   // Build order clause with priority first
   const order = [];
-  
+
   // Always prioritize promoted content first
   order.push([sequelize.json("priority.value"), "DESC"]);
 
@@ -246,12 +425,14 @@ const findAllAcademyProfiles = async (filters = {}) => {
   // Always add a secondary sort by id for consistent results
   order.push(["academyId", "ASC"]);
 
-  const include = [{
-    model: Supplier,
-    as: "supplier",
-    where: supplierWhereClause,
-    attributes: ["name", "email", "city", "state", "location"]
-  }];
+  const include = [
+    {
+      model: Supplier,
+      as: "supplier",
+      where: supplierWhereClause,
+      attributes: ["name", "email", "city", "state", "location"],
+    },
+  ];
 
   // Add distance filter if coordinates provided
   if (latitude && longitude && radius) {
@@ -262,12 +443,16 @@ const findAllAcademyProfiles = async (filters = {}) => {
           sequelize.fn(
             "ST_DWithin",
             sequelize.col("supplier.location"),
-            sequelize.fn("ST_SetSRID", sequelize.fn("ST_MakePoint", longitude, latitude), 4326),
+            sequelize.fn(
+              "ST_SetSRID",
+              sequelize.fn("ST_MakePoint", longitude, latitude),
+              4326
+            ),
             radius * 1000 // Convert km to meters
           ),
           true
-        )
-      ]
+        ),
+      ],
     };
   }
 
@@ -277,7 +462,7 @@ const findAllAcademyProfiles = async (filters = {}) => {
     order,
     limit: parseInt(limit),
     offset: parseInt(offset),
-    distinct: true
+    distinct: true,
   });
 
   return {
@@ -286,8 +471,8 @@ const findAllAcademyProfiles = async (filters = {}) => {
       total: count,
       page: parseInt(page),
       limit: parseInt(limit),
-      pages: Math.ceil(count / limit)
-    }
+      pages: Math.ceil(count / limit),
+    },
   };
 };
 
@@ -301,19 +486,23 @@ const findAcademiesNearby = async (latitude, longitude, radius) => {
           sequelize.fn(
             "ST_DWithin",
             sequelize.col("supplier.location"),
-            sequelize.fn("ST_SetSRID", sequelize.fn("ST_MakePoint", longitude, latitude), 4326),
-            radius,
+            sequelize.fn(
+              "ST_SetSRID",
+              sequelize.fn("ST_MakePoint", longitude, latitude),
+              4326
+            ),
+            radius
           ),
-          true,
+          true
         ),
-        attributes: ["name", "email", "city", "state", "location"]
+        attributes: ["name", "email", "city", "state", "location"],
       },
     ],
     order: [
       [sequelize.json("priority.value"), "DESC"], // Priority first
       ["rating", "DESC"],
-      ["academyId", "ASC"]
-    ]
+      ["academyId", "ASC"],
+    ],
   });
 };
 
@@ -365,23 +554,23 @@ const findAcademiesBySupplierId = async (supplierId) => {
       {
         model: Supplier,
         as: "supplier",
-        attributes: ["supplierId", "name", "email", "city", "state"]
-      }
+        attributes: ["supplierId", "name", "email", "city", "state"],
+      },
     ],
     order: [
       [sequelize.json("priority.value"), "DESC"], // Prioritize promoted academies
-      ["createdAt", "DESC"]
-    ]
+      ["createdAt", "DESC"],
+    ],
   });
 };
 
 const findAcademiesBySport = async (sport, filters = {}) => {
   const { limit = 10, latitude, longitude } = filters;
-  
+
   const order = [
     [sequelize.json("priority.value"), "DESC"], // Always prioritize promoted content
     ["rating", "DESC"],
-    ["academyId", "ASC"]
+    ["academyId", "ASC"],
   ];
 
   if (latitude && longitude) {
@@ -390,23 +579,23 @@ const findAcademiesBySport = async (sport, filters = {}) => {
         "supplier"."location", 
         ST_SetSRID(ST_MakePoint(${longitude}, ${latitude}), 4326)
       )`),
-      "ASC"
+      "ASC",
     ]);
   }
 
   return await AcademyProfile.findAll({
     where: {
-      sports: { [Op.contains]: [sport] }
+      sports: { [Op.contains]: [sport] },
     },
     include: [
       {
         model: Supplier,
         as: "supplier",
-        attributes: ["name", "city", "state", "location"]
-      }
+        attributes: ["name", "city", "state", "location"],
+      },
     ],
     order,
-    limit: parseInt(limit)
+    limit: parseInt(limit),
   });
 };
 
@@ -416,16 +605,16 @@ const getTopRatedAcademies = async (limit = 10) => {
       [sequelize.json("priority.value"), "DESC"], // Priority first
       ["rating", "DESC"],
       ["reviews", "DESC"],
-      ["academyId", "ASC"]
+      ["academyId", "ASC"],
     ],
     limit: parseInt(limit),
     include: [
       {
         model: Supplier,
         as: "supplier",
-        attributes: ["name", "city", "state"]
-      }
-    ]
+        attributes: ["name", "city", "state"],
+      },
+    ],
   });
 };
 
@@ -440,8 +629,8 @@ const getAcademyAnalytics = async (academyId) => {
     promotionStatus: {
       isPromoted: academy.priority?.value > 0,
       plan: academy.priority?.plan || "none",
-      expiresAt: academy.priority?.expiresAt
-    }
+      expiresAt: academy.priority?.expiresAt,
+    },
   };
 };
 
@@ -464,4 +653,7 @@ module.exports = {
   getStudentsByAcademy,
   getStudentsByProgram,
   deleteStudent,
+  getStudentsWithScoreAnalytics,
+  updateStudentScores,
+  updateMonthlyStudentScoreMetric,
 };

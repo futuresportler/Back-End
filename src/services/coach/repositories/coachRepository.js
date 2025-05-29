@@ -12,7 +12,7 @@ const findCoachProfileById = async (coachProfileId) => {
   return await CoachProfile.findByPk(coachProfileId, {
     attributes: [
       "coachId",
-      "name", 
+      "name",
       "sports",
       "experienceYears",
       "certifications",
@@ -44,7 +44,7 @@ const findCoachBySupplierId = async (supplierId) => {
     where: { supplierId },
     attributes: [
       "coachId",
-      "name", 
+      "name",
       "sports",
       "experienceYears",
       "certifications",
@@ -59,7 +59,7 @@ const findCoachBySupplierId = async (supplierId) => {
       "languages",
       "ageGroups",
       "sessionTypes",
-      "priority", // Add priority field here too
+      "priority",
     ],
     include: [
       {
@@ -68,6 +68,70 @@ const findCoachBySupplierId = async (supplierId) => {
         attributes: ["email", "mobile_number", "profilePicture", "location"],
       },
     ],
+  });
+};
+
+// Add new method to get students with scores
+const getStudentsWithScores = async (coachId, filters = {}) => {
+  const { includeScoreHistory = false, monthId = null } = filters;
+
+  const include = [
+    {
+      model: User,
+      as: "student",
+      attributes: ["userId", "first_name", "last_name", "email", "mobile"],
+    },
+  ];
+
+  if (includeScoreHistory && monthId) {
+    include.push({
+      model: MonthlyStudentProgress,
+      as: "monthlyProgress",
+      where: { monthId },
+      required: false,
+    });
+  }
+
+  return await CoachStudent.findAll({
+    where: { coachId },
+    attributes: [
+      "userId",
+      "coachId",
+      "currentScores",
+      "achievementFlags",
+      "scoreHistory",
+      "createdAt",
+    ],
+    include,
+    order: [["createdAt", "DESC"]],
+  });
+};
+
+// Add method to update student scores
+const updateStudentScores = async (coachId, studentId, scoreData) => {
+  const coachStudent = await CoachStudent.findOne({
+    where: { coachId, userId: studentId },
+  });
+
+  if (!coachStudent) {
+    throw new Error("Student not found in coach's roster");
+  }
+
+  const updatedScores = {
+    ...coachStudent.currentScores,
+    ...scoreData.currentScores,
+  };
+
+  const updatedHistory = {
+    ...coachStudent.scoreHistory,
+    ...scoreData.scoreHistory,
+  };
+
+  return await coachStudent.update({
+    currentScores: updatedScores,
+    scoreHistory: updatedHistory,
+    achievementFlags:
+      scoreData.achievementFlags || coachStudent.achievementFlags,
   });
 };
 
@@ -92,7 +156,7 @@ const findCoachesNearby = async (latitude, longitude, radius) => {
   return await CoachProfile.findAll({
     attributes: [
       "coachId",
-      "name", 
+      "name",
       "sports",
       "experienceYears",
       "certifications",
@@ -132,8 +196,8 @@ const findCoachesNearby = async (latitude, longitude, radius) => {
     order: [
       [sequelize.json("priority.value"), "DESC"], // Priority first
       ["rating", "DESC"],
-      ["coachId", "ASC"]
-    ]
+      ["coachId", "ASC"],
+    ],
   });
 };
 
@@ -332,4 +396,8 @@ module.exports = {
   findCoachStudent,
   createCoachStudent,
   updateCoachStudent,
+
+  // Add new methods for scores
+  getStudentsWithScores,
+  updateStudentScores,
 };
