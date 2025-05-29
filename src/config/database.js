@@ -1,9 +1,10 @@
 const mongoose = require("mongoose");
 const { Sequelize } = require("sequelize");
 
-const sequelize = new Sequelize("test1", "postgres", "1422", {
-  host: "127.0.0.1",  // <-- change from "localhost" to IPv4 address
+const sequelize = new Sequelize("future_sportler", "postgres", "fs-root-25", {
+  host: "future-sportler-primary-database.cbekoqei89i4.eu-north-1.rds.amazonaws.com",
   dialect: "postgres",
+  port: 5432,
   logging: false,
 });
 
