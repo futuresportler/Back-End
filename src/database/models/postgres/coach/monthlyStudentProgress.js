@@ -87,6 +87,62 @@ module.exports = (sequelize) => {
         //   }
         // }
       },
+      quarterlyProgress: {
+        type: DataTypes.JSON,
+        defaultValue: {},
+        allowNull: false,
+        comment: "Monthly contribution to quarterly progress tracking",
+        // Structure: {
+        //   quarter: "2024-Q1",
+        //   monthInQuarter: 1, // 1, 2, or 3
+        //   quarterlyGoals: ["improve_technique", "increase_fitness"],
+        //   monthlyContribution: {
+        //     goalsProgress: {
+        //       "improve_technique": { target: 2.0, achieved: 0.8, remaining: 1.2 },
+        //       "increase_fitness": { target: 1.5, achieved: 0.6, remaining: 0.9 }
+        //     },
+        //     skillDevelopment: {
+        //       technique: { monthlyImprovement: 0.8, quarterlyTarget: 2.0 },
+        //       fitness: { monthlyImprovement: 0.6, quarterlyTarget: 1.5 }
+        //     }
+        //   },
+        //   cumulativeProgress: {
+        //     quarterStartScore: 6.5,
+        //     currentScore: 7.3,
+        //     quarterTargetScore: 8.5,
+        //     onTrackToMeetTarget: true
+        //   }
+        // }
+      },
+      progressInsights: {
+        type: DataTypes.JSON,
+        defaultValue: {},
+        allowNull: false,
+        comment:
+          "AI-generated insights and recommendations for progress optimization",
+        // Structure: {
+        //   trends: {
+        //     improving: ["teamwork", "game_understanding"],
+        //     declining: [],
+        //     stable: ["fitness"],
+        //     volatile: ["technique"] // inconsistent performance
+        //   },
+        //   predictions: {
+        //     nextMonthScore: 8.0,
+        //     quarterEndScore: 8.4,
+        //     confidenceLevel: 0.85,
+        //     factorsInfluencing: ["consistent_attendance", "coach_feedback"]
+        //   },
+        //   recommendations: {
+        //     immediate: ["focus_on_weak_foot_practice"],
+        //     shortTerm: ["increase_game_time"],
+        //     longTerm: ["consider_advanced_coaching"]
+        //   },
+        //   alerts: [
+        //     { type: "plateau_warning", skill: "fitness", duration: 2 }
+        //   ]
+        // }
+      },
       performanceRating: {
         type: DataTypes.INTEGER,
         validate: { min: 1, max: 10 },
