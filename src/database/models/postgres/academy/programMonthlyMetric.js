@@ -1,5 +1,5 @@
 // models/postgres/academy/programMonthlyMetric.js
-const { DataTypes } = require("sequelize")
+const { DataTypes } = require("sequelize");
 
 module.exports = (sequelize) => {
   return sequelize.define(
@@ -14,16 +14,16 @@ module.exports = (sequelize) => {
         type: DataTypes.UUID,
         allowNull: false,
         references: {
-          model: "AcademyProgram",
+          model: "AcademyPrograms",
           key: "programId",
         },
       },
       academyId: {
-        type: DataTypes.INTEGER,
+        type: DataTypes.UUID,
         allowNull: false,
         references: {
           model: "AcademyProfiles",
-          key: "id",
+          key: "academyId",
         },
       },
       monthId: {
@@ -56,7 +56,9 @@ module.exports = (sequelize) => {
       conversionRate: DataTypes.DECIMAL(5, 2),
       profileViews: DataTypes.INTEGER,
     },
-    { timestamps: true,      indexes: [
+    {
+      timestamps: true,
+      indexes: [
         {
           unique: true,
           fields: ["programId", "monthId"],
@@ -65,6 +67,6 @@ module.exports = (sequelize) => {
           fields: ["academyId", "monthId"],
         },
       ],
- }
-  )
-}
+    }
+  );
+};

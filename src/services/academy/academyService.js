@@ -934,6 +934,11 @@ const getAcademyWithPromotionStatus = async (academyProfileId, options) => {
     }
   };
 };
+const refreshMetrics = async (academyId, monthId) => {
+  // You can call recalculateMetricsFromSessions and calculateConversionRate for full refresh
+  await academyMetricsRepository.recalculateMetricsFromSessions(academyId, monthId);
+  await academyMetricsRepository.calculateConversionRate(academyId, monthId);
+};
 
 module.exports = {
   createAcademyProfile,
@@ -1003,6 +1008,7 @@ module.exports = {
   recordBookingPlatform,
   getPopularPrograms,
   getAcademyWithFeedback,
+  refreshMetrics,
 
     // Academy Coach exports
   academyCoachService,

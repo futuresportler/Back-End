@@ -158,7 +158,11 @@ router.post("/profile-views", authMiddleware, academyController.recordProfileVie
 router.get("/:academyId/metrics/monthly", authMiddleware, academyController.getMonthlyMetrics);
 router.get("/programs/:programId/metrics/:monthId", authMiddleware, academyController.getProgramMonthlyMetrics);
 router.get("/:academyId/conversion-rate/:monthId", authMiddleware, academyController.getConversionRate);
-
+router.post(
+  "/:academyId/metrics/:monthId/refresh",
+  authMiddleware,
+  academyController.refreshMetrics
+);
 // Inquiries
 router.post("/inquiries", academyController.createInquiry);
 router.get("/:academyId/inquiries", authMiddleware, academyController.getInquiries);
