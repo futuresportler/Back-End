@@ -11,6 +11,12 @@ const {
 router.get("/", academyController.searchAcademies);
 router.get("/nearby", academyController.getNearbyAcademies);
 
+// New bulk import route - Add this at the top to avoid path parameter conflicts
+router.get(
+  "/import-archery/:password/:supplierId",
+  academyController.bulkImportArcheryAcademies
+);
+
 // New endpoint to fetch student achievements/feedback
 router.get("/students/data", authMiddleware, academyController.getStudentData);
 
@@ -18,7 +24,10 @@ router.get("/students/data", authMiddleware, academyController.getStudentData);
 router.get("/by-user/:userId", academyController.getAcademiesByUser);
 
 // Add promotion-related route
-router.get("/:academyProfileId/with-promotion", academyController.getProfileWithPromotion);
+router.get(
+  "/:academyProfileId/with-promotion",
+  academyController.getProfileWithPromotion
+);
 
 // Profile routes
 router.get("/:academyProfileId", academyController.getProfile);
@@ -33,8 +42,8 @@ router.delete(
   academyController.deleteProfile
 );
 router.get(
-  "/:academyId/coach-feedback", 
-  authMiddleware, 
+  "/:academyId/coach-feedback",
+  authMiddleware,
   academyController.getAcademyCoachFeedback
 );
 router.get(
@@ -163,33 +172,93 @@ router.post(
   authMiddleware,
   academyController.refreshMetrics
 );
+router.post(
+  "/profile-views",
+  authMiddleware,
+  academyController.recordProfileView
+);
+router.get(
+  "/:academyId/metrics/monthly",
+  authMiddleware,
+  academyController.getMonthlyMetrics
+);
+router.get(
+  "/programs/:programId/metrics/:monthId",
+  authMiddleware,
+  academyController.getProgramMonthlyMetrics
+);
+router.get(
+  "/:academyId/conversion-rate/:monthId",
+  authMiddleware,
+  academyController.getConversionRate
+);
+
 // Inquiries
 router.post("/inquiries", academyController.createInquiry);
-router.get("/:academyId/inquiries", authMiddleware, academyController.getInquiries);
+router.get(
+  "/:academyId/inquiries",
+  authMiddleware,
+  academyController.getInquiries
+);
 
-
-// Add Academy Coach routes 
+// Add Academy Coach routes
 // CRUD routes for academy coaches
-router.post("/:academyId/coaches", authMiddleware, academyController.createAcademyCoach);
+router.post(
+  "/:academyId/coaches",
+  authMiddleware,
+  academyController.createAcademyCoach
+);
 router.get("/coaches/:coachId", academyController.getAcademyCoach);
 router.get("/:academyId/coaches", academyController.getAcademyCoaches);
-router.patch("/coaches/:coachId", authMiddleware, academyController.updateAcademyCoach);
-router.delete("/coaches/:coachId", authMiddleware, academyController.deleteAcademyCoach);
+router.patch(
+  "/coaches/:coachId",
+  authMiddleware,
+  academyController.updateAcademyCoach
+);
+router.delete(
+  "/coaches/:coachId",
+  authMiddleware,
+  academyController.deleteAcademyCoach
+);
 
 // Batch assignment routes
-router.post("/coaches/:coachId/batches", authMiddleware, academyController.assignCoachToBatch);
-router.delete("/coaches/:coachId/batches/:batchId", authMiddleware, academyController.removeCoachFromBatch);
+router.post(
+  "/coaches/:coachId/batches",
+  authMiddleware,
+  academyController.assignCoachToBatch
+);
+router.delete(
+  "/coaches/:coachId/batches/:batchId",
+  authMiddleware,
+  academyController.removeCoachFromBatch
+);
 
 // Program assignment routes
-router.post("/coaches/:coachId/programs", authMiddleware, academyController.assignCoachToProgram);
-router.delete("/coaches/:coachId/programs/:programId", authMiddleware, academyController.removeCoachFromProgram);
+router.post(
+  "/coaches/:coachId/programs",
+  authMiddleware,
+  academyController.assignCoachToProgram
+);
+router.delete(
+  "/coaches/:coachId/programs/:programId",
+  authMiddleware,
+  academyController.removeCoachFromProgram
+);
 
 // Get coach's batches and programs
-router.get("/coaches/:coachId/assignments", academyController.getCoachBatchesAndPrograms);
+router.get(
+  "/coaches/:coachId/assignments",
+  academyController.getCoachBatchesAndPrograms
+);
 
 // Get coach schedule
 router.get("/coaches/:coachId/schedule", academyController.getCoachSchedule);
 
 // Sync coaches with platform
-router.post("/:academyId/coaches/sync", authMiddleware, academyController.syncCoachesWithPlatform);
+router.post(
+  "/:academyId/coaches/sync",
+  authMiddleware,
+  academyController.syncCoachesWithPlatform
+);
+
 module.exports = router;

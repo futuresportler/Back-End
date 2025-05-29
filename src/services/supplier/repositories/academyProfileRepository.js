@@ -22,16 +22,16 @@ async function createAcademyProfile(data) {
 
   // 1️⃣ Determine managerId
   let managerId;
+  let managerInvitationSent = false;
+
   if (manager_info.owner_is_manager) {
-    managerId = null; // owner is manager, so no separate managerId needed
+    managerId = null;
   } else if (manager_info.manager) {
     const m = manager_info.manager;
-    // try find existing supplier by mobile
     let mgr = await SupplierRepository.findSupplierByMobile(m.phone);
     if (mgr) {
       managerId = mgr.supplierId;
     } else {
-      // create new “manager” supplier
       mgr = await SupplierRepository.createSupplier({
         supplierId: uuidv4(),
         name: m.name,
@@ -45,11 +45,10 @@ async function createAcademyProfile(data) {
     }
     managerInvitationSent = true;
   }
-  console.log("managerId", managerId);
+
   // 2️⃣ Create AcademyProfile
-  // parse location from sports_details.academy_video.geolocation ("lat° N, lon° E")
   let location = null;
-  if (sports_details.academy_video?.geolocation) {
+  if (sports_details?.academy_video?.geolocation) {
     const [latStr, lonStr] = sports_details.academy_video.geolocation
       .split(",")
       .map((s) => s.trim().replace(/[°NSEW]/g, ""));
@@ -58,34 +57,51 @@ async function createAcademyProfile(data) {
     location = { type: "Point", coordinates: [lon, lat] };
   }
 
-  const profile = await AcademyProfile.create({
-    // basic_info → academyProfile fields
-    name: basic_info.academy_name,
-    description: basic_info.academy_description,
-    foundedYear: basic_info.year_of_establishment,
+  const profileData = {
     supplierId,
-    managerId,
-    managerInvitationStatus: managerId ? "pending" : null,
-    managerInvitedAt: managerId ? new Date() : null,
+    ...(basic_info?.academy_name && { name: basic_info.academy_name }),
+    ...(basic_info?.academy_description && {
+      description: basic_info.academy_description,
+    }),
+    ...(basic_info?.year_of_establishment && {
+      foundedYear: basic_info.year_of_establishment,
+    }),
+    ...(managerId !== undefined && { managerId }),
+    ...(managerId && {
+      managerInvitationStatus: "pending",
+      managerInvitedAt: new Date(),
+    }),
+    ...(basic_info?.city && { city: basic_info.city }),
+    ...(basic_info?.full_address && { address: basic_info.full_address }),
+    ...(basic_info?.contact_email && { email: basic_info.contact_email }),
+    ...(basic_info?.contact_phone && { phone: basic_info.contact_phone }),
+    ...(basic_info?.website && { website: basic_info.website }),
+    ...(basic_info?.social_media_links && {
+      socialMediaLinks: basic_info.social_media_links,
+    }),
+    ...(location && { location }),
+    ...(sports_details?.sports_available && {
+      sports: sports_details.sports_available,
+    }),
+    ...(sports_details?.champions_achievements && {
+      achievements: sports_details.champions_achievements,
+    }),
+    ...(sports_details?.facilities && {
+      facilities: sports_details.facilities,
+    }),
+    ...(sports_details?.age_groups && { ageGroups: sports_details.age_groups }),
+    ...(sports_details?.class_types && {
+      classTypes: sports_details.class_types,
+    }),
+    ...(sports_details?.academy_photos && {
+      photos: sports_details.academy_photos,
+    }),
+    ...(sports_details?.academy_video?.url && {
+      videos: [sports_details.academy_video.url],
+    }),
+  };
 
-    city: basic_info.city,
-    address: basic_info.full_address,
-    email: basic_info.contact_email,
-    phone: basic_info.contact_phone,
-    website: basic_info.website,
-    socialMediaLinks: basic_info.social_media_links,
-    location,
-
-    // sports_details → academyProfile fields
-    sports: sports_details.sports_available,
-    achievements: sports_details.champions_achievements,
-    facilities: sports_details.facilities,
-    ageGroups: sports_details.age_groups,
-    classTypes: sports_details.class_types,
-    photos: sports_details.academy_photos,
-    videos: [sports_details.academy_video.url],
-  });
-
+  const profile = await AcademyProfile.create(profileData);
   const academyId = profile.academyId;
 
   // 3️⃣ Create AcademyCoach entries
@@ -95,7 +111,7 @@ async function createAcademyProfile(data) {
       name: c.coach_name,
       experienceLevel: String(c.years_of_experience),
       role: c.specialization,
-      sport: c.specialization.split(" ")[0], // e.g. "Cricket"
+      sport: c.specialization.split(" ")[0],
       certifications: c.certifications,
       email: c.email,
       mobileNumber: c.mobileNumber,
@@ -108,9 +124,8 @@ async function createAcademyProfile(data) {
 
   // 4️⃣ Create AcademyBatch entries
   for (const b of batches) {
-    // split timing → days & times
     const [daysPart = "", timePart = ""] = b.timing.split(",");
-    const daysOfWeek = [daysPart.trim()]; // you can expand range later
+    const daysOfWeek = [daysPart.trim()];
     const [startTime = "", endTime = ""] = timePart
       .split("-")
       .map((t) => t.trim());
@@ -125,10 +140,9 @@ async function createAcademyProfile(data) {
       startTime,
       endTime,
       maxStudents: b.capacity,
-      // totalStudents will default to 0
     });
   }
-  console.log("batches", batches);
+
   // 5️⃣ Update Supplier with payment_info if present
   if (payment_info.gst_number || payment_info.payment_details) {
     const upd = {};
@@ -142,7 +156,8 @@ async function createAcademyProfile(data) {
     }
     await SupplierRepository.updateSupplier(supplierId, upd);
   }
-  // 6️⃣ NEW: Send invitations after academy creation
+
+  // 6️⃣ Send Invitations
   if (managerInvitationSent && managerId) {
     try {
       await academyInvitationService.inviteManager(
@@ -152,9 +167,9 @@ async function createAcademyProfile(data) {
       );
     } catch (error) {
       console.error("Failed to send manager invitation:", error);
-      // Don't fail academy creation if invitation fails
     }
   }
+
   for (const c of coaches) {
     if (c.mobileNumber) {
       try {
@@ -170,6 +185,7 @@ async function createAcademyProfile(data) {
       }
     }
   }
+
   return profile;
 }
 
