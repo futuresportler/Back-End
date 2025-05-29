@@ -1,4 +1,4 @@
-const { body, param } = require("express-validator");
+const { body, param, validationResult } = require("express-validator");
 
 const validateCreateCoach = [
   body("email").isEmail().withMessage("Invalid email format"),
@@ -17,21 +17,13 @@ const validateCreateCoach = [
     .isLength({ min: 1 })
     .withMessage("Last name is required"),
   body("mobile").optional().isMobilePhone().withMessage("Invalid phone number"),
-  body("specialization")  
+  body("specialization")
     .isString()
     .withMessage("Specialization must be a string"),
-  body("experience")
-    .isInt()
-    .withMessage("Experience must be an integer"),
-  body("biography")
-    .isString()
-    .withMessage("Biography must be a string"),
-  body("hourly_rate")
-    .isFloat()
-    .withMessage("Hourly rate must be a float"),
-  body("availability")
-    .isObject()
-    .withMessage("Availability must be an object"),
+  body("experience").isInt().withMessage("Experience must be an integer"),
+  body("biography").isString().withMessage("Biography must be a string"),
+  body("hourly_rate").isFloat().withMessage("Hourly rate must be a float"),
+  body("availability").isObject().withMessage("Availability must be an object"),
   body("certification_ids")
     .isArray()
     .withMessage("Certification IDs must be an array of integers"),
@@ -204,11 +196,11 @@ const validateUpdateCoach = [
     .withMessage("Availability calendar must be an object"),
 ];
 
+// Middleware to validate request
 const validateRequest = (req, res, next) => {
-  const errors = require("express-validator").validationResult(req);
+  const errors = validationResult(req);
   if (!errors.isEmpty()) {
-    const errorMessages = errors.array().map((item) => item.msg);
-    return res.status(400).json({ error: errorMessages });
+    return res.status(400).json({ errors: errors.array() });
   }
   next();
 };
@@ -220,9 +212,98 @@ const validateOTPVerification = [
     .withMessage("OTP must be 6 digits"),
 ];
 
+// Validation for creating a batch
+const validateCreateBatch = [
+  body("name").notEmpty().withMessage("Batch name is required"),
+  body("description").optional(),
+  body("sport").notEmpty().withMessage("Sport is required"),
+  body("level").optional(),
+  body("ageGroup").optional(),
+  body("maxStudents")
+    .isInt({ min: 1 })
+    .withMessage("Max students must be at least 1"),
+  body("fee").isFloat({ min: 0 }).withMessage("Fee must be a positive number"),
+  body("feeType")
+    .isIn(["session", "monthly", "package"])
+    .withMessage("Invalid fee type"),
+  body("startTime").notEmpty().withMessage("Start time is required"),
+  body("endTime").notEmpty().withMessage("End time is required"),
+  body("days")
+    .isArray()
+    .withMessage("Days must be an array")
+    .notEmpty()
+    .withMessage("At least one day must be selected"),
+];
+
+// Validation for updating a batch
+const validateUpdateBatch = [
+  body("name").optional(),
+  body("description").optional(),
+  body("sport").optional(),
+  body("level").optional(),
+  body("ageGroup").optional(),
+  body("maxStudents")
+    .optional()
+    .isInt({ min: 1 })
+    .withMessage("Max students must be at least 1"),
+  body("fee")
+    .optional()
+    .isFloat({ min: 0 })
+    .withMessage("Fee must be a positive number"),
+  body("feeType")
+    .optional()
+    .isIn(["session", "monthly", "package"])
+    .withMessage("Invalid fee type"),
+  body("startTime").optional(),
+  body("endTime").optional(),
+  body("days").optional().isArray().withMessage("Days must be an array"),
+];
+
+// Updated validation for adding a student to a batch - userId is now optional
+const validateAddStudentToBatch = [
+  body("userId").optional().isUUID().withMessage("Invalid user ID"),
+  // Add validation for the new fields when userId is not provided
+  body("name")
+    .if(body("userId").not().exists())
+    .notEmpty()
+    .withMessage("Student name is required when userId is not provided"),
+  body("email").optional().isEmail().withMessage("Invalid email format"),
+  body("phone").optional(),
+  body("age")
+    .optional()
+    .isInt({ min: 1 })
+    .withMessage("Age must be a positive number"),
+  body("gender")
+    .optional()
+    .isIn(["male", "female", "other"])
+    .withMessage("Invalid gender"),
+  body("sport").optional(),
+  body("level").optional(),
+  body("guardianName").optional(),
+  body("guardianMobile").optional(),
+  body("address").optional(),
+];
+
+// Validation for creating a batch payment
+const validateCreateBatchPayment = [
+  body("userId").isUUID().withMessage("Invalid user ID"),
+  body("amount")
+    .isFloat({ min: 0 })
+    .withMessage("Amount must be a positive number"),
+  body("paymentMethod")
+    .isIn(["cash", "card", "upi", "bank_transfer"])
+    .withMessage("Invalid payment method"),
+  body("description").optional(),
+  body("paymentDate").optional().isISO8601().withMessage("Invalid date format"),
+];
+
 module.exports = {
   validateCreateCoach,
   validateUpdateCoach,
   validateRequest,
   validateOTPVerification,
+  validateCreateBatch,
+  validateUpdateBatch,
+  validateAddStudentToBatch,
+  validateCreateBatchPayment,
 };

@@ -69,7 +69,34 @@ const getSupplierProfile = async (req, res) => {
   }
 }
 
-// Additional controller methods...
+const getSupplierEntities = async (req, res) => {
+  try {
+    const entities = await SupplierService.getSupplierEntities(req.user.supplierId)
+    successResponse(res, "Supplier entities fetched successfully", entities)
+  } catch (error) {
+    errorResponse(res, error.message, error)
+  }
+}
+
+const getAnalyticsOverview = async (req, res) => {
+  try {
+    const period = req.query.period ? parseInt(req.query.period) : 6;
+    
+    if (isNaN(period) || period < 1 || period > 12) {
+      return errorResponse(res, "Period must be a number between 1 and 12", null, 400);
+    }
+    
+    const analytics = await SupplierService.getSupplierAnalyticsOverview(
+      req.user.supplierId,
+      period
+    );
+    
+    successResponse(res, "Analytics overview fetched successfully", analytics);
+  } catch (error) {
+    console.error("Error fetching supplier analytics overview:", error);
+    errorResponse(res, error.message, error);
+  }
+};
 
 module.exports = {
   signup,
@@ -79,4 +106,6 @@ module.exports = {
   updateSupplierProfile,
   deleteSupplier,
   setSupplierModule,
+  getSupplierEntities,
+  getAnalyticsOverview,
 }

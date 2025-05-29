@@ -10,6 +10,14 @@ module.exports = (sequelize) => {
         defaultValue: DataTypes.UUIDV4,
         primaryKey: true,
       },
+      academyCoachId: {
+        type: DataTypes.UUID,
+        allowNull: true,
+        references: {
+          model: "AcademyCoaches",
+          key: "id",
+        },
+      },
       batchName: {
         type: DataTypes.STRING,
         allowNull: false,
@@ -57,6 +65,13 @@ module.exports = (sequelize) => {
         // Example: ["studentId1", "studentId2"]
       },
     },
-    { timestamps: true }
+    {
+      timestamps: true,
+      indexes: [
+        {
+          fields: ["primaryCoachId"],
+        },
+      ],
+    }
   );
 };

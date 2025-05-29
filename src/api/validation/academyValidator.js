@@ -61,6 +61,15 @@ const validateCreateAcademy = [
     .optional()
     .matches(/^[0-9]+$/)
     .withMessage("Contact phone must contain only numbers"),
+  body("trailDuration")
+    .optional()
+    .isInt({ min: 1, max: 30 })
+    .withMessage("Trail duration must be between 1 and 30 days"),
+  body("trailBookable")
+    .optional()
+    .isBoolean()
+    .withMessage("Trail bookable must be a boolean"),
+  body("cctv").optional().isBoolean().withMessage("CCTV must be a boolean"),
 ];
 
 const validateUpdateAcademy = [
@@ -115,6 +124,15 @@ const validateUpdateAcademy = [
     .optional()
     .matches(/^[0-9]+$/)
     .withMessage("Contact phone must contain only numbers"),
+  body("trailDuration")
+    .optional()
+    .isInt({ min: 1, max: 30 })
+    .withMessage("Trail duration must be between 1 and 30 days"),
+  body("trailBookable")
+    .optional()
+    .isBoolean()
+    .withMessage("Trail bookable must be a boolean"),
+  body("cctv").optional().isBoolean().withMessage("CCTV must be a boolean"),
 ];
 
 const validateRequest = (req, res, next) => {

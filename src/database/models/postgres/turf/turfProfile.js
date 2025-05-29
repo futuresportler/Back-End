@@ -1,5 +1,5 @@
 // models/postgres/turfProfile.js (Main Turf Table)
-const { DataTypes } = require("sequelize")
+const { DataTypes } = require("sequelize");
 
 module.exports = (sequelize) => {
   return sequelize.define(
@@ -99,10 +99,24 @@ module.exports = (sequelize) => {
         type: DataTypes.ENUM("active", "maintenance", "closed"),
         defaultValue: "active",
       },
+      // Priority for sorting
+      priority: {
+        type: DataTypes.JSON,
+        defaultValue: { value: 0, reason: "standard" },
+        allowNull: false,
+      },
+      notifications: {
+        type: DataTypes.ARRAY(DataTypes.JSON),
+        defaultValue: [],
+      },
+      bookingRequestNotifications: {
+        type: DataTypes.ARRAY(DataTypes.JSON),
+        defaultValue: [],
+      }
     },
     {
       timestamps: true,
       paranoid: true,
-    },
-  )
-}
+    }
+  );
+};

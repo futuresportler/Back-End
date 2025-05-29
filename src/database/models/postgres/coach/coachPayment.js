@@ -26,12 +26,12 @@ module.exports = (sequelize) => {
           key: "userId",
         },
       },
-      slotId: {
+      batchId: {
         type: DataTypes.UUID,
-        allowNull: false,
+        allowNull: true,
         references: {
-          model: "CoachSlots",
-          key: "slotId",
+          model: "CoachBatches",
+          key: "batchId",
         },
       },
       amount: DataTypes.DECIMAL(10, 2),
@@ -40,6 +40,14 @@ module.exports = (sequelize) => {
       status: {
         type: DataTypes.ENUM("pending", "completed", "failed"),
         defaultValue: "pending",
+      },
+      paymentType: {
+        type: DataTypes.ENUM("session", "monthly", "package"),
+        defaultValue: "session",
+      },
+      paymentPeriod: {
+        type: DataTypes.JSON,
+        allowNull: true, // For monthly payments, this would contain month and year
       },
     },
     { timestamps: true },

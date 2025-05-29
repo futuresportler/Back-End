@@ -38,7 +38,7 @@ module.exports = (sequelize) => {
       },
       managerId: {
         type: DataTypes.UUID,
-        allowNull: false,
+        allowNull: true,
         references: {
           model: "Suppliers",
           key: "supplierId",
@@ -61,7 +61,7 @@ module.exports = (sequelize) => {
       // Age Groups & Class Types
       ageGroups: {
         type: DataTypes.JSON,
-        allowNull: false,
+        allowNull: true,
         // Example: [{ "infants": true, "children": false, teens: true, adults: false }]
       },
       classTypes: {
@@ -73,7 +73,7 @@ module.exports = (sequelize) => {
       // Location Info
       location: {
         type: DataTypes.GEOMETRY("POINT"),
-        allowNull: false,
+        allowNull: true,
       },
       city: {
         type: DataTypes.STRING,
@@ -87,11 +87,11 @@ module.exports = (sequelize) => {
       // Contact Info
       phone: {
         type: DataTypes.STRING,
-        allowNull: false,
+        allowNull: true,
       },
       email: {
         type: DataTypes.STRING,
-        allowNull: false,
+        allowNull: true,
       },
       website: {
         type: DataTypes.STRING,
@@ -120,32 +120,75 @@ module.exports = (sequelize) => {
       totalStudents: {
         type: DataTypes.INTEGER,
         defaultValue: 0,
-        allowNull: false,
+        allowNull: true,
       },
       totalPrograms: {
         type: DataTypes.INTEGER,
         defaultValue: 0,
-        allowNull: false,
+        allowNull: true,
       },
 
       // Ratings & Reviews
       rating: {
         type: DataTypes.DECIMAL(3, 2),
         defaultValue: 0.0,
-        allowNull: false,
+        allowNull: true,
       },
       reviewsCount: {
         type: DataTypes.INTEGER,
         defaultValue: 0,
-        allowNull: false,
+        allowNull: true,
       },
 
+      trailDuration: {
+        type: DataTypes.INTEGER,
+        allowNull: true,
+        // Example: 7 (for 7 days)
+      },
+      trailBookable: {
+        type: DataTypes.BOOLEAN,
+        defaultValue: false,  
+        allowNull: false,
+      },
+      cctv: {
+        type: DataTypes.BOOLEAN,
+        defaultValue: false,
+        allowNull: false,
+      },
       // Verification
       isVerified: {
         type: DataTypes.BOOLEAN,
         defaultValue: false,
         allowNull: false,
       },
+
+      // Priority for sorting
+      priority: {
+        type: DataTypes.JSON,
+        defaultValue: { value: 0, reason: "standard" },
+        allowNull: false,
+      },
+      notifications: {
+        type: DataTypes.ARRAY(DataTypes.JSON),
+        defaultValue: [],
+      },
+      bookingRequestNotifications: {
+        type: DataTypes.ARRAY(DataTypes.JSON),
+        defaultValue: [],
+      },
+      managerInvitationStatus: {
+        type: DataTypes.ENUM('pending', 'accepted', 'rejected'),
+        defaultValue: 'pending',
+        allowNull: true
+      },
+      managerInvitedAt: {
+        type: DataTypes.DATE,
+        allowNull: true
+      },
+      managerAcceptedAt: {
+        type: DataTypes.DATE,
+        allowNull: true
+      }
     },
     {
       timestamps: true,

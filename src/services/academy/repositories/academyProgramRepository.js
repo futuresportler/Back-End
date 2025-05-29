@@ -93,6 +93,30 @@ const getEnrolledStudents = async (programId) => {
     },
   })
 }
+// Add this function to academyProgramRepository.js
+const getPopularProgramsByAcademy = async (academyId, limit = 5) => {
+  // Find all programs for the academy
+  const programs = await AcademyProgram.findAll({
+    where: { academyId },
+    attributes: [
+      'programId', 
+      'programName', 
+      'fee', 
+      'sport', 
+      'bookedSpots',
+      'totalSpots',
+      'enrolledStudents',
+      'createdAt'
+    ],
+    order: [
+      [sequelize.literal('array_length(enrolled_students, 1) DESC NULLS LAST')],
+      ['createdAt', 'DESC']
+    ],
+    limit
+  });
+
+  return programs;
+}
 
 module.exports = {
   createProgram,
@@ -103,4 +127,5 @@ module.exports = {
   enrollStudent,
   unenrollStudent,
   getEnrolledStudents,
+  getPopularProgramsByAcademy
 }

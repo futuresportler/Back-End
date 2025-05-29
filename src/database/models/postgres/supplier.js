@@ -1,5 +1,5 @@
 // models/postgres/supplier.js
-const { DataTypes } = require("sequelize");
+const { DataTypes } = require("sequelize")
 
 module.exports = (sequelize) => {
   return sequelize.define(
@@ -9,6 +9,10 @@ module.exports = (sequelize) => {
         type: DataTypes.UUID,
         defaultValue: DataTypes.UUIDV4,
         primaryKey: true,
+      },
+      name: {
+        type: DataTypes.STRING,
+        allowNull: true,
       },
       email: {
         type: DataTypes.STRING,
@@ -25,6 +29,47 @@ module.exports = (sequelize) => {
         type: DataTypes.STRING,
         allowNull: true,
       },
+      // New fields
+      address: {
+        type: DataTypes.TEXT,
+        allowNull: true,
+      },
+      city: {
+        type: DataTypes.STRING,
+        allowNull: true,
+      },
+      state: {
+        type: DataTypes.STRING,
+        allowNull: true,
+      },
+      pincode: {
+        type: DataTypes.STRING,
+        allowNull: true,
+      },
+      businessName: {
+        type: DataTypes.STRING,
+        allowNull: true,
+      },
+      bio: {
+        type: DataTypes.TEXT,
+        allowNull: true,
+      },
+      idType: {
+        type: DataTypes.ENUM("aadhar", "pan", "voter", "driving", "passport"),
+        allowNull: true,
+      },
+      idNumber: {
+        type: DataTypes.STRING,
+        allowNull: true,
+      },
+      idImageLink: {
+        type: DataTypes.STRING,
+        allowNull: true,
+      },
+      dob: {
+        type: DataTypes.DATEONLY,
+        allowNull: true,
+      },
       isVerified: {
         type: DataTypes.BOOLEAN,
         defaultValue: false,
@@ -39,13 +84,7 @@ module.exports = (sequelize) => {
         unique: true,
       },
       role: {
-        type: DataTypes.ENUM(
-          "owner",
-          "employee",
-          "reviewer",
-          "manager",
-          "admin"
-        ),
+        type: DataTypes.ENUM("owner", "employee", "reviewer", "manager", "admin"),
         defaultValue: "owner",
       },
       module: {
@@ -53,16 +92,14 @@ module.exports = (sequelize) => {
         defaultValue: [],
         validate: {
           isValidModuleArray(value) {
-            const allowed = ["coach", "academy", "turf"];
+            const allowed = ["coach", "academy", "turf"]
             if (!Array.isArray(value)) {
-              throw new Error("Module must be an array.");
+              throw new Error("Module must be an array.")
             }
-            const uniqueValues = new Set(value);
-            for (let v of uniqueValues) {
+            const uniqueValues = new Set(value)
+            for (const v of uniqueValues) {
               if (!allowed.includes(v)) {
-                throw new Error(
-                  "Module must contain only 'coach', 'academy', or 'turf'."
-                );
+                throw new Error("Module must contain only 'coach', 'academy', or 'turf'.")
               }
             }
           },
@@ -100,6 +137,6 @@ module.exports = (sequelize) => {
     {
       timestamps: true,
       paranoid: true,
-    }
-  );
-};
+    },
+  )
+}

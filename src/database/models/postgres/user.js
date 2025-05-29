@@ -1,4 +1,4 @@
-const { DataTypes } = require("sequelize")
+const { DataTypes } = require("sequelize");
 
 module.exports = (sequelize) => {
   const User = sequelize.define(
@@ -57,31 +57,56 @@ module.exports = (sequelize) => {
         type: DataTypes.ENUM("active", "inactive", "suspended"),
         defaultValue: "active",
       },
+      notifications: {
+        type: DataTypes.ARRAY(DataTypes.JSON),
+        defaultValue: [],
+      },
+      notificationPreferences: {
+        type: DataTypes.JSON,
+        defaultValue: {
+          email: true,
+          push: true,
+          whatsapp: false,
+          sms: false,
+          feedbackReminders: true,
+          bookingUpdates: true
+        }
+      },
+      unreadNotificationCount: {
+        type: DataTypes.INTEGER,
+        defaultValue: 0
+      },
+      role: {
+        type: DataTypes.ENUM("user", "student", "admin"),
+        defaultValue: "user",
+        allowNull: false
+      },
     },
     {
+      freezeTableName: true, // 🚨 This is the magic sauce
       tableName: "User",
       timestamps: true,
       paranoid: true,
-    },
-  )
+    }
+  );
 
   User.beforeCreate((user) => {
     if (user.latitude && user.longitude) {
       user.location = {
         type: "Point",
         coordinates: [user.longitude, user.latitude],
-      }
+      };
     }
-  })
+  });
 
   User.beforeUpdate((user) => {
     if (user.latitude && user.longitude) {
       user.location = {
         type: "Point",
         coordinates: [user.longitude, user.latitude],
-      }
+      };
     }
-  })
+  });
 
-  return User
-}
+  return User;
+};

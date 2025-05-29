@@ -17,6 +17,9 @@ router.delete("/me", authMiddleware, supplierController.deleteSupplier)
 router.post("/module", authMiddleware, supplierController.setSupplierModule)
 router.get("/module", authMiddleware, supplierController.getSupplierProfile)
 
+router.get("/entities", authMiddleware, supplierController.getSupplierEntities)
+
+router.get("/me/analytics/overview", authMiddleware, supplierController.getAnalyticsOverview);
 // OTP routes
 // router.post("/request-otp", authMiddleware, supplierController.requestOTP);
 // router.post("/verify-otp", authMiddleware, supplierController.verifyOTP);

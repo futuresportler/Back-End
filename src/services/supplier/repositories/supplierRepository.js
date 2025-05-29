@@ -5,8 +5,16 @@ const {
   TurfProfile,
 } = require("../../../database");
 
-async function createSupplier(supplierData) {
-  return await Supplier.create(supplierData);
+async function createSupplier(supplierData, requireVerification = true) {
+  const supplier = await Supplier.create(supplierData);
+  
+  // If this is an invited user, don't require immediate verification
+  if (!requireVerification) {
+    return supplier;
+  }
+  
+  // For regular signups, existing verification logic applies
+  return supplier;
 }
 
 async function findSupplierById(supplierId) {

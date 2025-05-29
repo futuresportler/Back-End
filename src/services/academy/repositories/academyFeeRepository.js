@@ -73,7 +73,37 @@ class AcademyFeeRepository {
       order: [["dueDate", "DESC"]],
     })
   }
-
+  /**
+   * Get fees by program ID with date filters
+   * @param {string} programId - Program ID
+   * @param {Object} filters - Optional filters including createdAfter, createdBefore, status
+   * @returns {Promise<Array>} List of fees
+   */
+  async getFeesByProgram(programId, filters = {}) {
+    const { createdAfter, createdBefore, status } = filters;
+    const whereClause = { programId };
+    
+    if (status) {
+      whereClause.status = status;
+    }
+    
+    if (createdAfter || createdBefore) {
+      whereClause.createdAt = {};
+      
+      if (createdAfter) {
+        whereClause.createdAt[Op.gte] = createdAfter;
+      }
+      
+      if (createdBefore) {
+        whereClause.createdAt[Op.lt] = createdBefore;
+      }
+    }
+    
+    return await AcademyFee.findAll({
+      where: whereClause,
+      order: [["dueDate", "DESC"]],
+    });
+  }
   /**
    * Get fees by batch ID
    * @param {string} batchId - Batch ID

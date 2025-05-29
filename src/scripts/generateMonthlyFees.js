@@ -1,4 +1,4 @@
-const { AcademyService } = require("../services/academy")
+const AcademyService = require("../services/academy")
 const { sequelize } = require("../database")
 const { info, error } = require("../config/logging")
 const { v4: uuidv4 } = require("uuid")
