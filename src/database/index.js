@@ -80,6 +80,8 @@ const TurfSession = require("./models/postgres/sessions/turfSession")(sequelize)
 const AcademyBatchSession = require("./models/postgres/sessions/academyBatchSession")(sequelize);
 const AcademyProgramSession = require("./models/postgres/sessions/academyProgramSession")(sequelize);
 const UserFavorite = require("./models/postgres/userFavorite")(sequelize); 
+const ProgramMonthlyMetric = require("./models/postgres/academy/programMonthlyMetric")(sequelize);
+const AcademyBatchMonthlyMetric = require("./models/postgres/coach/batchMonthlyMetric")(sequelize);
 
 // Define Associations
 const defineAssociations = () => {
@@ -1071,6 +1073,48 @@ const defineAssociations = () => {
     constraints: false,
     as: "turf"
   });
+
+  // ...existing code...
+
+const ProgramMonthlyMetric = require("./models/postgres/academy/programMonthlyMetric")(sequelize);
+
+  // Program Monthly Metric Associations
+  AcademyProgram.hasMany(ProgramMonthlyMetric, {
+    foreignKey: "programId",
+    as: "monthlyMetrics",
+  });
+  ProgramMonthlyMetric.belongsTo(AcademyProgram, {
+    foreignKey: "programId",
+    as: "program",
+  });
+  Month.hasMany(ProgramMonthlyMetric, {
+    foreignKey: "monthId",
+    as: "programMonthlyMetrics",
+  });
+  ProgramMonthlyMetric.belongsTo(Month, {
+    foreignKey: "monthId",
+    as: "month",
+  });
+
+  // Academy Batch Monthly Metric Associations
+  AcademyBatch.hasMany(AcademyBatchMonthlyMetric, {
+    foreignKey: "batchId",
+    as: "monthlyMetrics",
+  });
+  AcademyBatchMonthlyMetric.belongsTo(AcademyBatch, {
+    foreignKey: "batchId",
+    as: "batch",
+  });
+  Month.hasMany(AcademyBatchMonthlyMetric, {
+    foreignKey: "monthId",
+    as: "academyBatchMonthlyMetrics",
+  });
+  AcademyBatchMonthlyMetric.belongsTo(Month, {
+    foreignKey: "monthId",
+    as: "month",
+  });
+
+
 };
 
 // Database Sync Function
@@ -1158,6 +1202,10 @@ module.exports = {
   AcademyCoachBatch,
   AcademyCoachProgram,
   AcademyInvitation,
+
+  ProgramMonthlyMetric,
+  AcademyBatchMonthlyMetric,
+
 
 
   // Turf exports

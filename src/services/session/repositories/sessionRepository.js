@@ -574,6 +574,13 @@ async findCoachBookingsByUserId(userId) {
   async createCoachSession(sessionData) {
     try {
       const session = await this.CoachSession.create(sessionData);
+        await updateMetricsOnSessionEvent({
+          sessionType: 'coach',
+          coachId: sessionData.coachId,
+          batchId: sessionData.batchId,
+          monthId: sessionData.monthId,
+          dayId: sessionData.dayId
+        }, 'created');
       return session;
     } catch (err) {
       error('Error creating coach session:', err);

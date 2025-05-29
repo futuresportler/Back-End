@@ -163,6 +163,15 @@ router.post(
 router.get("/fees/overdue", authMiddleware, academyController.getOverdueFees);
 
 // Metrics routes - Add these after your existing routes, before module.exports
+router.post("/profile-views", authMiddleware, academyController.recordProfileView);
+router.get("/:academyId/metrics/monthly", authMiddleware, academyController.getMonthlyMetrics);
+router.get("/programs/:programId/metrics/:monthId", authMiddleware, academyController.getProgramMonthlyMetrics);
+router.get("/:academyId/conversion-rate/:monthId", authMiddleware, academyController.getConversionRate);
+router.post(
+  "/:academyId/metrics/:monthId/refresh",
+  authMiddleware,
+  academyController.refreshMetrics
+);
 router.post(
   "/profile-views",
   authMiddleware,

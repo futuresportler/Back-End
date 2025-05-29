@@ -985,6 +985,15 @@ const getProfileWithPromotion = async (req, res) => {
     errorResponse(res, error.message, error);
   }
 };
+const refreshMetrics = async (req, res) => {
+  try {
+    await AcademyService.refreshMetrics(req.params.academyId, req.params.monthId);
+    successResponse(res, "Academy metrics refreshed successfully");
+  } catch (error) {
+    errorResponse(res, error.message, error);
+  }
+};
+
 
 // Bulk import academies
 const bulkImportArcheryAcademies = async (req, res) => {
@@ -1144,6 +1153,7 @@ const transformArcheryData = (archeryData) => {
   };
 };
 
+
 module.exports = {
   createProfile,
   getMyProfiles,
@@ -1201,6 +1211,7 @@ module.exports = {
   getAcademyCoachFeedback,
   getBookingPlatforms,
   getPopularPrograms,
+  refreshMetrics,
 
   // Add Academy Coach
   createAcademyCoach,

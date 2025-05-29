@@ -616,6 +616,100 @@ class CoachAnalyticsRepository {
     };
   }
 
+  async incrementMetricCounter(coachId, monthId, field, amount = 1){
+    try {
+      const [metric, created] = await MonthlyCoachMetric.findOrCreate({
+        where: { coachId, monthId },
+        defaults: {
+          coachId,
+          monthId,
+          totalSessions: 0,
+          completedSessions: 0,
+          cancelledSessions: 0,
+          totalRevenue: 0,
+          newStudents: 0,
+          activeStudents: 0,
+          averageRating: 0,
+          totalReviews: 0
+        }
+      });
+
+      metric[field] = (metric[field] || 0) + amount;
+      await metric.save();
+      
+      return metric;
+    } catch (error) {
+      console.error('Error incrementing coach metric counter:', error);
+      throw error;
+    }
+  };
+
+  async incrementBatchMetricCounter(batchId, monthId, field, amount = 1){
+    try {
+      const batch = await CoachBatch.findByPk(batchId);
+      if (!batch) throw new Error('Batch not found');
+
+      const [metric, created] = await BatchMonthlyMetric.findOrCreate({
+        where: { batchId, monthId, coachId: batch.coachId },
+        defaults: {
+          batchId,
+          monthId,
+          coachId: batch.coachId,
+          totalSessions: 0,
+          completedSessions: 0,
+          cancelledSessions: 0,
+          totalRevenue: 0,
+          averageAttendance: 0,
+          studentProgress: 0
+        }
+      });
+
+      metric[field] = (metric[field] || 0) + amount;
+      await metric.save();
+      
+      return metric;
+    } catch (error) {
+      console.error('Error incrementing batch metric counter:', error);
+      throw error;
+    }
+  };
+
+  async recalculateMetricsFromSessions(coachId, monthId){
+    try {
+      // Get all sessions for this coach and month
+      const sessions = await CoachSession.findAll({
+        where: { coachId, monthId }
+      });
+
+      const metrics = {
+        totalSessions: sessions.length,
+        completedSessions: sessions.filter(s => s.status === 'completed').length,
+        cancelledSessions: sessions.filter(s => s.status === 'cancelled').length
+      };
+
+      // Calculate revenue from payments
+      const payments = await CoachPayment.findAll({
+        where: { coachId, monthId }
+      });
+      metrics.totalRevenue = payments.reduce((sum, payment) => sum + (payment.amount || 0), 0);
+
+      // Update or create metric record
+      const [metric, created] = await MonthlyCoachMetric.findOrCreate({
+        where: { coachId, monthId },
+        defaults: metrics
+      });
+
+      if (!created) {
+        await metric.update(metrics);
+      }
+
+      return metric;
+    } catch (error) {
+      console.error('Error recalculating coach metrics from sessions:', error);
+      throw error;
+    }
+  };
+
   async updateAllCoachMetrics(coachId, monthId) {
     try {
       // Calculate all metrics
