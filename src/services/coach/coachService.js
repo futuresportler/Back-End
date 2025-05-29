@@ -564,6 +564,501 @@ const getCoachWithPromotionStatus = async (coachProfileId) => {
     },
   };
 };
+
+// Add score-related methods
+const updateStudentScore = async (coachId, studentId, scoreData) => {
+  const student = await coachRepository.findCoachStudent(coachId, studentId);
+  if (!student) {
+    throw new Error("Student not found for this coach");
+  }
+
+  // Update current scores
+  const updatedScores = {
+    ...student.currentScores,
+    ...scoreData.currentScores,
+  };
+
+  // Update score history
+  const updatedHistory = {
+    ...student.scoreHistory,
+    ...scoreData.scoreHistory,
+  };
+
+  return await coachRepository.updateCoachStudent(student.id, {
+    currentScores: updatedScores,
+    scoreHistory: updatedHistory,
+    achievementFlags: scoreData.achievementFlags || student.achievementFlags,
+  });
+};
+
+const getStudentScoreHistory = async (coachId, studentId, months = 6) => {
+  const student = await coachRepository.findCoachStudent(coachId, studentId);
+  if (!student) {
+    throw new Error("Student not found for this coach");
+  }
+
+  return {
+    studentId: student.id,
+    currentScores: student.currentScores,
+    scoreHistory: student.scoreHistory,
+    achievementFlags: student.achievementFlags,
+  };
+};
+
+const getBatchScoreAnalytics = async (batchId) => {
+  const students = await coachRepository.findStudentsByBatch(batchId);
+
+  if (students.length === 0) {
+    return {
+      batchId,
+      totalStudents: 0,
+      averageScore: 0,
+      scoreDistribution: {},
+      topPerformers: [],
+    };
+  }
+
+  const studentsWithScores = students.filter(
+    (s) => s.currentScores && Object.keys(s.currentScores).length > 0
+  );
+
+  let totalScore = 0;
+  const scoreDistribution = {
+    excellent: 0,
+    good: 0,
+    average: 0,
+    needsWork: 0,
+  };
+
+  studentsWithScores.forEach((student) => {
+    const overallScore =
+      Object.values(student.currentScores).reduce((sum, sport) => {
+        return sum + (sport.overall || 0);
+      }, 0) / Object.keys(student.currentScores).length;
+
+    totalScore += overallScore;
+
+    if (overallScore >= 8.5) scoreDistribution.excellent++;
+    else if (overallScore >= 7.0) scoreDistribution.good++;
+    else if (overallScore >= 5.0) scoreDistribution.average++;
+    else scoreDistribution.needsWork++;
+  });
+
+  const averageScore =
+    studentsWithScores.length > 0 ? totalScore / studentsWithScores.length : 0;
+
+  return {
+    batchId,
+    totalStudents: students.length,
+    studentsWithScores: studentsWithScores.length,
+    averageScore: parseFloat(averageScore.toFixed(2)),
+    scoreDistribution,
+    topPerformers: studentsWithScores
+      .sort((a, b) => {
+        const aScore = Object.values(a.currentScores).reduce(
+          (sum, sport) => sum + (sport.overall || 0),
+          0
+        );
+        const bScore = Object.values(b.currentScores).reduce(
+          (sum, sport) => sum + (sport.overall || 0),
+          0
+        );
+        return bScore - aScore;
+      })
+      .slice(0, 5)
+      .map((student) => ({
+        studentId: student.id,
+        name: student.name,
+        scores: student.currentScores,
+      })),
+  };
+};
+
+const getCoachEffectivenessReport = async (coachId) => {
+  const coach = await coachRepository.findCoachProfileById(coachId);
+  if (!coach) {
+    throw new Error("Coach not found");
+  }
+
+  const students = await coachRepository.getStudentsWithScores(coachId);
+
+  let totalImprovement = 0;
+  let studentsWithImprovement = 0;
+
+  students.forEach((student) => {
+    if (student.scoreHistory) {
+      Object.values(student.scoreHistory).forEach((sport) => {
+        if (sport.improvement > 0) {
+          totalImprovement += sport.improvement;
+          studentsWithImprovement++;
+        }
+      });
+    }
+  });
+
+  const averageImprovement =
+    studentsWithImprovement > 0
+      ? totalImprovement / studentsWithImprovement
+      : 0;
+
+  return {
+    coachId: coach.coachId,
+    coachName: coach.name,
+    totalStudents: students.length,
+    averageImprovement: parseFloat(averageImprovement.toFixed(2)),
+    studentsWithImprovement,
+    effectivenessRating:
+      averageImprovement > 1.0
+        ? "High"
+        : averageImprovement > 0.5
+        ? "Medium"
+        : "Low",
+  };
+};
+
+const getStudentsWithScores = async (coachId, filters = {}) => {
+  return await coachRepository.getStudentsWithScores(coachId, filters);
+};
+
+const bulkUpdateStudentScores = async (coachId, studentsScoreData) => {
+  const results = [];
+  const errors = [];
+
+  for (const studentScoreData of studentsScoreData) {
+    try {
+      const result = await updateStudentScore(
+        coachId,
+        studentScoreData.studentId,
+        studentScoreData.scoreData
+      );
+      results.push({
+        studentId: studentScoreData.studentId,
+        success: true,
+        data: result,
+      });
+    } catch (error) {
+      errors.push({
+        studentId: studentScoreData.studentId,
+        success: false,
+        error: error.message,
+      });
+    }
+  }
+
+  return {
+    successful: results,
+    failed: errors,
+    summary: {
+      total: studentsScoreData.length,
+      successful: results.length,
+      failed: errors.length,
+    },
+  };
+};
+
+// Add progress tracking methods after existing analytics methods
+const updateStudentQuarterlyProgress = async (
+  coachId,
+  studentId,
+  year,
+  quarter,
+  progressData
+) => {
+  // Verify coach owns this student
+  const student = await coachRepository.findCoachStudent(coachId, studentId);
+  if (!student) {
+    throw new Error("Student not found for this coach");
+  }
+
+  // Validate and enhance progress data
+  const validatedData = {
+    ...progressData,
+    updatedBy: coachId,
+    lastUpdated: new Date().toISOString(),
+  };
+
+  return await coachRepository.updateCoachStudentQuarterlyProgress(
+    student.id,
+    year,
+    quarter,
+    validatedData
+  );
+};
+
+const getStudentQuarterlyProgress = async (
+  coachId,
+  studentId,
+  year = null,
+  quarter = null
+) => {
+  // Verify coach owns this student
+  const student = await coachRepository.findCoachStudent(coachId, studentId);
+  if (!student) {
+    throw new Error("Student not found for this coach");
+  }
+
+  return await coachRepository.getCoachStudentQuarterlyProgress(
+    student.id,
+    year,
+    quarter
+  );
+};
+
+const updateStudentCoachingPlan = async (coachId, studentId, planData) => {
+  // Verify coach owns this student
+  const student = await coachRepository.findCoachStudent(coachId, studentId);
+  if (!student) {
+    throw new Error("Student not found for this coach");
+  }
+
+  return await coachRepository.updateCoachingPlan(student.id, planData);
+};
+
+const updateStudentPerformanceMetrics = async (
+  coachId,
+  studentId,
+  metricsData
+) => {
+  // Verify coach owns this student
+  const student = await coachRepository.findCoachStudent(coachId, studentId);
+  if (!student) {
+    throw new Error("Student not found for this coach");
+  }
+
+  return await coachRepository.updatePerformanceMetrics(
+    student.id,
+    metricsData
+  );
+};
+
+const getCoachProgressAnalytics = async (coachId, filters = {}) => {
+  const coach = await coachRepository.findCoachProfileById(coachId);
+  if (!coach) {
+    throw new Error("Coach profile not found");
+  }
+
+  return await coachRepository.getCoachProgressAnalytics(coachId, filters);
+};
+
+const generateStudentProgressReport = async (
+  coachId,
+  studentId,
+  year,
+  quarter
+) => {
+  // Verify coach owns this student
+  const student = await coachRepository.findCoachStudent(coachId, studentId);
+  if (!student) {
+    throw new Error("Student not found for this coach");
+  }
+
+  return await coachRepository.generateCoachStudentReport(
+    student.id,
+    year,
+    quarter
+  );
+};
+
+const getBatchProgressSummary = async (batchId, year, quarter) => {
+  const batch = await coachRepository.findCoachBatchById(batchId);
+  if (!batch) {
+    throw new Error("Batch not found");
+  }
+
+  // Get all students in the batch
+  const students = await coachRepository.findStudentsByBatch(batchId);
+
+  const progressSummary = {
+    batchInfo: {
+      batchId: batch.batchId,
+      batchName: batch.batchName,
+      coachName: batch.coach?.name,
+      totalStudents: students.length,
+    },
+    quarterProgress: {
+      year,
+      quarter,
+      studentsWithProgress: 0,
+      averageImprovement: 0,
+      commonChallenges: [],
+      topAchievers: [],
+    },
+    coachingEffectiveness: {
+      sessionCompletionRate: 0,
+      goalAchievementRate: 0,
+      parentSatisfactionAverage: 0,
+    },
+  };
+
+  let totalImprovement = 0;
+  let studentsWithProgress = 0;
+  const challengesCount = {};
+  const achievementsData = [];
+
+  // Analyze each student's progress
+  for (const student of students) {
+    try {
+      const progress = await coachRepository.getCoachStudentQuarterlyProgress(
+        student.id,
+        year,
+        quarter
+      );
+
+      if (progress.progress && Object.keys(progress.progress).length > 0) {
+        studentsWithProgress++;
+
+        Object.entries(progress.progress).forEach(([sport, data]) => {
+          // Calculate improvements
+          if (data.skills) {
+            Object.values(data.skills).forEach((skill) => {
+              if (skill.improvement) {
+                totalImprovement += skill.improvement;
+              }
+            });
+          }
+
+          // Track challenges
+          if (data.challenges) {
+            data.challenges.forEach((challenge) => {
+              challengesCount[challenge] =
+                (challengesCount[challenge] || 0) + 1;
+            });
+          }
+
+          // Track achievements
+          if (data.personalizedGoals?.achieved?.length > 0) {
+            achievementsData.push({
+              studentName: progress.student.name,
+              studentId: progress.student.id,
+              achievements: data.personalizedGoals.achieved.length,
+              overallImprovement: data.skills
+                ? Object.values(data.skills).reduce(
+                    (sum, skill) => sum + (skill.improvement || 0),
+                    0
+                  )
+                : 0,
+            });
+          }
+        });
+      }
+    } catch (error) {
+      console.error(`Error processing student ${student.id}:`, error.message);
+    }
+  }
+
+  // Calculate summary metrics
+  if (studentsWithProgress > 0) {
+    progressSummary.quarterProgress.studentsWithProgress = studentsWithProgress;
+    progressSummary.quarterProgress.averageImprovement =
+      totalImprovement / studentsWithProgress;
+  }
+
+  // Find most common challenges
+  progressSummary.quarterProgress.commonChallenges = Object.entries(
+    challengesCount
+  )
+    .sort(([, a], [, b]) => b - a)
+    .slice(0, 5)
+    .map(([challenge, count]) => ({ challenge, count }));
+
+  // Find top achievers
+  progressSummary.quarterProgress.topAchievers = achievementsData
+    .sort((a, b) => b.overallImprovement - a.overallImprovement)
+    .slice(0, 5);
+
+  return progressSummary;
+};
+
+const getCoachEffectivenessReportNew = async (
+  coachId,
+  timeframe = "quarter"
+) => {
+  const coach = await coachRepository.findCoachProfileById(coachId);
+  if (!coach) {
+    throw new Error("Coach profile not found");
+  }
+
+  const currentDate = new Date();
+  const currentYear = currentDate.getFullYear().toString();
+  const currentQuarter = `Q${Math.ceil((currentDate.getMonth() + 1) / 3)}`;
+
+  const analytics = await coachRepository.getCoachProgressAnalytics(coachId, {
+    year: currentYear,
+    quarter: currentQuarter,
+  });
+
+  const students = await coachRepository.getStudentsWithScores(coachId);
+
+  const report = {
+    coachInfo: {
+      coachId: coach.coachId,
+      name: coach.name,
+      experience: coach.experienceYears,
+      totalStudents: students.length,
+    },
+    effectivenessMetrics: {
+      studentImprovementRate:
+        analytics.coachingEffectiveness.averageImprovement,
+      goalAchievementRate: analytics.personalizedGoalsSuccess.successRate,
+      consistentProgressStudents:
+        analytics.coachingEffectiveness.consistentProgress,
+      coachingTypeDistribution: analytics.coachingTypes,
+    },
+    skillSpecialization: {
+      strongestAreas: [],
+      improvementAreas: [],
+      sessionEffectiveness: {},
+    },
+    studentSatisfaction: {
+      averageRating: 0,
+      parentFeedbackSummary: {
+        positive: 0,
+        neutral: 0,
+        concerns: 0,
+      },
+    },
+    recommendations: [],
+  };
+
+  // Analyze skill specialization
+  Object.entries(analytics.averageProgress).forEach(([skill, data]) => {
+    if (data.averageImprovement > 1.0) {
+      report.skillSpecialization.strongestAreas.push({
+        skill,
+        improvement: data.averageImprovement,
+        sessionEffectiveness: data.averageSessionEffectiveness,
+      });
+    } else if (data.averageImprovement < 0.5) {
+      report.skillSpecialization.improvementAreas.push({
+        skill,
+        improvement: data.averageImprovement,
+        sessionEffectiveness: data.averageSessionEffectiveness,
+      });
+    }
+  });
+
+  // Generate recommendations
+  if (report.effectivenessMetrics.goalAchievementRate < 60) {
+    report.recommendations.push(
+      "Consider revising goal-setting approach to be more achievable"
+    );
+  }
+
+  if (report.skillSpecialization.improvementAreas.length > 3) {
+    report.recommendations.push("Focus training on identified weak areas");
+  }
+
+  if (
+    analytics.coachingTypes["one-on-one"] > analytics.coachingTypes["group"]
+  ) {
+    report.recommendations.push(
+      "Consider group coaching to improve efficiency"
+    );
+  }
+
+  return report;
+};
+
 // Add the new function to the module.exports
 module.exports = {
   getCoachProfile,
@@ -621,4 +1116,14 @@ module.exports = {
   getCoachEffectivenessReport,
   getStudentsWithScores,
   bulkUpdateStudentScores,
+
+  // Add progress tracking exports
+  updateStudentQuarterlyProgress,
+  getStudentQuarterlyProgress,
+  updateStudentCoachingPlan,
+  updateStudentPerformanceMetrics,
+  getCoachProgressAnalytics,
+  generateStudentProgressReport,
+  getBatchProgressSummary,
+  getCoachEffectivenessReportNew,
 };
