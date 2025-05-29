@@ -1224,6 +1224,402 @@ const bulkUpdateStudentScores = async (
   );
 };
 
+// Add progress tracking methods after existing score methods
+const updateStudentQuarterlyProgress = async (
+  academyId,
+  studentId,
+  year,
+  quarter,
+  progressData,
+  updaterSupplierId
+) => {
+  // Check permissions
+  const permission = await checkAcademyPermission("coach")(
+    academyId,
+    updaterSupplierId
+  );
+  if (!permission.allowed) {
+    throw new Error("Unauthorized to update student progress");
+  }
+
+  // Verify student belongs to this academy
+  const student = await academyRepository.getStudentById(studentId);
+  if (!student || student.academyId !== academyId) {
+    throw new Error("Student not found in this academy");
+  }
+
+  // Validate quarter data structure
+  const validatedData = {
+    ...progressData,
+    updatedBy: updaterSupplierId,
+    lastUpdated: new Date().toISOString(),
+  };
+
+  return await academyRepository.updateQuarterlyProgress(
+    studentId,
+    year,
+    quarter,
+    validatedData
+  );
+};
+
+const getStudentQuarterlyProgress = async (
+  academyId,
+  studentId,
+  year = null,
+  quarter = null
+) => {
+  // Verify student belongs to this academy
+  const student = await academyRepository.getStudentById(studentId);
+  if (!student || student.academyId !== academyId) {
+    throw new Error("Student not found in this academy");
+  }
+
+  return await academyRepository.getQuarterlyProgress(studentId, year, quarter);
+};
+
+const generateStudentQuarterlyReport = async (
+  academyId,
+  studentId,
+  year,
+  quarter,
+  generatorSupplierId
+) => {
+  // Check permissions
+  const permission = await checkAcademyPermission("coach")(
+    academyId,
+    generatorSupplierId
+  );
+  if (!permission.allowed) {
+    throw new Error("Unauthorized to generate reports");
+  }
+
+  // Verify student belongs to this academy
+  const student = await academyRepository.getStudentById(studentId);
+  if (!student || student.academyId !== academyId) {
+    throw new Error("Student not found in this academy");
+  }
+
+  const report = await academyRepository.generateQuarterlyReport(
+    studentId,
+    year,
+    quarter
+  );
+
+  // Log report generation for audit
+  console.log(
+    `Quarterly report generated for student ${studentId} by supplier ${generatorSupplierId}`
+  );
+
+  return report;
+};
+
+const updateStudentProgressMilestones = async (
+  academyId,
+  studentId,
+  sport,
+  level,
+  achieved = true,
+  updaterSupplierId
+) => {
+  // Check permissions
+  const permission = await checkAcademyPermission("coach")(
+    academyId,
+    updaterSupplierId
+  );
+  if (!permission.allowed) {
+    throw new Error("Unauthorized to update milestones");
+  }
+
+  // Verify student belongs to this academy
+  const student = await academyRepository.getStudentById(studentId);
+  if (!student || student.academyId !== academyId) {
+    throw new Error("Student not found in this academy");
+  }
+
+  return await academyRepository.updateProgressMilestones(
+    studentId,
+    sport,
+    level,
+    achieved
+  );
+};
+
+const getAcademyProgressAnalytics = async (
+  academyId,
+  filters = {},
+  requesterSupplierId
+) => {
+  // Check permissions
+  const permission = await checkAcademyPermission("manager")(
+    academyId,
+    requesterSupplierId
+  );
+  if (!permission.allowed) {
+    throw new Error("Unauthorized to view academy analytics");
+  }
+
+  return await academyRepository.getProgressAnalytics(academyId, filters);
+};
+
+const getBatchProgressAnalytics = async (academyId, batchId, filters = {}) => {
+  // Verify batch belongs to this academy
+  const batch = await academyBatchRepository.getBatchById(batchId);
+  if (!batch || batch.academyId !== academyId) {
+    throw new Error("Batch not found in this academy");
+  }
+
+  // Get all students in the batch
+  const students = await academyRepository.getStudentsByAcademy(academyId, {
+    batchId,
+  });
+
+  const { year, quarter } = filters;
+  const progressData = {
+    batchInfo: {
+      batchId: batch.batchId,
+      batchName: batch.batchName,
+      sport: batch.sport,
+      level: batch.level,
+      totalStudents: students.students.length,
+    },
+    studentProgress: [],
+    batchAverages: {
+      overallImprovement: 0,
+      skillAverages: {},
+      attendanceRate: 0,
+      achievementsCount: 0,
+    },
+  };
+
+  let totalImprovement = 0;
+  let studentsWithProgress = 0;
+  let totalAttendance = 0;
+  let totalAchievements = 0;
+  const skillTotals = {};
+
+  // Analyze each student's progress
+  for (const student of students.students) {
+    const studentProgress = await academyRepository.getQuarterlyProgress(
+      student.studentId,
+      year,
+      quarter
+    );
+
+    if (studentProgress && Object.keys(studentProgress).length > 0) {
+      const studentData = {
+        studentId: student.studentId,
+        name: student.name,
+        progress: studentProgress,
+      };
+
+      // Calculate improvements for this student
+      Object.entries(studentProgress).forEach(([sport, data]) => {
+        if (data.overallScore?.improvement) {
+          totalImprovement += data.overallScore.improvement;
+          studentsWithProgress++;
+        }
+
+        if (data.attendance?.percentage) {
+          totalAttendance += data.attendance.percentage;
+        }
+
+        if (data.achievements?.length) {
+          totalAchievements += data.achievements.length;
+        }
+
+        if (data.skills) {
+          Object.entries(data.skills).forEach(([skill, skillData]) => {
+            if (!skillTotals[skill]) {
+              skillTotals[skill] = { total: 0, count: 0 };
+            }
+            if (skillData.improvement) {
+              skillTotals[skill].total += skillData.improvement;
+              skillTotals[skill].count++;
+            }
+          });
+        }
+      });
+
+      progressData.studentProgress.push(studentData);
+    }
+  }
+
+  // Calculate batch averages
+  const studentsCount = students.students.length;
+  if (studentsCount > 0) {
+    progressData.batchAverages.overallImprovement =
+      studentsWithProgress > 0 ? totalImprovement / studentsWithProgress : 0;
+    progressData.batchAverages.attendanceRate = totalAttendance / studentsCount;
+    progressData.batchAverages.achievementsCount =
+      totalAchievements / studentsCount;
+
+    // Calculate skill averages
+    Object.entries(skillTotals).forEach(([skill, data]) => {
+      progressData.batchAverages.skillAverages[skill] =
+        data.count > 0 ? data.total / data.count : 0;
+    });
+  }
+
+  return progressData;
+};
+
+const getProgramProgressAnalytics = async (
+  academyId,
+  programId,
+  filters = {}
+) => {
+  // Verify program belongs to this academy
+  const program = await academyProgramRepository.getProgramById(programId);
+  if (!program || program.academyId !== academyId) {
+    throw new Error("Program not found in this academy");
+  }
+
+  // Get all students in the program
+  const students = await academyRepository.getStudentsByAcademy(academyId, {
+    programId,
+  });
+
+  const { year, quarter } = filters;
+  const progressData = {
+    programInfo: {
+      programId: program.programId,
+      programName: program.programName,
+      sport: program.sport,
+      duration: program.duration,
+      totalStudents: students.students.length,
+    },
+    studentProgress: [],
+    programAverages: {
+      overallImprovement: 0,
+      skillAverages: {},
+      completionRate: 0,
+      satisfactionScore: 0,
+    },
+    graduationReadiness: {
+      readyForAdvancement: 0,
+      requiresMoreTime: 0,
+      totalAssessed: 0,
+    },
+  };
+
+  let totalImprovement = 0;
+  let studentsWithProgress = 0;
+  let readyForAdvancement = 0;
+
+  // Analyze each student's progress
+  for (const student of students.students) {
+    const studentProgress = await academyRepository.getQuarterlyProgress(
+      student.studentId,
+      year,
+      quarter
+    );
+
+    if (studentProgress && Object.keys(studentProgress).length > 0) {
+      const studentData = {
+        studentId: student.studentId,
+        name: student.name,
+        progress: studentProgress,
+        readinessScore: 0,
+      };
+
+      // Assess graduation readiness
+      Object.entries(studentProgress).forEach(([sport, data]) => {
+        if (data.overallScore?.current >= 8.0) {
+          studentData.readinessScore += 1;
+        }
+
+        if (data.overallScore?.improvement) {
+          totalImprovement += data.overallScore.improvement;
+          studentsWithProgress++;
+        }
+      });
+
+      if (studentData.readinessScore >= 1) {
+        readyForAdvancement++;
+      }
+
+      progressData.studentProgress.push(studentData);
+    }
+  }
+
+  // Calculate program averages
+  const studentsCount = students.students.length;
+  if (studentsCount > 0) {
+    progressData.programAverages.overallImprovement =
+      studentsWithProgress > 0 ? totalImprovement / studentsWithProgress : 0;
+
+    progressData.graduationReadiness = {
+      readyForAdvancement,
+      requiresMoreTime: studentsCount - readyForAdvancement,
+      totalAssessed: studentsCount,
+    };
+  }
+
+  return progressData;
+};
+
+const generateBulkQuarterlyReports = async (
+  academyId,
+  year,
+  quarter,
+  filters = {},
+  generatorSupplierId
+) => {
+  // Check permissions
+  const permission = await checkAcademyPermission("manager")(
+    academyId,
+    generatorSupplierId
+  );
+  if (!permission.allowed) {
+    throw new Error("Unauthorized to generate bulk reports");
+  }
+
+  const { batchId, programId, sport } = filters;
+
+  // Get students based on filters
+  const studentsData = await academyRepository.getStudentsByAcademy(academyId, {
+    batchId,
+    programId,
+    sport,
+  });
+
+  const reports = [];
+  const errors = [];
+
+  // Generate reports for each student
+  for (const student of studentsData.students) {
+    try {
+      const report = await academyRepository.generateQuarterlyReport(
+        student.studentId,
+        year,
+        quarter
+      );
+      reports.push(report);
+    } catch (error) {
+      errors.push({
+        studentId: student.studentId,
+        studentName: student.name,
+        error: error.message,
+      });
+    }
+  }
+
+  console.log(
+    `Bulk quarterly reports generated: ${reports.length} successful, ${errors.length} failed`
+  );
+
+  return {
+    successful: reports,
+    failed: errors,
+    summary: {
+      total: studentsData.students.length,
+      successful: reports.length,
+      failed: errors.length,
+    },
+  };
+};
+
 module.exports = {
   createAcademyProfile,
   getAcademyProfile,
@@ -1316,4 +1712,14 @@ module.exports = {
   awardStudentAchievement,
   getAcademyScoreOverview,
   bulkUpdateStudentScores,
+
+  // Add progress tracking exports
+  updateStudentQuarterlyProgress,
+  getStudentQuarterlyProgress,
+  generateStudentQuarterlyReport,
+  updateStudentProgressMilestones,
+  getAcademyProgressAnalytics,
+  getBatchProgressAnalytics,
+  getProgramProgressAnalytics,
+  generateBulkQuarterlyReports,
 };

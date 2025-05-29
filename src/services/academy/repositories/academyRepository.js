@@ -634,6 +634,345 @@ const getAcademyAnalytics = async (academyId) => {
   };
 };
 
+// Add quarterly progress tracking methods
+const updateQuarterlyProgress = async (
+  studentId,
+  year,
+  quarter,
+  progressData
+) => {
+  const student = await AcademyStudent.findByPk(studentId);
+  if (!student) {
+    throw new Error("Student not found");
+  }
+
+  const currentProgress = student.progressTracking || {};
+
+  if (!currentProgress[year]) {
+    currentProgress[year] = {};
+  }
+
+  currentProgress[year][quarter] = {
+    ...currentProgress[year][quarter],
+    ...progressData,
+    lastUpdated: new Date().toISOString(),
+  };
+
+  return await student.update({
+    progressTracking: currentProgress,
+  });
+};
+
+const getQuarterlyProgress = async (studentId, year = null, quarter = null) => {
+  const student = await AcademyStudent.findByPk(studentId, {
+    attributes: [
+      "studentId",
+      "name",
+      "progressTracking",
+      "quarterlyReports",
+      "progressMilestones",
+    ],
+  });
+
+  if (!student) {
+    throw new Error("Student not found");
+  }
+
+  if (year && quarter) {
+    return student.progressTracking?.[year]?.[quarter] || {};
+  }
+
+  if (year) {
+    return student.progressTracking?.[year] || {};
+  }
+
+  return student.progressTracking || {};
+};
+
+const generateQuarterlyReport = async (studentId, year, quarter) => {
+  const student = await AcademyStudent.findByPk(studentId, {
+    include: [
+      {
+        model: AcademyBatch,
+        as: "batch",
+        attributes: ["batchId", "batchName", "sport"],
+      },
+      {
+        model: AcademyProgram,
+        as: "program",
+        attributes: ["programId", "programName", "sport"],
+      },
+    ],
+  });
+
+  if (!student) {
+    throw new Error("Student not found");
+  }
+
+  const quarterProgress = student.progressTracking?.[year]?.[quarter];
+  if (!quarterProgress) {
+    throw new Error("No progress data found for specified quarter");
+  }
+
+  // Generate comprehensive report
+  const report = {
+    reportId: require("uuid").v4(),
+    quarter: `${year}-${quarter}`,
+    generatedDate: new Date().toISOString(),
+    studentInfo: {
+      studentId: student.studentId,
+      name: student.name,
+      batch: student.batch?.batchName,
+      program: student.program?.programName,
+    },
+    quarterData: quarterProgress,
+    summary: await calculateQuarterlySummary(quarterProgress),
+    recommendations: await generateRecommendations(quarterProgress),
+    milestones: student.progressMilestones || {},
+    status: "generated",
+  };
+
+  // Add report to student's quarterly reports
+  const currentReports = student.quarterlyReports || [];
+  currentReports.push(report);
+
+  await student.update({
+    quarterlyReports: currentReports,
+  });
+
+  return report;
+};
+
+const calculateQuarterlySummary = async (quarterProgress) => {
+  const sports = Object.keys(quarterProgress);
+  let totalImprovement = 0;
+  let strongestSport = null;
+  let maxImprovement = 0;
+  const areasOfFocus = [];
+
+  sports.forEach((sport) => {
+    const sportData = quarterProgress[sport];
+    if (sportData.overallScore) {
+      const improvement = sportData.overallScore.improvement || 0;
+      totalImprovement += improvement;
+
+      if (improvement > maxImprovement) {
+        maxImprovement = improvement;
+        strongestSport = sport;
+      }
+
+      // Identify areas needing focus (skills with low improvement)
+      if (sportData.skills) {
+        Object.entries(sportData.skills).forEach(([skill, data]) => {
+          if (data.improvement < 0.5) {
+            areasOfFocus.push(skill);
+          }
+        });
+      }
+    }
+  });
+
+  return {
+    overallImprovement: totalImprovement / sports.length,
+    strongestSport,
+    areasOfFocus: [...new Set(areasOfFocus)],
+    sportsCount: sports.length,
+  };
+};
+
+const generateRecommendations = async (quarterProgress) => {
+  const recommendations = [];
+
+  Object.entries(quarterProgress).forEach(([sport, data]) => {
+    if (data.skills) {
+      Object.entries(data.skills).forEach(([skill, skillData]) => {
+        if (skillData.current < skillData.target) {
+          const gap = skillData.target - skillData.current;
+          if (gap > 1.0) {
+            recommendations.push(
+              `Focus on improving ${skill} in ${sport} - current gap: ${gap.toFixed(
+                1
+              )} points`
+            );
+          }
+        }
+      });
+    }
+
+    if (data.challenges && data.challenges.length > 0) {
+      recommendations.push(
+        `Address challenges in ${sport}: ${data.challenges.join(", ")}`
+      );
+    }
+  });
+
+  return recommendations;
+};
+
+const updateProgressMilestones = async (
+  studentId,
+  sport,
+  level,
+  achieved = true
+) => {
+  const student = await AcademyStudent.findByPk(studentId);
+  if (!student) {
+    throw new Error("Student not found");
+  }
+
+  const currentMilestones = student.progressMilestones || {};
+
+  if (!currentMilestones[sport]) {
+    currentMilestones[sport] = {};
+  }
+
+  currentMilestones[sport][level] = {
+    achieved,
+    date: achieved ? new Date().toISOString() : null,
+    score: achieved ? student.currentScores?.[sport]?.overall || 0 : null,
+  };
+
+  // Update level progression if milestone achieved
+  if (achieved && currentMilestones.levelProgression) {
+    const levels = ["beginner", "intermediate", "advanced", "expert"];
+    const currentLevelIndex = levels.indexOf(level);
+
+    if (currentLevelIndex < levels.length - 1) {
+      currentMilestones.levelProgression = {
+        ...currentMilestones.levelProgression,
+        currentLevel: level,
+        nextLevel: levels[currentLevelIndex + 1],
+      };
+    }
+  }
+
+  return await student.update({
+    progressMilestones: currentMilestones,
+  });
+};
+
+const getProgressAnalytics = async (academyId, filters = {}) => {
+  const { sport, timeframe = "quarter", year, quarter } = filters;
+
+  let whereClause = { academyId };
+  if (sport) {
+    whereClause.sport = sport;
+  }
+
+  const students = await AcademyStudent.findAll({
+    where: whereClause,
+    attributes: [
+      "studentId",
+      "name",
+      "sport",
+      "progressTracking",
+      "progressMilestones",
+      "currentScores",
+      "scoreTrends",
+    ],
+  });
+
+  const analytics = {
+    totalStudents: students.length,
+    sportDistribution: {},
+    averageProgress: {},
+    milestoneAchievements: {},
+    trendAnalysis: {},
+  };
+
+  students.forEach((student) => {
+    const studentSport = student.sport;
+
+    // Sport distribution
+    analytics.sportDistribution[studentSport] =
+      (analytics.sportDistribution[studentSport] || 0) + 1;
+
+    // Progress analysis
+    if (year && quarter && student.progressTracking?.[year]?.[quarter]) {
+      const quarterData = student.progressTracking[year][quarter];
+
+      Object.entries(quarterData).forEach(([sport, data]) => {
+        if (!analytics.averageProgress[sport]) {
+          analytics.averageProgress[sport] = {
+            totalImprovement: 0,
+            studentCount: 0,
+            skillBreakdown: {},
+          };
+        }
+
+        if (data.overallScore?.improvement) {
+          analytics.averageProgress[sport].totalImprovement +=
+            data.overallScore.improvement;
+          analytics.averageProgress[sport].studentCount += 1;
+        }
+
+        // Skill breakdown
+        if (data.skills) {
+          Object.entries(data.skills).forEach(([skill, skillData]) => {
+            if (!analytics.averageProgress[sport].skillBreakdown[skill]) {
+              analytics.averageProgress[sport].skillBreakdown[skill] = {
+                totalImprovement: 0,
+                count: 0,
+              };
+            }
+
+            if (skillData.improvement) {
+              analytics.averageProgress[sport].skillBreakdown[
+                skill
+              ].totalImprovement += skillData.improvement;
+              analytics.averageProgress[sport].skillBreakdown[skill].count += 1;
+            }
+          });
+        }
+      });
+    }
+
+    // Milestone analysis
+    if (student.progressMilestones) {
+      Object.entries(student.progressMilestones).forEach(
+        ([sport, milestones]) => {
+          if (!analytics.milestoneAchievements[sport]) {
+            analytics.milestoneAchievements[sport] = {
+              beginner: 0,
+              intermediate: 0,
+              advanced: 0,
+              expert: 0,
+            };
+          }
+
+          Object.entries(milestones).forEach(([level, data]) => {
+            if (
+              data.achieved &&
+              analytics.milestoneAchievements[sport][level] !== undefined
+            ) {
+              analytics.milestoneAchievements[sport][level] += 1;
+            }
+          });
+        }
+      );
+    }
+  });
+
+  // Calculate averages
+  Object.keys(analytics.averageProgress).forEach((sport) => {
+    const sportData = analytics.averageProgress[sport];
+    if (sportData.studentCount > 0) {
+      sportData.averageImprovement =
+        sportData.totalImprovement / sportData.studentCount;
+    }
+
+    Object.keys(sportData.skillBreakdown).forEach((skill) => {
+      const skillData = sportData.skillBreakdown[skill];
+      if (skillData.count > 0) {
+        skillData.averageImprovement =
+          skillData.totalImprovement / skillData.count;
+      }
+    });
+  });
+
+  return analytics;
+};
+
 module.exports = {
   createAcademyProfile,
   findAcademyProfileById,
@@ -656,4 +995,12 @@ module.exports = {
   getStudentsWithScoreAnalytics,
   updateStudentScores,
   updateMonthlyStudentScoreMetric,
+  // Quarterly progress tracking exports
+  updateQuarterlyProgress,
+  getQuarterlyProgress,
+  generateQuarterlyReport,
+  updateProgressMilestones,
+  getProgressAnalytics,
+  calculateQuarterlySummary,
+  generateRecommendations,
 };
