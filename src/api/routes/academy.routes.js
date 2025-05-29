@@ -23,6 +23,9 @@ router.get("/students/data", authMiddleware, academyController.getStudentData);
 // New endpoint to fetch academies by user
 router.get("/by-user/:userId", academyController.getAcademiesByUser);
 
+// Add promotion-related route
+router.get("/:academyProfileId/with-promotion", academyController.getProfileWithPromotion);
+
 // Profile routes
 router.get("/:academyProfileId", academyController.getProfile);
 router.patch(

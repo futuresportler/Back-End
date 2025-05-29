@@ -2,19 +2,8 @@ const { sequelize } = require("../../database");
 const { info, error } = require("../../config/logging");
 const { Op } = require("sequelize");
 const moment = require("moment");
-
+const SessionRepository = require('./repositories/sessionRepository');
 // Session models
-const {
-  AcademyBatchSession,
-  AcademyProgramSession,
-  CoachSession,
-  TurfSession,
-  AcademyBatchSessionRequest,
-  AcademyProgramSessionRequest,
-  CoachSessionRequest,
-  TurfSessionRequest,
-} = require("../../database/models/postgres/sessions/sessionRequests");
-
 /**
  * Get the appropriate session and request models based on service type
  * @param {string} service - Service type ('academy_batch', 'academy_program', 'coach', 'turf')
@@ -25,17 +14,21 @@ const getModels = (service) => {
     case "academy_batch":
       return {
         Session: AcademyBatchSession,
-        Request: AcademyBatchSessionRequest,
+        // Request: AcademyBatchSessionRequest,
       };
     case "academy_program":
       return {
         Session: AcademyProgramSession,
-        Request: AcademyProgramSessionRequest,
+        // Request: AcademyProgramSessionRequest,
       };
     case "coach":
-      return { Session: CoachSession, Request: CoachSessionRequest };
+      return { Session: CoachSession, 
+        // Request: CoachSessionRequest 
+      };
     case "turf":
-      return { Session: TurfSession, Request: TurfSessionRequest };
+      return { Session: TurfSession, 
+        // Request: TurfSessionRequest 
+      };
     default:
       throw new Error(`Invalid service type: ${service}`);
   }
@@ -870,7 +863,62 @@ const getUpcomingSessions = async (
     throw err;
   }
 };
+const getAllUserCoachBookings= async (userId) => {
+  try {
+    // Implement based on your existing coach booking logic
+    // This should return all coach bookings for the user
+    return await SessionRepository.findCoachBookingsByUserId(userId);
+  } catch (error) {
+    console.error('Error getting user coach bookings:', error);
+    return [];
+  }
+}
+const getAllUserAcademyBookings = async (userId) => {
+  try {
+    // Implement based on your existing academy booking logic
+    return await SessionRepository.findAcademyBookingsByUserId(userId);
+  } catch (error) {
+    console.error('Error getting user academy bookings:', error);
+    return [];
+  }
+}
 
+const getAllUserTurfBookings= async (userId) =>{
+  try {
+    // Implement based on your existing turf booking logic
+    return await SessionRepository.findTurfBookingsByUserId(userId);
+  } catch (error) {
+    console.error('Error getting user turf bookings:', error);
+    return [];
+  }
+}
+
+const getUserCoachSessions= async (userId, coachId) =>{
+  try {
+    return await SessionRepository.findUserCoachSessions(userId, coachId);
+  } catch (error) {
+    console.error('Error getting user coach sessions:', error);
+    return [];
+  }
+}
+
+const getUserAcademySessions= async (userId, academyId) =>{
+  try {
+    return await SessionRepository.findUserAcademySessions(userId, academyId);
+  } catch (error) {
+    console.error('Error getting user academy sessions:', error);
+    return [];
+  }
+}
+
+const getUserTurfSessions= async (userId, turfId) =>{
+  try {
+    return await SessionRepository.findUserTurfSessions(userId, turfId);
+  } catch (error) {
+    console.error('Error getting user turf sessions:', error);
+    return [];
+      }
+}
 module.exports = {
   requestSession,
   confirmSessionRequest,
@@ -883,4 +931,11 @@ module.exports = {
   getAllUserBookings,
   getLatestCompletedSessions,
   getUpcomingSessions,
+  
+  getAllUserCoachBookings,
+  getAllUserAcademyBookings,
+  getAllUserTurfBookings,
+  getUserCoachSessions,
+  getUserAcademySessions,
+  getUserTurfSessions,
 };

@@ -42,7 +42,7 @@ module.exports = (sequelize) => {
         type: DataTypes.UUID,
         allowNull: true,
         references: {
-          model: "AcademyCoach",
+          model: "AcademyCoaches",
           key: "id",
         },
       },

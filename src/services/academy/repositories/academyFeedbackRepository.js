@@ -26,7 +26,7 @@ const getAcademyCoachFeedback = async (academyId) => {
     JOIN 
       "Users" u ON cr."userId" = u."userId"
     JOIN 
-      "AcademyCoaches" ac ON cp."coachId" = ac."coachId"
+      "AcademyCoach" ac ON cp."coachId" = ac."coachId"
     WHERE 
       ac."academyId" = :academyId
       AND cr."isPublic" = true

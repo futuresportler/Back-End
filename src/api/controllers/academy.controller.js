@@ -974,6 +974,17 @@ const inviteCoach = async (req, res) => {
     errorResponse(res, error.message, error);
   }
 };
+const getProfileWithPromotion = async (req, res) => {
+  try {
+    const profile = await AcademyService.getAcademyWithPromotionStatus(
+      req.params.academyProfileId,
+      req.query
+    );
+    successResponse(res, "Academy profile with promotion status fetched", profile);
+  } catch (error) {
+    errorResponse(res, error.message, error);
+  }
+};
 
 // Bulk import academies
 const bulkImportArcheryAcademies = async (req, res) => {
@@ -1140,6 +1151,7 @@ module.exports = {
   updateProfile,
   deleteProfile,
   getNearbyAcademies,
+  getProfileWithPromotion,
   // Removed getAllAcademies
   // Student-related exports
   getAcademyStudents,

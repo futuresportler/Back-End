@@ -240,6 +240,11 @@ const getGroundMetrics = async (turfId, monthId) => {
 const refreshMetrics = async (turfId, monthId) => {
   return await turfMetricsRepository.updateAllMetrics(turfId, monthId);
 };
+
+const getTurfWithPromotionStatus = async (turfProfileId) => {
+  return await turfRepository.getTurfWithPromotionStatus(turfProfileId);
+};
+
 module.exports = {
   createTurfProfile,
   getTurfProfile,
@@ -252,6 +257,7 @@ module.exports = {
   handleBookingRequest,
   addReview,
   searchTurfs,
+  getTurfWithPromotionStatus,
   // Ground management methods
   createTurfGround,
   getTurfGrounds,

@@ -10,6 +10,25 @@ const {
 
 const findCoachProfileById = async (coachProfileId) => {
   return await CoachProfile.findByPk(coachProfileId, {
+    attributes: [
+      "coachId",
+      "name", 
+      "sports",
+      "experienceYears",
+      "certifications",
+      "achievements",
+      "hourlyRate",
+      "description",
+      "images",
+      "rating",
+      "reviews",
+      "availability",
+      "specializations",
+      "languages",
+      "ageGroups",
+      "sessionTypes",
+      "priority", // Already present - good!
+    ],
     include: [
       {
         model: Supplier,
@@ -23,7 +42,32 @@ const findCoachProfileById = async (coachProfileId) => {
 const findCoachBySupplierId = async (supplierId) => {
   return await CoachProfile.findOne({
     where: { supplierId },
-    include: ["supplier"],
+    attributes: [
+      "coachId",
+      "name", 
+      "sports",
+      "experienceYears",
+      "certifications",
+      "achievements",
+      "hourlyRate",
+      "description",
+      "images",
+      "rating",
+      "reviews",
+      "availability",
+      "specializations",
+      "languages",
+      "ageGroups",
+      "sessionTypes",
+      "priority", // Add priority field here too
+    ],
+    include: [
+      {
+        model: Supplier,
+        as: "supplier",
+        attributes: ["email", "mobile_number", "profilePicture", "location"],
+      },
+    ],
   });
 };
 
@@ -46,6 +90,25 @@ const deleteCoachProfile = async (coachProfileId) => {
 
 const findCoachesNearby = async (latitude, longitude, radius) => {
   return await CoachProfile.findAll({
+    attributes: [
+      "coachId",
+      "name", 
+      "sports",
+      "experienceYears",
+      "certifications",
+      "achievements",
+      "hourlyRate",
+      "description",
+      "images",
+      "rating",
+      "reviews",
+      "availability",
+      "specializations",
+      "languages",
+      "ageGroups",
+      "sessionTypes",
+      "priority", // Add priority field
+    ],
     include: [
       {
         model: Supplier,
@@ -63,8 +126,14 @@ const findCoachesNearby = async (latitude, longitude, radius) => {
           ),
           true
         ),
+        attributes: ["email", "mobile_number", "profilePicture", "location"],
       },
     ],
+    order: [
+      [sequelize.json("priority.value"), "DESC"], // Priority first
+      ["rating", "DESC"],
+      ["coachId", "ASC"]
+    ]
   });
 };
 
