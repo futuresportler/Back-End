@@ -4,6 +4,9 @@ const {
   errorResponse,
 } = require("../../common/utils/response");
 const { userService } = require("../../services/user"); // Import userService
+const fs = require("fs").promises;
+const path = require("path");
+const profileFactory = require("../../services/supplier/profileFactory");
 
 const createProfile = async (req, res) => {
   try {
@@ -34,21 +37,19 @@ const getProfile = async (req, res) => {
       req.params.academyProfileId,
       req.body.options
     );
-        // Automatically record the profile view
+    // Automatically record the profile view
     try {
       // Only record view if this is a client-facing request (not internal API calls)
       // You can add additional conditions as needed
-      if (!req.headers['x-internal-api']) {
-        await AcademyService.recordProfileView(
-          req.params.academyProfileId,
-          {
-            userId: req.user?.userId,
-            ipAddress: req.ip,
-            userAgent: req.headers['user-agent'],
-            referrer: req.headers.referer,
-            deviceType: req.headers['sec-ch-ua-mobile'] === '?0' ? 'desktop' : 'mobile'
-          }
-        );
+      if (!req.headers["x-internal-api"]) {
+        await AcademyService.recordProfileView(req.params.academyProfileId, {
+          userId: req.user?.userId,
+          ipAddress: req.ip,
+          userAgent: req.headers["user-agent"],
+          referrer: req.headers.referer,
+          deviceType:
+            req.headers["sec-ch-ua-mobile"] === "?0" ? "desktop" : "mobile",
+        });
       }
     } catch (viewError) {
       // Log the error but don't fail the request
@@ -64,28 +65,35 @@ const checkAcademyPermission = async (req, res, next) => {
   try {
     const { academyId } = req.params;
     const academy = await AcademyService.getAcademyProfile(academyId);
-    
+
     if (!academy) {
       return errorResponse(res, "Academy not found", null, 404);
     }
-    
+
     // Check if user is owner or accepted manager
     if (academy.supplierId === req.user.supplierId) {
-      req.academyRole = 'owner';
+      req.academyRole = "owner";
       req.academy = academy;
       next();
-    } else if (academy.managerId === req.user.supplierId && academy.managerInvitationStatus === 'accepted') {
-      req.academyRole = 'manager';
+    } else if (
+      academy.managerId === req.user.supplierId &&
+      academy.managerInvitationStatus === "accepted"
+    ) {
+      req.academyRole = "manager";
       req.academy = academy;
       next();
     } else {
-      return errorResponse(res, "Unauthorized to access this academy", null, 403);
+      return errorResponse(
+        res,
+        "Unauthorized to access this academy",
+        null,
+        403
+      );
     }
   } catch (error) {
     errorResponse(res, error.message, error);
   }
 };
-
 
 const updateProfile = async (req, res) => {
   try {
@@ -122,15 +130,6 @@ const getNearbyAcademies = async (req, res) => {
   }
 };
 
-// This function is now removed, and we'll use searchAcademies directly
-// const getAllAcademies = async (req, res) => {
-//   try {
-//     await searchAcademies(req, res)
-//   } catch (error) {
-//     errorResponse(res, error.message || "Failed to fetch academies", error, error.statusCode || 500)
-//   }
-// }
-
 // Student-related controllers
 const getAcademyStudents = async (req, res) => {
   try {
@@ -155,7 +154,10 @@ const getStudent = async (req, res) => {
 
 const createStudent = async (req, res) => {
   try {
-    const student = await AcademyService.createStudent(req.body, req.user.supplierId);
+    const student = await AcademyService.createStudent(
+      req.body,
+      req.user.supplierId
+    );
     successResponse(res, "Student created successfully", student, 201);
   } catch (error) {
     errorResponse(res, error.message, error);
@@ -187,7 +189,10 @@ const deleteStudent = async (req, res) => {
 // Batch-related controllers
 const createBatch = async (req, res) => {
   try {
-    const batch = await AcademyService.createBatch(req.body,req.user.supplierId);
+    const batch = await AcademyService.createBatch(
+      req.body,
+      req.user.supplierId
+    );
     successResponse(res, "Batch created successfully", batch, 201);
   } catch (error) {
     errorResponse(res, error.message, error);
@@ -454,7 +459,6 @@ const searchAcademies = async (req, res) => {
       rating,
       ageGroup,
       classType,
-      // Removed minPrice and maxPrice as they don't exist in the model
       facilities,
       page = 1,
       limit = 20,
@@ -476,7 +480,6 @@ const searchAcademies = async (req, res) => {
     if (rating) filters.minRating = Number.parseFloat(rating);
     if (ageGroup) filters.ageGroup = ageGroup;
     if (classType) filters.classType = classType;
-    // Removed minPrice and maxPrice filters
     if (facilities) filters.facilities = facilities.split(",");
     if (latitude && longitude) {
       filters.latitude = Number.parseFloat(latitude);
@@ -554,16 +557,13 @@ const getAcademiesByUser = async (req, res) => {
 // Record profile view
 const recordProfileView = async (req, res) => {
   try {
-    const view = await AcademyService.recordProfileView(
-      req.body.academyId,
-      {
-        userId: req.user?.userId,
-        ipAddress: req.ip,
-        userAgent: req.headers['user-agent'],
-        referrer: req.headers.referer,
-        deviceType: req.body.deviceType
-      }
-    );
+    const view = await AcademyService.recordProfileView(req.body.academyId, {
+      userId: req.user?.userId,
+      ipAddress: req.ip,
+      userAgent: req.headers["user-agent"],
+      referrer: req.headers.referer,
+      deviceType: req.body.deviceType,
+    });
     successResponse(res, "Profile view recorded", view, 201);
   } catch (error) {
     errorResponse(res, error.message, error);
@@ -579,6 +579,7 @@ const createInquiry = async (req, res) => {
     errorResponse(res, error.message, error);
   }
 };
+
 // Get inquiries
 const getInquiries = async (req, res) => {
   try {
@@ -604,6 +605,7 @@ const getMonthlyMetrics = async (req, res) => {
     errorResponse(res, error.message, error);
   }
 };
+
 // Get program monthly metrics
 const getProgramMonthlyMetrics = async (req, res) => {
   try {
@@ -633,68 +635,100 @@ const getConversionRate = async (req, res) => {
 const getAcademyCoachFeedback = async (req, res) => {
   try {
     const { academyId } = req.params;
-    
+
     if (!academyId) {
       return errorResponse(res, "Academy ID is required", null, 400);
     }
-    
+
     const feedback = await AcademyService.getAcademyCoachFeedback(academyId);
-    successResponse(res, "Academy coach feedback fetched successfully", { feedback });
+    successResponse(res, "Academy coach feedback fetched successfully", {
+      feedback,
+    });
   } catch (error) {
     errorResponse(res, error.message, error);
   }
 };
+
 const getBookingPlatforms = async (req, res) => {
   try {
     const { academyId } = req.params;
-    const period = req.query.period ? parseInt(req.query.period) : 3;
-    
+    const period = req.query.period ? Number.parseInt(req.query.period) : 3;
+
     if (!academyId) {
       return errorResponse(res, "Academy ID is required", null, 400);
     }
-    
+
     if (isNaN(period) || period < 1 || period > 12) {
-      return errorResponse(res, "Period must be a number between 1 and 12", null, 400);
+      return errorResponse(
+        res,
+        "Period must be a number between 1 and 12",
+        null,
+        400
+      );
     }
-    
-    const bookingData = await AcademyService.getBookingPlatforms(academyId, period);
-    successResponse(res, "Booking platforms data fetched successfully", bookingData);
+
+    const bookingData = await AcademyService.getBookingPlatforms(
+      academyId,
+      period
+    );
+    successResponse(
+      res,
+      "Booking platforms data fetched successfully",
+      bookingData
+    );
   } catch (error) {
     errorResponse(res, error.message, error);
   }
 };
+
 const getPopularPrograms = async (req, res) => {
   try {
     const { academyId } = req.params;
-    const limit = req.query.limit ? parseInt(req.query.limit) : 5;
-    
+    const limit = req.query.limit ? Number.parseInt(req.query.limit) : 5;
+
     if (!academyId) {
       return errorResponse(res, "Academy ID is required", null, 400);
     }
-    
+
     if (isNaN(limit) || limit < 1 || limit > 20) {
-      return errorResponse(res, "Limit must be a number between 1 and 20", null, 400);
+      return errorResponse(
+        res,
+        "Limit must be a number between 1 and 20",
+        null,
+        400
+      );
     }
-    
-    const popularPrograms = await AcademyService.getPopularPrograms(academyId, limit);
-    successResponse(res, "Popular programs fetched successfully", popularPrograms);
+
+    const popularPrograms = await AcademyService.getPopularPrograms(
+      academyId,
+      limit
+    );
+    successResponse(
+      res,
+      "Popular programs fetched successfully",
+      popularPrograms
+    );
   } catch (error) {
     errorResponse(res, error.message, error);
   }
 };
 
-// Add these Academy Coach controller methods to the existing file
-
+// Academy Coach controller methods
 const createAcademyCoach = async (req, res) => {
   try {
     const { academyId } = req.params;
-    
+
     // Add academy ownership validation
     const academy = await AcademyService.getAcademyProfile(academyId);
     if (academy.supplierId !== req.user.supplierId) {
-      return errorResponse(res, "Unauthorized to create coaches for this academy", null, 403);
+      return errorResponse(
+        res,
+        "Unauthorized to create coaches for this academy",
+        null,
+        403
+      );
     }
-    
+
     const coach = await AcademyService.createAcademyCoach(academyId, req.body);
     successResponse(res, "Academy coach created successfully", coach, 201);
   } catch (error) {
@@ -715,7 +749,10 @@ const getAcademyCoach = async (req, res) => {
 const getAcademyCoaches = async (req, res) => {
   try {
     const { academyId } = req.params;
-    const coaches = await AcademyService.getAcademyCoaches(academyId, req.query);
+    const coaches = await AcademyService.getAcademyCoaches(
+      academyId,
+      req.query
+    );
     successResponse(res, "Academy coaches fetched successfully", coaches);
   } catch (error) {
     errorResponse(res, error.message, error);
@@ -725,16 +762,19 @@ const getAcademyCoaches = async (req, res) => {
 const updateAcademyCoach = async (req, res) => {
   try {
     const { coachId } = req.params;
-    
+
     // Add authorization check - coach must belong to user's academy
     const coach = await AcademyService.getAcademyCoach(coachId);
     const academy = await AcademyService.getAcademyProfile(coach.academyId);
-    
+
     if (academy.supplierId !== req.user.supplierId) {
       return errorResponse(res, "Unauthorized to update this coach", null, 403);
     }
-    
-    const updatedCoach = await AcademyService.updateAcademyCoach(coachId, req.body);
+
+    const updatedCoach = await AcademyService.updateAcademyCoach(
+      coachId,
+      req.body
+    );
     successResponse(res, "Academy coach updated successfully", updatedCoach);
   } catch (error) {
     errorResponse(res, error.message, error);
@@ -744,15 +784,15 @@ const updateAcademyCoach = async (req, res) => {
 const deleteAcademyCoach = async (req, res) => {
   try {
     const { coachId } = req.params;
-    
+
     // Add authorization check
     const coach = await AcademyService.getAcademyCoach(coachId);
     const academy = await AcademyService.getAcademyProfile(coach.academyId);
-    
+
     if (academy.supplierId !== req.user.supplierId) {
       return errorResponse(res, "Unauthorized to delete this coach", null, 403);
     }
-    
+
     await AcademyService.deleteAcademyCoach(coachId);
     successResponse(res, "Academy coach deleted successfully", null, 204);
   } catch (error) {
@@ -764,22 +804,31 @@ const assignCoachToBatch = async (req, res) => {
   try {
     const { coachId } = req.params;
     const { batchId, isPrimary } = req.body;
-    
+
     // Validate coach belongs to user's academy
     const coach = await AcademyService.getAcademyCoach(coachId);
     const academy = await AcademyService.getAcademyProfile(coach.academyId);
-    
+
     if (academy.supplierId !== req.user.supplierId) {
       return errorResponse(res, "Unauthorized to assign this coach", null, 403);
     }
-    
+
     // Validate batch belongs to same academy
     const batch = await AcademyService.getBatchById(batchId);
     if (batch.academyId !== coach.academyId) {
-      return errorResponse(res, "Coach and batch must belong to the same academy", null, 400);
+      return errorResponse(
+        res,
+        "Coach and batch must belong to the same academy",
+        null,
+        400
+      );
     }
-    
-    const assignment = await AcademyService.academyCoachService.assignToBatch(coachId, batchId, isPrimary);
+
+    const assignment = await AcademyService.academyCoachService.assignToBatch(
+      coachId,
+      batchId,
+      isPrimary
+    );
     successResponse(res, "Coach assigned to batch successfully", assignment);
   } catch (error) {
     errorResponse(res, error.message, error);
@@ -789,15 +838,15 @@ const assignCoachToBatch = async (req, res) => {
 const removeCoachFromBatch = async (req, res) => {
   try {
     const { coachId, batchId } = req.params;
-    
+
     // Add authorization check
     const coach = await AcademyService.getAcademyCoach(coachId);
     const academy = await AcademyService.getAcademyProfile(coach.academyId);
-    
+
     if (academy.supplierId !== req.user.supplierId) {
       return errorResponse(res, "Unauthorized to remove this coach", null, 403);
     }
-    
+
     await AcademyService.academyCoachService.removeFromBatch(coachId, batchId);
     successResponse(res, "Coach removed from batch successfully", null, 204);
   } catch (error) {
@@ -809,22 +858,31 @@ const assignCoachToProgram = async (req, res) => {
   try {
     const { coachId } = req.params;
     const { programId, isPrimary } = req.body;
-    
+
     // Validate coach belongs to user's academy
     const coach = await AcademyService.getAcademyCoach(coachId);
     const academy = await AcademyService.getAcademyProfile(coach.academyId);
-    
+
     if (academy.supplierId !== req.user.supplierId) {
       return errorResponse(res, "Unauthorized to assign this coach", null, 403);
     }
-    
+
     // Validate program belongs to same academy
     const program = await AcademyService.getProgramById(programId);
     if (program.academyId !== coach.academyId) {
-      return errorResponse(res, "Coach and program must belong to the same academy", null, 400);
+      return errorResponse(
+        res,
+        "Coach and program must belong to the same academy",
+        null,
+        400
+      );
     }
-    
-    const assignment = await AcademyService.academyCoachService.assignToProgram(coachId, programId, isPrimary);
+
+    const assignment = await AcademyService.academyCoachService.assignToProgram(
+      coachId,
+      programId,
+      isPrimary
+    );
     successResponse(res, "Coach assigned to program successfully", assignment);
   } catch (error) {
     errorResponse(res, error.message, error);
@@ -834,16 +892,19 @@ const assignCoachToProgram = async (req, res) => {
 const removeCoachFromProgram = async (req, res) => {
   try {
     const { coachId, programId } = req.params;
-    
+
     // Add authorization check
     const coach = await AcademyService.getAcademyCoach(coachId);
     const academy = await AcademyService.getAcademyProfile(coach.academyId);
-    
+
     if (academy.supplierId !== req.user.supplierId) {
       return errorResponse(res, "Unauthorized to remove this coach", null, 403);
     }
-    
-    await AcademyService.academyCoachService.removeFromProgram(coachId, programId);
+
+    await AcademyService.academyCoachService.removeFromProgram(
+      coachId,
+      programId
+    );
     successResponse(res, "Coach removed from program successfully", null, 204);
   } catch (error) {
     errorResponse(res, error.message, error);
@@ -854,7 +915,11 @@ const getCoachBatchesAndPrograms = async (req, res) => {
   try {
     const { coachId } = req.params;
     const data = await AcademyService.getCoachBatchesAndPrograms(coachId);
-    successResponse(res, "Coach batches and programs fetched successfully", data);
+    successResponse(
+      res,
+      "Coach batches and programs fetched successfully",
+      data
+    );
   } catch (error) {
     errorResponse(res, error.message, error);
   }
@@ -869,25 +934,33 @@ const getCoachSchedule = async (req, res) => {
     errorResponse(res, error.message, error);
   }
 };
+
 const syncCoachesWithPlatform = async (req, res) => {
   try {
     const { academyId } = req.params;
-    
+
     // Add academy ownership validation
     const academy = await AcademyService.getAcademyProfile(academyId);
     if (academy.supplierId !== req.user.supplierId) {
-      return errorResponse(res, "Unauthorized to sync coaches for this academy", null, 403);
+      return errorResponse(
+        res,
+        "Unauthorized to sync coaches for this academy",
+        null,
+        403
+      );
     }
-    
-    const result = await AcademyService.academyCoachService.syncAllCoachesWithPlatform(academyId);
+
+    const result =
+      await AcademyService.academyCoachService.syncAllCoachesWithPlatform(
+        academyId
+      );
     successResponse(res, "Coaches synced with platform successfully", result);
   } catch (error) {
     errorResponse(res, error.message, error);
   }
 };
 
-
-// Add invitation endpoints
+// Invitation endpoints
 const inviteCoach = async (req, res) => {
   try {
     const { academyId } = req.params;
@@ -901,6 +974,165 @@ const inviteCoach = async (req, res) => {
     errorResponse(res, error.message, error);
   }
 };
+
+// Bulk import academies
+const bulkImportArcheryAcademies = async (req, res) => {
+  try {
+    const { password, supplierId } = req.params;
+
+    // Simple password check (you might want to use a more secure approach)
+    if (password !== "adminPass") {
+      return errorResponse(res, "Unauthorized access", null, 401);
+    }
+
+    // Read the JSON file
+    const jsonFilePath = path.join(
+      __dirname,
+      "../../../src/scripts/Archery_data.json"
+    );
+    const jsonData = await fs.readFile(jsonFilePath, "utf8");
+    const academies = JSON.parse(jsonData);
+
+    console.log(`Found ${academies.length} academies to import`);
+
+    // Use the provided supplier ID
+    if (!supplierId) {
+      return errorResponse(
+        res,
+        "Admin supplier ID not found in request parameters",
+        null,
+        500
+      );
+    }
+
+    // Batch processing
+    const batchSize = 10; // Process 10 academies at a time
+    const delay = 1500; // 1.5 seconds delay between batches
+    const results = {
+      total: academies.length,
+      processed: 0,
+      successful: 0,
+      failed: 0,
+      failures: [],
+    };
+
+    // Process academies in batches
+    for (let i = 0; i < academies.length; i += batchSize) {
+      const batch = academies.slice(i, i + batchSize);
+      console.log(
+        `Processing batch ${Math.floor(i / batchSize) + 1} of ${Math.ceil(
+          academies.length / batchSize
+        )}`
+      );
+
+      // Process each academy in the batch
+      const batchPromises = batch.map(async (academy) => {
+        try {
+          // Transform the data to match academyProfile schema
+          const academyData = transformArcheryData(academy);
+
+          // Create the academy profile
+          const createdAcademy = await profileFactory.createProfile(
+            "academy",
+            supplierId,
+            academyData
+          );
+          console.log(`Successfully created academy: ${academyData.basic_info.academy_name}`);
+          results.successful++;
+          return createdAcademy;
+        } catch (error) {
+          console.error(
+            `Failed to create academy ${academyData.basic_info.academy_name}: ${error.message}`
+          );
+          results.failed++;
+          results.failures.push({
+            name: academyData.basic_info.academy_name,
+            error: error.message,
+          });
+          return null;
+        } finally {
+          results.processed++;
+        }
+      });
+
+      // Wait for all academies in the batch to be processed
+      await Promise.all(batchPromises);
+
+      // Add delay between batches if not the last batch
+      if (i + batchSize < academies.length) {
+        console.log(
+          `Waiting ${delay / 1000} seconds before processing next batch...`
+        );
+        await new Promise((resolve) => setTimeout(resolve, delay));
+      }
+    }
+
+    successResponse(res, "Bulk import completed", results);
+  } catch (error) {
+    console.error("Error in bulk import:", error);
+    errorResponse(res, error.message, error);
+  }
+};
+
+// Helper function to transform archery data to match academyProfile schema
+const transformArcheryData = (archeryData) => {
+  // Extract year from establishment year or use random recent year
+  const foundedYear = archeryData["Establishment Year"]
+    ? Number.parseInt(archeryData["Establishment Year"])
+    : new Date().getFullYear() - Math.floor(Math.random() * 10);
+
+  // Address
+  const address = archeryData["Full Address"] || "Address not available";
+
+  // Gallery Images
+  const galleryImages = archeryData["Gallery Images"]
+    ? archeryData["Gallery Images"]
+        .split(", ")
+        .filter((url) => url.startsWith("http"))
+    : [];
+
+  // Default to archery
+  const sports = ["archery"];
+
+  // State as city fallback
+  const city = archeryData["STATE"] || "Unknown";
+
+  // Description
+  const name = archeryData["Name"] || "Unnamed Archery Academy";
+  const description = `${name} offers professional archery training for all age groups. Located in ${city}, it provides quality coaching and facilities for archery enthusiasts.`;
+
+  // Transform to match createAcademyProfile expected shape
+  return {
+    basic_info: {
+      academy_name: name,
+      academy_description: description,
+      year_of_establishment: foundedYear,
+      city,
+      full_address: address,
+    },
+    sports_details: {
+      sports_available: sports,
+      facilities: [
+        "Archery Range",
+        "Equipment Rental",
+        "Professional Coaching",
+      ],
+      age_groups: {
+        children: true,
+        teens: true,
+        adults: true,
+      },
+      class_types: {
+        "group-classes": true,
+      },
+      academy_photos: galleryImages,
+    },
+    manager_info: {
+      owner_is_manager: true,
+    },
+  };
+};
+
 module.exports = {
   createProfile,
   getMyProfiles,
@@ -958,7 +1190,7 @@ module.exports = {
   getBookingPlatforms,
   getPopularPrograms,
 
-  // Add Academy Coach 
+  // Add Academy Coach
   createAcademyCoach,
   getAcademyCoach,
   getAcademyCoaches,
@@ -971,7 +1203,10 @@ module.exports = {
   getCoachBatchesAndPrograms,
   getCoachSchedule,
   syncCoachesWithPlatform,
-  
+
   checkAcademyPermission,
   inviteCoach,
+
+  // Add the new bulk import function
+  bulkImportArcheryAcademies,
 };

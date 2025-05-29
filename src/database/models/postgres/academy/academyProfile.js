@@ -61,7 +61,7 @@ module.exports = (sequelize) => {
       // Age Groups & Class Types
       ageGroups: {
         type: DataTypes.JSON,
-        allowNull: false,
+        allowNull: true,
         // Example: [{ "infants": true, "children": false, teens: true, adults: false }]
       },
       classTypes: {
@@ -73,7 +73,7 @@ module.exports = (sequelize) => {
       // Location Info
       location: {
         type: DataTypes.GEOMETRY("POINT"),
-        allowNull: false,
+        allowNull: true,
       },
       city: {
         type: DataTypes.STRING,
@@ -87,11 +87,11 @@ module.exports = (sequelize) => {
       // Contact Info
       phone: {
         type: DataTypes.STRING,
-        allowNull: false,
+        allowNull: true,
       },
       email: {
         type: DataTypes.STRING,
-        allowNull: false,
+        allowNull: true,
       },
       website: {
         type: DataTypes.STRING,
@@ -120,24 +120,24 @@ module.exports = (sequelize) => {
       totalStudents: {
         type: DataTypes.INTEGER,
         defaultValue: 0,
-        allowNull: false,
+        allowNull: true,
       },
       totalPrograms: {
         type: DataTypes.INTEGER,
         defaultValue: 0,
-        allowNull: false,
+        allowNull: true,
       },
 
       // Ratings & Reviews
       rating: {
         type: DataTypes.DECIMAL(3, 2),
         defaultValue: 0.0,
-        allowNull: false,
+        allowNull: true,
       },
       reviewsCount: {
         type: DataTypes.INTEGER,
         defaultValue: 0,
-        allowNull: false,
+        allowNull: true,
       },
 
       trailDuration: {
