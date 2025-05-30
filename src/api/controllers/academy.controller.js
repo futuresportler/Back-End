@@ -58,6 +58,7 @@ const getProfile = async (req, res) => {
     successResponse(res, "Academy profile fetched", profile);
   } catch (error) {
     errorResponse(res, error.message, error);
+    errorResponse(res, error.message, error);
   }
 };
 
@@ -195,6 +196,7 @@ const createBatch = async (req, res) => {
     );
     successResponse(res, "Batch created successfully", batch, 201);
   } catch (error) {
+    errorResponse(res, error.message, error);
     errorResponse(res, error.message, error);
   }
 };
@@ -980,7 +982,22 @@ const getProfileWithPromotion = async (req, res) => {
       req.params.academyProfileId,
       req.query
     );
-    successResponse(res, "Academy profile with promotion status fetched", profile);
+    successResponse(
+      res,
+      "Academy profile with promotion status fetched",
+      profile
+    );
+  } catch (error) {
+    errorResponse(res, error.message, error);
+  }
+};
+const refreshMetrics = async (req, res) => {
+  try {
+    await AcademyService.refreshMetrics(
+      req.params.academyId,
+      req.params.monthId
+    );
+    successResponse(res, "Academy metrics refreshed successfully");
   } catch (error) {
     errorResponse(res, error.message, error);
   }
@@ -1048,7 +1065,9 @@ const bulkImportArcheryAcademies = async (req, res) => {
             supplierId,
             academyData
           );
-          console.log(`Successfully created academy: ${academyData.basic_info.academy_name}`);
+          console.log(
+            `Successfully created academy: ${academyData.basic_info.academy_name}`
+          );
           results.successful++;
           return createdAcademy;
         } catch (error) {
@@ -1144,6 +1163,342 @@ const transformArcheryData = (archeryData) => {
   };
 };
 
+// Add score tracking controller methods after existing methods
+
+const updateStudentScore = async (req, res) => {
+  try {
+    const { academyId, studentId } = req.params;
+    const scoreData = req.body;
+    const assessorId = req.user.supplierId;
+
+    const updatedStudent = await AcademyService.updateStudentScore(
+      academyId,
+      studentId,
+      scoreData,
+      assessorId
+    );
+
+    successResponse(res, "Student score updated successfully", updatedStudent);
+  } catch (error) {
+    errorResponse(res, error.message, error);
+  }
+};
+
+const getStudentScoreAnalytics = async (req, res) => {
+  try {
+    const { academyId, studentId } = req.params;
+    const { months = 6 } = req.query;
+
+    const analytics = await AcademyService.getStudentScoreAnalytics(
+      academyId,
+      studentId,
+      months
+    );
+
+    successResponse(
+      res,
+      "Student score analytics fetched successfully",
+      analytics
+    );
+  } catch (error) {
+    errorResponse(res, error.message, error);
+  }
+};
+
+const getBatchScoreAnalytics = async (req, res) => {
+  try {
+    const { academyId, batchId } = req.params;
+
+    const analytics = await AcademyService.getBatchScoreAnalytics(
+      academyId,
+      batchId
+    );
+    successResponse(
+      res,
+      "Batch score analytics fetched successfully",
+      analytics
+    );
+  } catch (error) {
+    errorResponse(res, error.message, error);
+  }
+};
+
+const getProgramScoreAnalytics = async (req, res) => {
+  try {
+    const { academyId, programId } = req.params;
+
+    const analytics = await AcademyService.getProgramScoreAnalytics(
+      academyId,
+      programId
+    );
+    successResponse(
+      res,
+      "Program score analytics fetched successfully",
+      analytics
+    );
+  } catch (error) {
+    errorResponse(res, error.message, error);
+  }
+};
+
+const getStudentsWithScoreAnalytics = async (req, res) => {
+  try {
+    const { academyId } = req.params;
+    const filters = req.query;
+
+    const students = await AcademyService.getStudentsWithScoreAnalytics(
+      academyId,
+      filters
+    );
+    successResponse(
+      res,
+      "Students with score analytics fetched successfully",
+      students
+    );
+  } catch (error) {
+    errorResponse(res, error.message, error);
+  }
+};
+
+const awardStudentAchievement = async (req, res) => {
+  try {
+    const { academyId, studentId } = req.params;
+    const achievement = req.body;
+
+    const updatedStudent = await AcademyService.awardStudentAchievement(
+      academyId,
+      studentId,
+      achievement
+    );
+
+    successResponse(
+      res,
+      "Student achievement awarded successfully",
+      updatedStudent
+    );
+  } catch (error) {
+    errorResponse(res, error.message, error);
+  }
+};
+
+const getAcademyScoreOverview = async (req, res) => {
+  try {
+    const { academyId } = req.params;
+
+    const overview = await AcademyService.getAcademyScoreOverview(academyId);
+    successResponse(
+      res,
+      "Academy score overview fetched successfully",
+      overview
+    );
+  } catch (error) {
+    errorResponse(res, error.message, error);
+  }
+};
+
+const bulkUpdateStudentScores = async (req, res) => {
+  try {
+    const { academyId } = req.params;
+    const { studentsScoreData } = req.body;
+    const assessorId = req.user.supplierId;
+
+    const result = await AcademyService.bulkUpdateStudentScores(
+      academyId,
+      studentsScoreData,
+      assessorId
+    );
+
+    successResponse(res, "Bulk score update completed", result);
+  } catch (error) {
+    errorResponse(res, error.message, error);
+  }
+};
+
+// Progress tracking controller methods
+const updateStudentQuarterlyProgress = async (req, res) => {
+  try {
+    const { academyId, studentId, year, quarter } = req.params;
+    const progressData = req.body;
+    const updaterSupplierId = req.user.supplierId;
+
+    const updatedProgress = await AcademyService.updateStudentQuarterlyProgress(
+      academyId,
+      studentId,
+      year,
+      quarter,
+      progressData,
+      updaterSupplierId
+    );
+
+    successResponse(
+      res,
+      "Student quarterly progress updated successfully",
+      updatedProgress
+    );
+  } catch (error) {
+    errorResponse(res, error.message, error);
+  }
+};
+
+const getStudentQuarterlyProgress = async (req, res) => {
+  try {
+    const { academyId, studentId } = req.params;
+    const { year, quarter } = req.query;
+
+    const progress = await AcademyService.getStudentQuarterlyProgress(
+      academyId,
+      studentId,
+      year,
+      quarter
+    );
+
+    successResponse(
+      res,
+      "Student quarterly progress fetched successfully",
+      progress
+    );
+  } catch (error) {
+    errorResponse(res, error.message, error);
+  }
+};
+
+const generateStudentQuarterlyReport = async (req, res) => {
+  try {
+    const { academyId, studentId, year, quarter } = req.params;
+    const generatorSupplierId = req.user.supplierId;
+
+    const report = await AcademyService.generateStudentQuarterlyReport(
+      academyId,
+      studentId,
+      year,
+      quarter,
+      generatorSupplierId
+    );
+
+    successResponse(
+      res,
+      "Student quarterly report generated successfully",
+      report
+    );
+  } catch (error) {
+    errorResponse(res, error.message, error);
+  }
+};
+
+const updateStudentProgressMilestones = async (req, res) => {
+  try {
+    const { academyId, studentId } = req.params;
+    const { sport, level, achieved = true } = req.body;
+    const updaterSupplierId = req.user.supplierId;
+
+    const updatedMilestones =
+      await AcademyService.updateStudentProgressMilestones(
+        academyId,
+        studentId,
+        sport,
+        level,
+        achieved,
+        updaterSupplierId
+      );
+
+    successResponse(
+      res,
+      "Student progress milestones updated successfully",
+      updatedMilestones
+    );
+  } catch (error) {
+    errorResponse(res, error.message, error);
+  }
+};
+
+const getAcademyProgressAnalytics = async (req, res) => {
+  try {
+    const { academyId } = req.params;
+    const filters = req.query;
+    const requesterSupplierId = req.user.supplierId;
+
+    const analytics = await AcademyService.getAcademyProgressAnalytics(
+      academyId,
+      filters,
+      requesterSupplierId
+    );
+
+    successResponse(
+      res,
+      "Academy progress analytics fetched successfully",
+      analytics
+    );
+  } catch (error) {
+    errorResponse(res, error.message, error);
+  }
+};
+
+const getBatchProgressAnalytics = async (req, res) => {
+  try {
+    const { academyId, batchId } = req.params;
+    const filters = req.query;
+
+    const analytics = await AcademyService.getBatchProgressAnalytics(
+      academyId,
+      batchId,
+      filters
+    );
+
+    successResponse(
+      res,
+      "Batch progress analytics fetched successfully",
+      analytics
+    );
+  } catch (error) {
+    errorResponse(res, error.message, error);
+  }
+};
+
+const getProgramProgressAnalytics = async (req, res) => {
+  try {
+    const { academyId, programId } = req.params;
+    const filters = req.query;
+
+    const analytics = await AcademyService.getProgramProgressAnalytics(
+      academyId,
+      programId,
+      filters
+    );
+
+    successResponse(
+      res,
+      "Program progress analytics fetched successfully",
+      analytics
+    );
+  } catch (error) {
+    errorResponse(res, error.message, error);
+  }
+};
+
+const generateBulkQuarterlyReports = async (req, res) => {
+  try {
+    const { academyId, year, quarter } = req.params;
+    const filters = req.query;
+    const generatorSupplierId = req.user.supplierId;
+
+    const reports = await AcademyService.generateBulkQuarterlyReports(
+      academyId,
+      year,
+      quarter,
+      filters,
+      generatorSupplierId
+    );
+
+    successResponse(
+      res,
+      "Bulk quarterly reports generated successfully",
+      reports
+    );
+  } catch (error) {
+    errorResponse(res, error.message, error);
+  }
+};
+
 module.exports = {
   createProfile,
   getMyProfiles,
@@ -1151,6 +1506,8 @@ module.exports = {
   updateProfile,
   deleteProfile,
   getNearbyAcademies,
+  getProfileWithPromotion,
+  // Removed getAllAcademies
   getProfileWithPromotion,
   // Removed getAllAcademies
   // Student-related exports
@@ -1201,6 +1558,7 @@ module.exports = {
   getAcademyCoachFeedback,
   getBookingPlatforms,
   getPopularPrograms,
+  refreshMetrics,
 
   // Add Academy Coach
   createAcademyCoach,
@@ -1221,4 +1579,24 @@ module.exports = {
 
   // Add the new bulk import function
   bulkImportArcheryAcademies,
+
+  // Add score tracking exports
+  updateStudentScore,
+  getStudentScoreAnalytics,
+  getBatchScoreAnalytics,
+  getProgramScoreAnalytics,
+  getStudentsWithScoreAnalytics,
+  awardStudentAchievement,
+  getAcademyScoreOverview,
+  bulkUpdateStudentScores,
+
+  // Add progress tracking exports
+  updateStudentQuarterlyProgress,
+  getStudentQuarterlyProgress,
+  generateStudentQuarterlyReport,
+  updateStudentProgressMilestones,
+  getAcademyProgressAnalytics,
+  getBatchProgressAnalytics,
+  getProgramProgressAnalytics,
+  generateBulkQuarterlyReports,
 };

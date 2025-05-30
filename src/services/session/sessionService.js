@@ -3,6 +3,10 @@ const { info, error } = require("../../config/logging");
 const { Op } = require("sequelize");
 const moment = require("moment");
 const SessionRepository = require('./repositories/sessionRepository');
+const coachAnalyticsRepository = require('../coach/repositories/coachAnalyticsRepository');
+const academyMetricsRepository = require('../academy/repositories/academyMetricsRepository');
+const turfMetricsRepository = require('../turf/repositories/turfMetricsRepository');
+
 // Session models
 /**
  * Get the appropriate session and request models based on service type
@@ -356,6 +360,17 @@ const cancelSession = async (service, session_id, reason) => {
       is_cancelled: true,
       reason: reason || "Session cancelled",
     });
+    await updateMetricsOnSessionEvent({
+    sessionType,
+    coachId: session.coachId,
+    academyId: session.academyId,
+    turfId: session.turfId,
+    batchId: session.batchId,
+    programId: session.programId,
+    monthId: session.monthId,
+    dayId: session.dayId
+  }, 'cancelled');
+  
 
     return session;
   } catch (err) {
@@ -384,6 +399,7 @@ const completeSession = async (service, session_id) => {
       },
     });
 
+
     if (!session) {
       throw new Error(
         "Session not found, not booked, or already cancelled/completed"
@@ -394,6 +410,17 @@ const completeSession = async (service, session_id) => {
     await session.update({
       is_completed: true,
     });
+    await updateMetricsOnSessionEvent({
+      sessionType,
+      coachId: session.coachId,
+      academyId: session.academyId,
+      turfId: session.turfId,
+      batchId: session.batchId,
+      programId: session.programId,
+      monthId: session.monthId,
+      dayId: session.dayId
+    }, 'completed');
+      
 
     return session;
   } catch (err) {
@@ -919,6 +946,79 @@ const getUserTurfSessions= async (userId, turfId) =>{
     return [];
       }
 }
+const updateMetricsOnSessionEvent = async (sessionData, eventType) => {
+  try {
+    const { sessionType, coachId, academyId, turfId, batchId, programId, monthId, dayId } = sessionData;
+    
+    switch (eventType) {
+      case 'created':
+        if (sessionType === 'coach' && coachId) {
+          await coachAnalyticsRepository.incrementMetricCounter(coachId, monthId, 'totalSessions');
+          if (batchId) {
+            await coachAnalyticsRepository.incrementBatchMetricCounter(batchId, monthId, 'totalSessions');
+          }
+        }
+        if (sessionType === 'academy' && academyId) {
+          await academyMetricsRepository.incrementMetricCounter(academyId, monthId, dayId, 'totalSessions');
+          if (batchId) {
+            await academyMetricsRepository.incrementBatchMetricCounter(batchId, monthId, 'totalSessions');
+          }
+          if (programId) {
+            await academyMetricsRepository.incrementProgramMetricCounter(programId, monthId, 'totalSessions');
+          }
+        }
+        if (sessionType === 'turf' && turfId) {
+          await turfMetricsRepository.incrementMetricCounter(turfId, monthId, dayId, 'totalBookings');
+        }
+        break;
+      case 'completed':
+        if (sessionType === 'coach' && coachId) {
+          await coachAnalyticsRepository.incrementMetricCounter(coachId, monthId, 'completedSessions');
+          if (batchId) {
+            await coachAnalyticsRepository.incrementBatchMetricCounter(batchId, monthId, 'completedSessions');
+          }
+        }
+        if (sessionType === 'academy' && academyId) {
+          await academyMetricsRepository.incrementMetricCounter(academyId, monthId, dayId, 'completedSessions');
+          if (batchId) {
+            await academyMetricsRepository.incrementBatchMetricCounter(batchId, monthId, 'completedSessions');
+          }
+          if (programId) {
+            await academyMetricsRepository.incrementProgramMetricCounter(programId, monthId, 'completedSessions');
+          }
+        }
+        if (sessionType === 'turf' && turfId) {
+          await turfMetricsRepository.incrementMetricCounter(turfId, monthId, dayId, 'completedBookings');
+        }
+        break;
+        case 'cancelled':
+        if (sessionType === 'coach' && coachId) {
+          await coachAnalyticsRepository.incrementMetricCounter(coachId, monthId, 'cancelledSessions');
+          if (batchId) {
+            await coachAnalyticsRepository.incrementBatchMetricCounter(batchId, monthId, 'cancelledSessions');
+          }
+        }
+        if (sessionType === 'academy' && academyId) {
+          await academyMetricsRepository.incrementMetricCounter(academyId, monthId, dayId, 'cancelledSessions');
+          if (batchId) {
+            await academyMetricsRepository.incrementBatchMetricCounter(batchId, monthId, 'cancelledSessions');
+          }
+          if (programId) {
+            await academyMetricsRepository.incrementProgramMetricCounter(programId, monthId, 'cancelledSessions');
+          }
+        }
+        if (sessionType === 'turf' && turfId) {
+          await turfMetricsRepository.incrementMetricCounter(turfId, monthId, dayId, 'cancelledBookings');
+        }
+        break;
+    }
+  } catch (error) {
+    console.error('Error updating metrics on session event:', error);
+  }
+};
+        
+
+
 module.exports = {
   requestSession,
   confirmSessionRequest,
@@ -931,7 +1031,7 @@ module.exports = {
   getAllUserBookings,
   getLatestCompletedSessions,
   getUpcomingSessions,
-  
+  updateMetricsOnSessionEvent,
   getAllUserCoachBookings,
   getAllUserAcademyBookings,
   getAllUserTurfBookings,
