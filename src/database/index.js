@@ -421,7 +421,7 @@ const defineAssociations = () => {
 
   CoachStudent.belongsTo(User, {
     foreignKey: "userId",
-    as: "student",
+    as: "coachStudentUser",
   });
 
   CoachBatch.hasMany(CoachStudent, {
@@ -458,7 +458,7 @@ const defineAssociations = () => {
   });
   MonthlyStudentProgress.belongsTo(User, {
     foreignKey: "userId",
-    as: "student",
+    as: "progressStudent",
   });
   MonthlyStudentProgress.belongsTo(Month, {
     foreignKey: "monthId",
@@ -468,11 +468,6 @@ const defineAssociations = () => {
   CoachProfile.hasMany(MonthlyStudentProgress, {
     foreignKey: "coachId",
     as: "studentProgress",
-  });
-
-  User.hasMany(MonthlyStudentProgress, {
-    foreignKey: "userId",
-    as: "progressReports",
   });
 
   // Student Relationships
@@ -498,7 +493,7 @@ const defineAssociations = () => {
 
   CoachReview.belongsTo(User, {
     foreignKey: "userId",
-    as: "student",
+    as: "reviewingStudent",
   });
 
   CoachReview.belongsTo(CoachPayment, {
@@ -528,20 +523,11 @@ const defineAssociations = () => {
     as: "monthlyMetrics",
   });
 
-  BatchMonthlyMetric.belongsTo(CoachBatch, {
-    foreignKey: "batchId",
-    as: "batch",
-  });
-
   CoachProfile.hasMany(BatchMonthlyMetric, {
     foreignKey: "coachId",
     as: "batchMetrics",
   });
 
-  BatchMonthlyMetric.belongsTo(CoachProfile, {
-    foreignKey: "coachId",
-    as: "coach",
-  });
   // Academy Coach associations
   AcademyProfile.hasMany(AcademyCoach, {
     foreignKey: "academyId",
@@ -758,7 +744,7 @@ const defineAssociations = () => {
 
   FeedbackReminder.belongsTo(User, {
     foreignKey: "studentId",
-    as: "student",
+    as: "remindedStudent",
   });
 
   AcademyBatch.hasMany(FeedbackReminder, {
@@ -884,7 +870,7 @@ const defineAssociations = () => {
 
   User.hasMany(AcademyStudent, {
     foreignKey: "userId",
-    as: "student",
+    as: "academyEnrollments",
   });
   // Coach Session associations
   CoachSession.belongsTo(CoachBatch, {
@@ -1105,35 +1091,15 @@ const defineAssociations = () => {
   });
 
   // Score-related associations
-  MonthlyStudentProgress.belongsTo(User, {
-    foreignKey: "userId",
-    as: "student",
-  });
-
-  MonthlyStudentProgress.belongsTo(CoachProfile, {
-    foreignKey: "coachId",
-    as: "coach",
-  });
-
-  MonthlyStudentProgress.belongsTo(Month, {
-    foreignKey: "monthId",
-    as: "month",
-  });
-
   User.hasMany(MonthlyStudentProgress, {
     foreignKey: "userId",
     as: "monthlyProgress",
   });
 
-  CoachProfile.hasMany(MonthlyStudentProgress, {
-    foreignKey: "coachId",
-    as: "studentProgress",
-  });
-
   // Monthly Student Metric associations for academy students
   MonthlyStudentMetric.belongsTo(AcademyStudent, {
     foreignKey: "studentId",
-    as: "student",
+    as: "metricStudent",
   });
 
   MonthlyStudentMetric.belongsTo(Month, {
@@ -1155,32 +1121,6 @@ const defineAssociations = () => {
   BatchMonthlyMetric.belongsTo(CoachProfile, {
     foreignKey: "coachId",
     as: "coach",
-  });
-
-  BatchMonthlyMetric.belongsTo(Month, {
-    foreignKey: "monthId",
-    as: "month",
-  });
-
-  CoachBatch.hasMany(BatchMonthlyMetric, {
-    foreignKey: "batchId",
-    as: "scoreMetrics",
-  });
-
-  // Monthly Coach Metric associations for effectiveness tracking
-  MonthlyCoachMetric.belongsTo(CoachProfile, {
-    foreignKey: "coachId",
-    as: "coach",
-  });
-
-  MonthlyCoachMetric.belongsTo(Month, {
-    foreignKey: "monthId",
-    as: "month",
-  });
-
-  CoachProfile.hasMany(MonthlyCoachMetric, {
-    foreignKey: "coachId",
-    as: "effectivenessMetrics",
   });
 
   // Program Monthly Metric associations for score tracking
