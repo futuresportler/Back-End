@@ -345,11 +345,262 @@ const refreshAnalytics = async (req, res) => {
   }
 };
 
-
 const getProfileWithPromotion = async (req, res) => {
   try {
-    const profile = await coachService.getCoachWithPromotionStatus(req.params.coachProfileId);
-    successResponse(res, "Coach profile with promotion status fetched", profile);
+    const profile = await coachService.getCoachWithPromotionStatus(
+      req.params.coachProfileId
+    );
+    successResponse(
+      res,
+      "Coach profile with promotion status fetched",
+      profile
+    );
+  } catch (error) {
+    errorResponse(res, error.message, error);
+  }
+};
+
+// Score tracking methods
+const updateStudentScore = async (req, res) => {
+  try {
+    const { coachId, studentId } = req.params;
+    const scoreData = req.body;
+
+    const updatedStudent = await coachService.updateStudentScore(
+      coachId,
+      studentId,
+      scoreData
+    );
+    successResponse(res, "Student score updated successfully", updatedStudent);
+  } catch (error) {
+    errorResponse(res, error.message, error);
+  }
+};
+
+const getStudentScoreHistory = async (req, res) => {
+  try {
+    const { coachId, studentId } = req.params;
+    const { months = 6 } = req.query;
+
+    const scoreHistory = await coachService.getStudentScoreHistory(
+      coachId,
+      studentId,
+      months
+    );
+    successResponse(
+      res,
+      "Student score history fetched successfully",
+      scoreHistory
+    );
+  } catch (error) {
+    errorResponse(res, error.message, error);
+  }
+};
+
+const getBatchScoreAnalytics = async (req, res) => {
+  try {
+    const { batchId } = req.params;
+
+    const analytics = await coachService.getBatchScoreAnalytics(batchId);
+    successResponse(
+      res,
+      "Batch score analytics fetched successfully",
+      analytics
+    );
+  } catch (error) {
+    errorResponse(res, error.message, error);
+  }
+};
+
+const getCoachEffectivenessReport = async (req, res) => {
+  try {
+    const { coachId } = req.params;
+    const { timeframe = "quarter" } = req.query;
+
+    const report = await coachService.getCoachEffectivenessReportNew(
+      coachId,
+      timeframe
+    );
+    successResponse(
+      res,
+      "Coach effectiveness report generated successfully",
+      report
+    );
+  } catch (error) {
+    errorResponse(res, error.message, error);
+  }
+};
+
+const getStudentsWithScores = async (req, res) => {
+  try {
+    const { coachId } = req.params;
+    const filters = req.query;
+
+    const students = await coachService.getStudentsWithScores(coachId, filters);
+    successResponse(res, "Students with scores fetched successfully", students);
+  } catch (error) {
+    errorResponse(res, error.message, error);
+  }
+};
+
+const bulkUpdateStudentScores = async (req, res) => {
+  try {
+    const { coachId } = req.params;
+    const { studentsScoreData } = req.body;
+
+    const result = await coachService.bulkUpdateStudentScores(
+      coachId,
+      studentsScoreData
+    );
+    successResponse(res, "Bulk score update completed", result);
+  } catch (error) {
+    errorResponse(res, error.message, error);
+  }
+};
+
+// Quarterly progress tracking methods
+const updateStudentQuarterlyProgress = async (req, res) => {
+  try {
+    const { coachId, studentId } = req.params;
+    const { year, quarter } = req.params;
+    const progressData = req.body;
+
+    const updatedProgress = await coachService.updateStudentQuarterlyProgress(
+      coachId,
+      studentId,
+      year,
+      quarter,
+      progressData
+    );
+
+    successResponse(
+      res,
+      "Student quarterly progress updated successfully",
+      updatedProgress
+    );
+  } catch (error) {
+    errorResponse(res, error.message, error);
+  }
+};
+
+const getStudentQuarterlyProgress = async (req, res) => {
+  try {
+    const { coachId, studentId } = req.params;
+    const { year, quarter } = req.query;
+
+    const progress = await coachService.getStudentQuarterlyProgress(
+      coachId,
+      studentId,
+      year,
+      quarter
+    );
+
+    successResponse(
+      res,
+      "Student quarterly progress fetched successfully",
+      progress
+    );
+  } catch (error) {
+    errorResponse(res, error.message, error);
+  }
+};
+
+const updateStudentCoachingPlan = async (req, res) => {
+  try {
+    const { coachId, studentId } = req.params;
+    const planData = req.body;
+
+    const updatedPlan = await coachService.updateStudentCoachingPlan(
+      coachId,
+      studentId,
+      planData
+    );
+    successResponse(
+      res,
+      "Student coaching plan updated successfully",
+      updatedPlan
+    );
+  } catch (error) {
+    errorResponse(res, error.message, error);
+  }
+};
+
+const updateStudentPerformanceMetrics = async (req, res) => {
+  try {
+    const { coachId, studentId } = req.params;
+    const metricsData = req.body;
+
+    const updatedMetrics = await coachService.updateStudentPerformanceMetrics(
+      coachId,
+      studentId,
+      metricsData
+    );
+
+    successResponse(
+      res,
+      "Student performance metrics updated successfully",
+      updatedMetrics
+    );
+  } catch (error) {
+    errorResponse(res, error.message, error);
+  }
+};
+
+const getCoachProgressAnalytics = async (req, res) => {
+  try {
+    const { coachId } = req.params;
+    const filters = req.query;
+
+    const analytics = await coachService.getCoachProgressAnalytics(
+      coachId,
+      filters
+    );
+    successResponse(
+      res,
+      "Coach progress analytics fetched successfully",
+      analytics
+    );
+  } catch (error) {
+    errorResponse(res, error.message, error);
+  }
+};
+
+const generateStudentProgressReport = async (req, res) => {
+  try {
+    const { coachId, studentId } = req.params;
+    const { year, quarter } = req.params;
+
+    const report = await coachService.generateStudentProgressReport(
+      coachId,
+      studentId,
+      year,
+      quarter
+    );
+    successResponse(
+      res,
+      "Student progress report generated successfully",
+      report
+    );
+  } catch (error) {
+    errorResponse(res, error.message, error);
+  }
+};
+
+const getBatchProgressSummary = async (req, res) => {
+  try {
+    const { batchId } = req.params;
+    const { year, quarter } = req.params;
+
+    const summary = await coachService.getBatchProgressSummary(
+      batchId,
+      year,
+      quarter
+    );
+    successResponse(
+      res,
+      "Batch progress summary fetched successfully",
+      summary
+    );
   } catch (error) {
     errorResponse(res, error.message, error);
   }
@@ -364,7 +615,7 @@ module.exports = {
   addCertification,
   getAllCoaches,
 
-  getProfileWithPromotion, 
+  getProfileWithPromotion,
 
   // Add the new batch controller functions
   createBatch,
@@ -391,5 +642,22 @@ module.exports = {
   getBatchMonthlyAnalytics,
   getDetailedMonthlyAnalytics,
   getDetailedBatchAnalytics,
-  refreshAnalytics
+  refreshAnalytics,
+
+  // Add score tracking exports
+  updateStudentScore,
+  getStudentScoreHistory,
+  getBatchScoreAnalytics,
+  getCoachEffectivenessReport,
+  getStudentsWithScores,
+  bulkUpdateStudentScores,
+
+  // Add progress tracking exports
+  updateStudentQuarterlyProgress,
+  getStudentQuarterlyProgress,
+  updateStudentCoachingPlan,
+  updateStudentPerformanceMetrics,
+  getCoachProgressAnalytics,
+  generateStudentProgressReport,
+  getBatchProgressSummary,
 };

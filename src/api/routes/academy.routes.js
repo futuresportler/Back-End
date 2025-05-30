@@ -163,10 +163,26 @@ router.post(
 router.get("/fees/overdue", authMiddleware, academyController.getOverdueFees);
 
 // Metrics routes - Add these after your existing routes, before module.exports
-router.post("/profile-views", authMiddleware, academyController.recordProfileView);
-router.get("/:academyId/metrics/monthly", authMiddleware, academyController.getMonthlyMetrics);
-router.get("/programs/:programId/metrics/:monthId", authMiddleware, academyController.getProgramMonthlyMetrics);
-router.get("/:academyId/conversion-rate/:monthId", authMiddleware, academyController.getConversionRate);
+router.post(
+  "/profile-views",
+  authMiddleware,
+  academyController.recordProfileView
+);
+router.get(
+  "/:academyId/metrics/monthly",
+  authMiddleware,
+  academyController.getMonthlyMetrics
+);
+router.get(
+  "/programs/:programId/metrics/:monthId",
+  authMiddleware,
+  academyController.getProgramMonthlyMetrics
+);
+router.get(
+  "/:academyId/conversion-rate/:monthId",
+  authMiddleware,
+  academyController.getConversionRate
+);
 router.post(
   "/:academyId/metrics/:monthId/refresh",
   authMiddleware,
@@ -259,6 +275,56 @@ router.post(
   "/:academyId/coaches/sync",
   authMiddleware,
   academyController.syncCoachesWithPlatform
+);
+
+// Add progress tracking routes after existing routes
+
+// Progress tracking routes
+router.get(
+  "/:academyId/students/:studentId/progress",
+  authMiddleware,
+  academyController.getStudentQuarterlyProgress
+);
+router.put(
+  "/:academyId/students/:studentId/progress/:year/:quarter",
+  authMiddleware,
+  academyController.updateStudentQuarterlyProgress
+);
+
+// Progress milestones
+router.put(
+  "/:academyId/students/:studentId/milestones",
+  authMiddleware,
+  academyController.updateStudentProgressMilestones
+);
+
+// Progress analytics routes
+router.get(
+  "/:academyId/progress/analytics",
+  authMiddleware,
+  academyController.getAcademyProgressAnalytics
+);
+router.get(
+  "/:academyId/batches/:batchId/progress/analytics",
+  authMiddleware,
+  academyController.getBatchProgressAnalytics
+);
+router.get(
+  "/:academyId/programs/:programId/progress/analytics",
+  authMiddleware,
+  academyController.getProgramProgressAnalytics
+);
+
+// Quarterly reports
+router.get(
+  "/:academyId/students/:studentId/reports/:year/:quarter",
+  authMiddleware,
+  academyController.generateStudentQuarterlyReport
+);
+router.post(
+  "/:academyId/reports/bulk/:year/:quarter",
+  authMiddleware,
+  academyController.generateBulkQuarterlyReports
 );
 
 module.exports = router;

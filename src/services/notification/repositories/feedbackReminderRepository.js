@@ -98,8 +98,7 @@ class FeedbackReminderRepository {
         },
       },
       include: [
-        { model: AcademyCoach, as: "academyCoach" },
-        { model: AcademyStudent, as: "student" },
+        { model: AcademyCoach, as: "academyCoach" }
       ],
     });
   }

@@ -105,7 +105,7 @@ class NotificationRepository {
       include: [
         { model: CoachProfile, as: "coach", required: false },
         { model: AcademyCoach, as: "academyCoach", required: false },
-        { model: User, as: "student", required: false },
+        { model: User, as: "remindedStudent", required: false },
         { model: AcademyBatch, as: "batch", required: false },
         { model: AcademyProgram, as: "program", required: false },
         { model: AcademyProfile, as: "academy", required: false }
@@ -131,7 +131,7 @@ class NotificationRepository {
       include: [
         { model: CoachProfile, as: "coach", required: false },
         { model: AcademyCoach, as: "academyCoach", required: false },
-        { model: User, as: "student", required: false },
+        { model: User, as: "remindedStudent", required: false },
         { model: AcademyBatch, as: "batch", required: false },
         { model: AcademyProgram, as: "program", required: false }
       ]
