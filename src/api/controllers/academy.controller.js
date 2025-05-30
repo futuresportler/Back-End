@@ -58,6 +58,7 @@ const getProfile = async (req, res) => {
     successResponse(res, "Academy profile fetched", profile);
   } catch (error) {
     errorResponse(res, error.message, error);
+    errorResponse(res, error.message, error);
   }
 };
 
@@ -195,6 +196,7 @@ const createBatch = async (req, res) => {
     );
     successResponse(res, "Batch created successfully", batch, 201);
   } catch (error) {
+    errorResponse(res, error.message, error);
     errorResponse(res, error.message, error);
   }
 };
@@ -1504,6 +1506,8 @@ module.exports = {
   updateProfile,
   deleteProfile,
   getNearbyAcademies,
+  getProfileWithPromotion,
+  // Removed getAllAcademies
   getProfileWithPromotion,
   // Removed getAllAcademies
   // Student-related exports
