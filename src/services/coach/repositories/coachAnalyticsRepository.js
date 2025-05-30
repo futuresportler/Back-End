@@ -980,7 +980,7 @@ class CoachAnalyticsRepository {
       include: [
         {
           model: sequelize.models.User,
-          as: "student",
+          as: "coachStudentUser",
           attributes: ["first_name", "last_name"],
         },
       ],

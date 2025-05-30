@@ -3,6 +3,8 @@ const {
   AcademyProfileView,
   AcademyInquiry,
   Month,
+  MonthlyStudentMetric,
+  AcademyProgramSession,
   sequelize,
 } = require("../../../database");
 const { Op } = require("sequelize");

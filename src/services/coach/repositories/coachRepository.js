@@ -78,7 +78,7 @@ const getStudentsWithScores = async (coachId, filters = {}) => {
   const include = [
     {
       model: User,
-      as: "student",
+      as: "coachStudentUser",
       attributes: ["userId", "first_name", "last_name", "email", "mobile"],
     },
   ];
@@ -260,7 +260,7 @@ const findStudentsByBatch = async (batchId) => {
     include: [
       {
         model: User,
-        as: "student",
+        as: "coachStudentUser",
         attributes: [
           "userId",
           "first_name",
@@ -419,7 +419,7 @@ const getCoachStudentQuarterlyProgress = async (
     include: [
       {
         model: User,
-        as: "student",
+        as: "coachStudentUser",
         attributes: ["userId", "first_name", "last_name"],
       },
     ],
@@ -531,7 +531,7 @@ const getCoachProgressAnalytics = async (coachId, filters = {}) => {
     include: [
       {
         model: User,
-        as: "student",
+        as: "coachStudentUser",
         attributes: ["userId", "first_name", "last_name"],
       },
     ],
@@ -647,7 +647,7 @@ const generateCoachStudentReport = async (studentId, year, quarter) => {
     include: [
       {
         model: User,
-        as: "student",
+        as: "coachStudentUser",
         attributes: ["userId", "first_name", "last_name", "email"],
       },
       {

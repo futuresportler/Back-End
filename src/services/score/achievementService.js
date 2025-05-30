@@ -272,7 +272,7 @@ class AchievementService {
         include: [
           {
             model: sequelize.models.User,
-            as: "student",
+            as: "coachStudentUser",
             attributes: ["userId", "first_name", "last_name"],
           },
         ],
@@ -280,7 +280,7 @@ class AchievementService {
 
       students = batchStudents.map((s) => ({
         studentId: s.userId,
-        name: `${s.student.first_name} ${s.student.last_name}`,
+        name: `${s.coachStudentUser.first_name} ${s.coachStudentUser.last_name}`,
         achievements: s.achievementFlags || [],
         studentType: "coach",
       }));
