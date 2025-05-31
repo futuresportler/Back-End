@@ -17,6 +17,11 @@ module.exports = (sequelize) => {
       yearId: {
         type: DataTypes.UUID,
         allowNull: false,
+        references: {
+          model: 'Years', // matches Year model's tableName
+          key: 'yearId'
+        },
+        onDelete: 'CASCADE', // Optional: define behavior on delete
       }
     },
     { timestamps: false }
