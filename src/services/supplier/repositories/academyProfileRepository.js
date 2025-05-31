@@ -31,6 +31,7 @@ async function createAcademyProfile(data) {
     let mgr = await SupplierRepository.findSupplierByMobile(m.phone);
     if (mgr) {
       managerId = mgr.supplierId;
+      manager_info.manager = mgr
     } else {
       mgr = await SupplierRepository.createSupplier({
         supplierId: uuidv4(),
@@ -156,7 +157,6 @@ async function createAcademyProfile(data) {
     }
     await SupplierRepository.updateSupplier(supplierId, upd);
   }
-
   // 6️⃣ Send Invitations
   if (managerInvitationSent && managerId) {
     try {

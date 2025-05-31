@@ -1037,8 +1037,8 @@ const bulkImportArcheryAcademies = async (req, res) => {
       mobile_number
     );
     // Batch processing
-    const batchSize = 10; // Process 10 academies at a time
-    const delay = 500; // 1.5 seconds delay between batches
+    const batchSize = 25; // Process 25 academies at a time
+    const delay = 500; // 0.5 seconds delay between batches
     const results = {
       total: academies.length,
       processed: 0,

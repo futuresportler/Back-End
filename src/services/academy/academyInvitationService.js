@@ -13,7 +13,7 @@ class AcademyInvitationService {
 
   // Invite manager to academy
   async inviteManager(academyId, inviterSupplierId, managerData) {
-    const { phoneNumber, email, name } = managerData;
+    const { mobile_number, email, name } = managerData;
     
     // Check if academy exists and inviter is owner
     const academy = await AcademyProfile.findByPk(academyId);
@@ -28,20 +28,19 @@ class AcademyInvitationService {
     // Check if supplier exists with phone number
     let existingSupplier = null;
     try {
-      existingSupplier = await SupplierRepository.findSupplierByMobile(phoneNumber);
+      existingSupplier = await SupplierRepository.findSupplierByMobile(mobile_number);
     } catch (error) {
       // Supplier doesn't exist, we'll create one
     }
 
     let inviteeSupplierId = null;
-    
     if (existingSupplier) {
       inviteeSupplierId = existingSupplier.supplierId;
     } else {
       // Create unverified supplier account
       const newSupplier = await SupplierRepository.createSupplier({
         supplierId: uuidv4(),
-        mobile_number: phoneNumber,
+        mobile_number: mobile_number,
         email: email,
         name: name,
         isVerified: false,
@@ -58,7 +57,7 @@ class AcademyInvitationService {
       academyId,
       inviterSupplierId,
       inviteeSupplierId,
-      inviteePhoneNumber: phoneNumber,
+      inviteePhoneNumber: mobile_number,
       inviteeEmail: email,
       role: 'manager',
       invitationToken: this.generateInvitationToken(),
