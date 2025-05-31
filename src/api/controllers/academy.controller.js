@@ -1161,6 +1161,7 @@ const transformArcheryData = (archeryData) => {
     },
     manager_info: {
       owner_is_manager: true,
+      managerId: null, // Add this line
     },
   };
 };
