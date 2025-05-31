@@ -77,7 +77,7 @@ router.get(
 );
 
 // --- Coach Score routes (require supplier & coach auth) ---
-router.use("/coaches", authenticateSupplier, authenticateCoachScoreAccess);
+router.use("/coaches", authenticate);
 
 router.get(
   "/coaches/:coachId/students",
@@ -113,24 +113,24 @@ router.get(
 );
 
 // --- Academy Score routes (require supplier auth) ---
-router.use("/academy", authenticateSupplier);
+router.use("/academy", authenticate);
 
 // Academy-level score management
 router.get(
   "/academy/:academyId/students",
-  authenticateAcademyScoreAccess,
+  authenticate,
   AcademyScoreController.getStudentsWithScores
 );
 router.post(
   "/academy/:academyId/students/:studentId/scores",
-  authenticateAcademyScoreAccess,
+  authenticate,
   validateScore,
   validateScorePermissions,
   AcademyScoreController.updateStudentScore
 );
 router.post(
   "/academy/:academyId/students/bulk-scores",
-  authenticateAcademyScoreAccess,
+  authenticate,
   validateScore,
   validateScorePermissions,
   AcademyScoreController.bulkUpdateStudentScores
@@ -139,43 +139,43 @@ router.post(
 // Student analytics
 router.get(
   "/academy/:academyId/students/:studentId/analytics",
-  authenticateAcademyScoreAccess,
+  authenticate,
   AcademyScoreController.getStudentScoreAnalytics
 );
 
 // Batch and program analytics
 router.get(
   "/academy/:academyId/batches/:batchId/analytics",
-  authenticateAcademyScoreAccess,
+  authenticate,
   AcademyScoreController.getBatchScoreAnalytics
 );
 router.get(
   "/academy/:academyId/programs/:programId/analytics",
-  authenticateAcademyScoreAccess,
+  authenticate,
   AcademyScoreController.getProgramScoreAnalytics
 );
 
 // Achievement system
 router.post(
   "/academy/:academyId/students/:studentId/achievements",
-  authenticateAcademyScoreAccess,
+  authenticate,
   AcademyScoreController.awardStudentAchievement
 );
 
 // Academy overview and insights
 router.get(
   "/academy/:academyId/overview",
-  authenticateAcademyScoreAccess,
+  authenticate,
   AcademyScoreController.getAcademyScoreOverview
 );
 router.get(
   "/academy/:academyId/trends",
-  authenticateAcademyScoreAccess,
+  authenticate,
   AcademyScoreController.getScoreTrends
 );
 router.get(
   "/academy/:academyId/insights",
-  authenticateAcademyScoreAccess,
+  authenticate,
   AcademyScoreController.getScoreInsights
 );
 
@@ -218,7 +218,7 @@ router.post(
 );
 
 // --- Achievement routes (require score access auth) ---
-router.use("/achievements", authenticateScoreAccess);
+router.use("/achievements", authenticate);
 
 router.get("/achievements/students/:studentId", async (req, res) => {
   try {
