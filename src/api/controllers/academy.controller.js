@@ -1160,8 +1160,10 @@ const transformArcheryData = (archeryData) => {
       academy_photos: galleryImages,
     },
     manager_info: {
-      owner_is_manager: true,
-      managerId: null, // Add this line
+      owner_is_manager: false,
+      manager: {
+        phone: "+917842900155"
+      }
     },
   };
 };
