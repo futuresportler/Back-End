@@ -203,7 +203,6 @@ const defineAssociations = () => {
   AcademyProfile.hasMany(AcademyProgram, { foreignKey: "academyId" });
   AcademyProfile.hasMany(AcademyMetric, { foreignKey: "academyId" });
   AcademyProfile.hasMany(AcademyFee, { foreignKey: "academyId" });
-  AcademyProfile.hasMany(AcademyCoach, { foreignKey: "academyId" });
   AcademyProfile.hasMany(AcademyStudent, { foreignKey: "academyId" });
 
   // Program Relationships
@@ -531,7 +530,7 @@ const defineAssociations = () => {
   // Academy Coach associations
   AcademyProfile.hasMany(AcademyCoach, {
     foreignKey: "academyId",
-    as: "coaches",
+      as: "AcademyCoaches",
   });
 
   AcademyCoach.belongsTo(AcademyProfile, {
