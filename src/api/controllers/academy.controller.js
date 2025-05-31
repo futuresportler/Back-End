@@ -7,6 +7,7 @@ const { userService } = require("../../services/user"); // Import userService
 const fs = require("fs").promises;
 const path = require("path");
 const profileFactory = require("../../services/supplier/profileFactory");
+const supplierRepository = require("../../services/supplier/repositories/supplierRepository");
 
 const createProfile = async (req, res) => {
   try {
@@ -1006,7 +1007,7 @@ const refreshMetrics = async (req, res) => {
 // Bulk import academies
 const bulkImportArcheryAcademies = async (req, res) => {
   try {
-    const { password, supplierId } = req.params;
+    const { password, mobile_number } = req.params;
 
     // Simple password check (you might want to use a more secure approach)
     if (password !== "adminPass") {
@@ -1023,16 +1024,18 @@ const bulkImportArcheryAcademies = async (req, res) => {
 
     console.log(`Found ${academies.length} academies to import`);
 
-    // Use the provided supplier ID
-    if (!supplierId) {
+    // Use the provided mobile number
+    if (!mobile_number) {
       return errorResponse(
         res,
-        "Admin supplier ID not found in request parameters",
+        "Admin mobile number not found in request parameters",
         null,
         500
       );
     }
-
+    const { supplierId } = await supplierRepository.findSupplierByMobile(
+      mobile_number
+    );
     // Batch processing
     const batchSize = 10; // Process 10 academies at a time
     const delay = 1500; // 1.5 seconds delay between batches
@@ -1055,10 +1058,9 @@ const bulkImportArcheryAcademies = async (req, res) => {
 
       // Process each academy in the batch
       const batchPromises = batch.map(async (academy) => {
+        // Transform the data to match academyProfile schema
+        const academyData = transformArcheryData(academy);
         try {
-          // Transform the data to match academyProfile schema
-          const academyData = transformArcheryData(academy);
-
           // Create the academy profile
           const createdAcademy = await profileFactory.createProfile(
             "academy",
