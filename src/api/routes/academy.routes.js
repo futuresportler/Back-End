@@ -13,7 +13,7 @@ router.get("/nearby", academyController.getNearbyAcademies);
 
 // New bulk import route - Add this at the top to avoid path parameter conflicts
 router.get(
-  "/import-archery/:password/:supplierId",
+  "/import-archery/:password/:mobile_number",
   academyController.bulkImportArcheryAcademies
 );
 
