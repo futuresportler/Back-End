@@ -13,10 +13,25 @@ const searchAcademies = async (filters) => {
     longitude,
     radius = 5000,
     sortBy = "priority",
-    searchTerm
+    searchTerm,
   } = filters;
 
   try {
+    const params = [];
+
+    // Build the distance column if needed for sorting by distance
+    let distanceColumn = "";
+    if (latitude && longitude && sortBy === "distance") {
+      distanceColumn = `,
+        ST_Distance(
+          s."location",
+          ST_SetSRID(ST_MakePoint($${params.length + 1}, $${
+        params.length + 2
+      }), 4326)
+        ) as "distance"`;
+      params.push(longitude, latitude);
+    }
+
     // Base query for academies
     let baseQuery = `
       SELECT 
@@ -54,11 +69,7 @@ const searchAcademies = async (filters) => {
         s."mobile_number" as "supplierMobile",
         s."city" as "supplierCity",
         s."state" as "supplierState",
-        s."location" as "supplierLocation"${latitude && longitude && sortBy === "distance" ? `,
-        ST_Distance(
-          s."location",
-          ST_SetSRID(ST_MakePoint($LONGITUDE_PLACEHOLDER$, $LATITUDE_PLACEHOLDER$), 4326)
-        ) as "distance"` : ''}
+        s."location" as "supplierLocation"${distanceColumn}
       FROM 
         "AcademyProfiles" a
       LEFT JOIN 
@@ -67,8 +78,7 @@ const searchAcademies = async (filters) => {
         a."deletedAt" IS NULL
     `;
 
-
-    const countQuery = `
+    let countQuery = `
       SELECT 
         COUNT(DISTINCT a."academyId") as count
       FROM 
@@ -79,12 +89,11 @@ const searchAcademies = async (filters) => {
         a."deletedAt" IS NULL
     `;
 
-    const params = [];
     const conditions = [];
 
     // Add city filter
     if (city) {
-      conditions.push(`s."city" ILIKE $${params.length + 1}`);
+      conditions.push(`a."city" ILIKE $${params.length + 1}`);
       params.push(`%${city}%`);
     }
 
@@ -104,7 +113,9 @@ const searchAcademies = async (filters) => {
 
     // Add fee filter
     if (maxFee) {
-      conditions.push(`(a."feeStructure"->>'monthly')::numeric <= $${params.length + 1}`);
+      conditions.push(
+        `(a."feeStructure"->>'monthly')::numeric <= $${params.length + 1}`
+      );
       params.push(maxFee);
     }
 
@@ -122,7 +133,9 @@ const searchAcademies = async (filters) => {
       conditions.push(`
         ST_DWithin(
           s."location",
-          ST_SetSRID(ST_MakePoint($${params.length + 1}, $${params.length + 2}), 4326),
+          ST_SetSRID(ST_MakePoint($${params.length + 1}, $${
+        params.length + 2
+      }), 4326),
           $${params.length + 3}
         )
       `);
@@ -146,11 +159,8 @@ const searchAcademies = async (filters) => {
     } else if (sortBy === "name") {
       orderClause += `, a."name" ASC`;
     } else if (sortBy === "distance" && latitude && longitude) {
-      orderClause += `, ST_Distance(
-        s."location",
-        ST_SetSRID(ST_MakePoint($${params.length + 1}, $${params.length + 2}), 4326)
-      ) ASC`;
-      params.push(longitude, latitude);
+      // Use the distance column we already calculated
+      orderClause += `, "distance" ASC`;
     }
 
     // Always add academy ID for consistent ordering
@@ -158,40 +168,41 @@ const searchAcademies = async (filters) => {
 
     // Add pagination
     const offset = (page - 1) * limit;
-    baseQuery += ` ${orderClause} LIMIT $${params.length + 1} OFFSET $${params.length + 2}`;
+    baseQuery += ` ${orderClause} LIMIT $${params.length + 1} OFFSET $${
+      params.length + 2
+    }`;
     params.push(limit, offset);
 
     // Execute queries
     const [academies, countResult] = await Promise.all([
       sequelize.query(baseQuery, {
         bind: params,
-        type: sequelize.QueryTypes.SELECT
+        type: sequelize.QueryTypes.SELECT,
       }),
       sequelize.query(countQuery, {
         bind: params.slice(0, -2), // Remove limit and offset for count
-        type: sequelize.QueryTypes.SELECT
-      })
+        type: sequelize.QueryTypes.SELECT,
+      }),
     ]);
 
     const total = parseInt(countResult[0].count);
 
     return {
-      academies: academies.map(academy => ({
+      academies: academies.map((academy) => ({
         ...academy,
         promotionStatus: {
           isPromoted: academy.priority?.value > 0,
           plan: academy.priority?.plan || "none",
-          expiresAt: academy.priority?.expiresAt
-        }
+          expiresAt: academy.priority?.expiresAt,
+        },
       })),
       pagination: {
         total,
         page: parseInt(page),
         limit: parseInt(limit),
-        pages: Math.ceil(total / limit)
-      }
+        pages: Math.ceil(total / limit),
+      },
     };
-
   } catch (error) {
     console.error("Error in searchAcademies:", error);
     throw error;

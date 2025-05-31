@@ -460,6 +460,8 @@ const searchAcademies = async (req, res) => {
       city,
       sport,
       rating,
+      minRating,
+      maxFee,
       ageGroup,
       classType,
       facilities,
@@ -469,6 +471,8 @@ const searchAcademies = async (req, res) => {
       longitude,
       radius,
       sortBy = "priority",
+      searchTerm,
+      search,
     } = req.query;
 
     const filters = {
@@ -481,6 +485,10 @@ const searchAcademies = async (req, res) => {
     if (city) filters.city = city;
     if (sport) filters.sport = sport;
     if (rating) filters.minRating = Number.parseFloat(rating);
+    if (minRating) filters.minRating = Number.parseFloat(minRating);
+    if (maxFee) filters.maxFee = Number.parseFloat(maxFee);
+    if (searchTerm) filters.searchTerm = searchTerm;
+    if (search) filters.searchTerm = search; // Support both 'search' and 'searchTerm' params
     if (ageGroup) filters.ageGroup = ageGroup;
     if (classType) filters.classType = classType;
     if (facilities) filters.facilities = facilities.split(",");
@@ -1162,8 +1170,8 @@ const transformArcheryData = (archeryData, mobile_number) => {
     manager_info: {
       owner_is_manager: false,
       manager: {
-        phone: mobile_number
-      }
+        phone: mobile_number,
+      },
     },
   };
 };
@@ -1350,11 +1358,12 @@ const getStudentQuarterlyProgress = async (req, res) => {
     const { academyId, studentId } = req.params;
     const { year, quarter } = req.query;
 
+    // Convert undefined to null for the service call
     const progress = await AcademyService.getStudentQuarterlyProgress(
       academyId,
       studentId,
-      year,
-      quarter
+      year || null,
+      quarter || null
     );
 
     successResponse(
