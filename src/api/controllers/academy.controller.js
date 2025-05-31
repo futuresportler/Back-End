@@ -1059,7 +1059,7 @@ const bulkImportArcheryAcademies = async (req, res) => {
       // Process each academy in the batch
       const batchPromises = batch.map(async (academy) => {
         // Transform the data to match academyProfile schema
-        const academyData = transformArcheryData(academy);
+        const academyData = transformArcheryData(academy, mobile_number);
         try {
           // Create the academy profile
           const createdAcademy = await profileFactory.createProfile(
@@ -1107,7 +1107,7 @@ const bulkImportArcheryAcademies = async (req, res) => {
 };
 
 // Helper function to transform archery data to match academyProfile schema
-const transformArcheryData = (archeryData) => {
+const transformArcheryData = (archeryData, mobile_number) => {
   // Extract year from establishment year or use random recent year
   const foundedYear = archeryData["Establishment Year"]
     ? Number.parseInt(archeryData["Establishment Year"])
@@ -1160,8 +1160,10 @@ const transformArcheryData = (archeryData) => {
       academy_photos: galleryImages,
     },
     manager_info: {
-      owner_is_manager: true,
-      managerId: null, // Add this line
+      owner_is_manager: false,
+      manager: {
+        phone: mobile_number
+      }
     },
   };
 };
