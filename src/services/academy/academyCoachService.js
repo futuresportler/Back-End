@@ -1,6 +1,7 @@
 const { v4: uuidv4 } = require("uuid");
 const academyCoachRepository = require("./repositories/academyCoachRepository");
-const { CoachProfile, Supplier } = require("../../database");
+const academyRepository = require("./repositories/academyRepository");
+const { CoachProfile, Supplier, sequelize, AcademyStudent, AcademyBatch , AcademyProgram} = require("../../database");
 const coachProfileRepository = require("../supplier/repositories/coachProfileRepository");
 const scoreService = require("../score/scoreService");
 const { Op } = require("sequelize");
@@ -108,7 +109,7 @@ class AcademyCoachService {
         supplierId: supplier.supplierId,
         bio: academyCoach.bio,
         hourlyRate: academyCoach.hourlyRate,
-        experienceYears: parseInt(academyCoach.experienceLevel) || 1,
+        experienceYears: Number.parseInt(academyCoach.experienceLevel) || 1,
         sportsCoached: [academyCoach.sport],
         city: academy?.location || "Unknown",
         isVerified: false,
@@ -230,39 +231,46 @@ class AcademyCoachService {
   }
 
   async verifyStudentAccess(coachId, studentId) {
-    // Check if student is in any batch assigned to this coach
-    const coachBatches = await academyCoachRepository.getCoachBatches(coachId);
-    const batchIds = coachBatches.map((batch) => batch.batchId);
+    try {
+      // Check if student is in any batch assigned to this coach
+      const coachBatches = await academyCoachRepository.getCoachBatches(
+        coachId
+      );
+      const batchIds = coachBatches.map((batch) => batch.batchId);
 
-    if (batchIds.length > 0) {
-      const studentInBatch = await sequelize.models.AcademyStudent.findOne({
-        where: {
-          studentId,
-          batchId: { [Op.in]: batchIds },
-        },
-      });
+      if (batchIds.length > 0) {
+        const studentInBatch = await AcademyStudent.findOne({
+          where: {
+            studentId,
+            batchId: { [Op.in]: batchIds },
+          },
+        });
 
-      if (studentInBatch) return true;
+        if (studentInBatch) return true;
+      }
+
+      // Check if student is in any program assigned to this coach
+      const coachPrograms = await academyCoachRepository.getCoachPrograms(
+        coachId
+      );
+      const programIds = coachPrograms.map((program) => program.programId);
+
+      if (programIds.length > 0) {
+        const studentInProgram = await AcademyStudent.findOne({
+          where: {
+            studentId,
+            programId: { [Op.in]: programIds },
+          },
+        });
+
+        if (studentInProgram) return true;
+      }
+
+      return false;
+    } catch (error) {
+      console.error("Error verifying student access:", error);
+      return false;
     }
-
-    // Check if student is in any program assigned to this coach
-    const coachPrograms = await academyCoachRepository.getCoachPrograms(
-      coachId
-    );
-    const programIds = coachPrograms.map((program) => program.programId);
-
-    if (programIds.length > 0) {
-      const studentInProgram = await sequelize.models.AcademyStudent.findOne({
-        where: {
-          studentId,
-          programId: { [Op.in]: programIds },
-        },
-      });
-
-      if (studentInProgram) return true;
-    }
-
-    return false;
   }
 
   async getMyStudentsWithScores(coachId, filters = {}) {
@@ -288,7 +296,7 @@ class AcademyCoachService {
       where.sport = filters.sport;
     }
 
-    const students = await sequelize.models.AcademyStudent.findAll({
+    const students = await AcademyStudent.findAll({
       where,
       attributes: [
         "studentId",
@@ -302,13 +310,13 @@ class AcademyCoachService {
       ],
       include: [
         {
-          model: sequelize.models.AcademyBatch,
+          model: AcademyBatch,
           as: "batch",
           attributes: ["batchId", "batchName"],
           required: false,
         },
         {
-          model: sequelize.models.AcademyProgram,
+          model: AcademyProgram,
           as: "program",
           attributes: ["programId", "programName"],
           required: false,

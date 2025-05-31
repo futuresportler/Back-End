@@ -3,6 +3,7 @@ const {
   AcademyCoach,
   AcademyBatch,
   AcademyStudent,
+  AcademyProgram,
   AcademyFee,
 } = require("../../../database");
 const SupplierRepository = require("./supplierRepository");
@@ -209,13 +210,13 @@ async function getAcademyProfileBySupplierId(
   const include = [];
 
   if (includeBatches) {
-    include.push({ model: AcademyBatch, as: "AcademyBatche" });
+    include.push({ model: AcademyBatch, as: "AcademyBatches" });
   }
   if (includePrograms) {
-    include.push({ model: AcademyProgram, as: "" });
+    include.push({ model: AcademyProgram, as: "AcademyPrograms" });
   }
   if (includeCoaches) {
-    include.push({ model: AcademyCoach, as: "AcademyCoach" });
+    include.push({ model: AcademyCoach, as: "AcademyCoaches" });
   }
   if (includeStudents) {
     include.push({ model: AcademyStudent, as: "AcademyStudents" });
