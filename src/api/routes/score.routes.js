@@ -4,6 +4,7 @@ const {
   CoachScoreController,
   AcademyScoreController,
   AcademyCoachScoreController,
+  UserScoreController,
 } = require("../controllers/score.controller");
 const achievementService = require("../../services/score/achievementService");
 const {
@@ -312,5 +313,52 @@ router.get("/achievements/:entityType/:entityId/report", async (req, res) => {
     });
   }
 });
+
+// --- User Score routes (require authentication) ---
+router.use("/users", authenticate);
+
+// User score management
+router.get(
+  "/users/:userId",
+  UserScoreController.getUserScores
+);
+router.post(
+  "/users/:userId/scores",
+  validateScore,
+  UserScoreController.updateUserScore
+);
+router.get(
+  "/users/:userId/history",
+  UserScoreController.getUserScoreHistory
+);
+router.get(
+  "/users/:userId/analytics",
+  UserScoreController.getUserScoreAnalytics
+);
+
+// User achievements
+router.post(
+  "/users/:userId/achievements",
+  UserScoreController.awardUserAchievement
+);
+
+// User progress tracking
+router.get(
+  "/users/:userId/progress",
+  UserScoreController.getUserProgressTracking
+);
+router.post(
+  "/users/:userId/progress",
+  UserScoreController.updateUserProgressTracking
+);
+router.get(
+  "/users/:userId/progress/report",
+  UserScoreController.generateUserProgressReport
+);
+router.get(
+  "/users/:userId/milestones",
+  UserScoreController.trackUserMilestones
+);
+
 
 module.exports = router;

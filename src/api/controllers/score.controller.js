@@ -1216,10 +1216,246 @@ class AcademyCoachScoreController {
   }
 }
 
+// --- UserScoreController ---
+const userService = require("../../services/user/userService");
+
+class UserScoreController {
+  // Get user scores
+  async getUserScores(req, res) {
+    try {
+      const { userId } = req.params;
+      const { includeHistory = false } = req.query;
+
+      const scores = await userService.getUserScores(userId, { includeHistory: includeHistory === 'true' });
+
+      res.status(200).json({
+        success: true,
+        data: scores
+      });
+    } catch (error) {
+      res.status(400).json({
+        success: false,
+        message: error.message
+      });
+    }
+  }
+
+  // Update user score
+  async updateUserScore(req, res) {
+    try {
+      const { userId } = req.params;
+      const scoreData = req.body;
+      const assessorId = req.user?.userId || req.supplier?.supplierId;
+      const assessorType = req.user ? "user" : "supplier";
+
+      // Validate sport-specific flags if provided
+      if (scoreData.sportScores) {
+        for (const [sport, scores] of Object.entries(scoreData.sportScores)) {
+          if (!SPORTS_SCORING_FLAGS[sport]) {
+            return res.status(400).json({
+              success: false,
+              message: `Invalid sport: ${sport}`
+            });
+          }
+        }
+      }
+
+      const result = await userService.updateUserScore(userId, scoreData, assessorId, assessorType);
+
+      res.status(200).json({
+        success: true,
+        message: "User score updated successfully",
+        data: result
+      });
+    } catch (error) {
+      res.status(400).json({
+        success: false,
+        message: error.message
+      });
+    }
+  }
+
+  // Get user score history
+  async getUserScoreHistory(req, res) {
+    try {
+      const { userId } = req.params;
+      const { months = 6 } = req.query;
+
+      const history = await userService.getUserScoreHistory(userId, parseInt(months));
+
+      res.status(200).json({
+        success: true,
+        data: {
+          userId,
+          months: parseInt(months),
+          history
+        }
+      });
+    } catch (error) {
+      res.status(400).json({
+        success: false,
+        message: error.message
+      });
+    }
+  }
+
+  // Get user score analytics
+  async getUserScoreAnalytics(req, res) {
+    try {
+      const { userId } = req.params;
+      const { months = 6 } = req.query;
+
+      const analytics = await userService.getUserScoreAnalytics(userId, parseInt(months));
+
+      res.status(200).json({
+        success: true,
+        data: analytics
+      });
+    } catch (error) {
+      res.status(400).json({
+        success: false,
+        message: error.message
+      });
+    }
+  }
+
+  // Award achievement to user
+  async awardUserAchievement(req, res) {
+    try {
+      const { userId } = req.params;
+      const { achievement } = req.body;
+
+      if (!achievement) {
+        return res.status(400).json({
+          success: false,
+          message: "Achievement data is required"
+        });
+      }
+
+      const result = await userService.awardUserAchievement(userId, achievement);
+
+      res.status(200).json({
+        success: true,
+        message: "Achievement awarded successfully",
+        data: result
+      });
+    } catch (error) {
+      res.status(400).json({
+        success: false,
+        message: error.message
+      });
+    }
+  }
+
+  // Get user progress tracking
+  async getUserProgressTracking(req, res) {
+    try {
+      const { userId } = req.params;
+      const { timeframe = 6 } = req.query;
+
+      const progressData = await userService.getUserProgressTracking(userId, parseInt(timeframe));
+
+      res.status(200).json({
+        success: true,
+        data: progressData
+      });
+    } catch (error) {
+      res.status(400).json({
+        success: false,
+        message: error.message
+      });
+    }
+  }
+
+  // Update user progress tracking
+  async updateUserProgressTracking(req, res) {
+    try {
+      const { userId } = req.params;
+      const { progressData } = req.body;
+      const assessorId = req.user?.userId || req.supplier?.supplierId;
+      const assessorType = req.user ? "user" : "supplier";
+
+      if (!progressData) {
+        return res.status(400).json({
+          success: false,
+          message: "Progress data is required"
+        });
+      }
+
+      const result = await userService.updateUserProgressTracking(userId, progressData, assessorId, assessorType);
+
+      res.status(200).json({
+        success: true,
+        message: "User progress tracking updated successfully",
+        data: result
+      });
+    } catch (error) {
+      res.status(400).json({
+        success: false,
+        message: error.message
+      });
+    }
+  }
+
+  // Generate user progress report
+  async generateUserProgressReport(req, res) {
+    try {
+      const { userId } = req.params;
+      const { year, quarter } = req.query;
+
+      if (!year || !quarter) {
+        return res.status(400).json({
+          success: false,
+          message: "Year and quarter are required query parameters"
+        });
+      }
+
+      const report = await userService.generateUserProgressReport(userId, year, quarter);
+
+      res.status(200).json({
+        success: true,
+        data: report
+      });
+    } catch (error) {
+      res.status(400).json({
+        success: false,
+        message: error.message
+      });
+    }
+  }
+
+  // Track user milestones
+  async trackUserMilestones(req, res) {
+    try {
+      const { userId } = req.params;
+      const { sport } = req.query;
+
+      if (!sport) {
+        return res.status(400).json({
+          success: false,
+          message: "Sport query parameter is required"
+        });
+      }
+
+      const milestones = await userService.trackUserMilestones(userId, sport);
+
+      res.status(200).json({
+        success: true,
+        data: milestones
+      });
+    } catch (error) {
+      res.status(400).json({
+        success: false,
+        message: error.message
+      });
+    }
+  }
+}
 // Export all controllers as properties of an object
 module.exports = {
   ScoreController: new ScoreController(),
   CoachScoreController: new CoachScoreController(),
   AcademyScoreController: new AcademyScoreController(),
   AcademyCoachScoreController: new AcademyCoachScoreController(),
+  UserScoreController: new UserScoreController(),
 };
