@@ -58,7 +58,6 @@ module.exports = (sequelize) => {
       grades: {
         type: DataTypes.JSON,
         defaultValue: {},
-
       },
       guardianName: {
         type: DataTypes.STRING,
