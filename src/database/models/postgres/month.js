@@ -17,6 +17,7 @@ module.exports = (sequelize) => {
       yearId: {
         type: DataTypes.UUID,
         allowNull: false,
+        onDelete: 'CASCADE', // Optional: define behavior on delete
       }
     },
     { timestamps: false }

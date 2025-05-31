@@ -1175,28 +1175,23 @@ const syncDatabase = async () => {
       );
     }
 
-    // Skip the Day model entirely in sync
-    const models = Object.values(sequelize.models).filter(
-      (model) => model.name !== "Day"
-    );
-
-    // Sync all models except Day
-    for (const model of models) {
-      try {
-        await model.sync({ alter: true }); // Never use alter in production
-        console.log(`Synced ${model.name} successfully`);
-      } catch (error) {
-        console.error(`Error syncing ${model.name}:`, error.message);
+    if (process.env.NODE_ENV !== "production") {
+      // Sync all models except Day
+      const models = Object.values(sequelize.models).filter(
+        (model) => model.name !== "Day"
+      );
+      for (const model of models) {
+        try {
+          await model.sync({ alter: true });
+          console.log(`Synced ${model.name} successfully`);
+        } catch (error) {
+          console.error(`Error syncing ${model.name}:`, error.message);
+        }
       }
+    } else {
+      console.log("⚠️ Skipping automatic sync in production. Use migrations for schema changes.");
     }
-    // Sync models individually with force:false, alter:false first to create tables safely
-    // console.log("Creating tables if they don't exist...");
-    // await sequelize.sync({ force: false, alter: false });
 
-    // // Then try to sync Year and Month models first to establish their relationship
-    // console.log("Syncing time models...");
-    // await Year.sync({ alter: true });
-    // await sequelize.sync({ alter: true });
     console.log("✅ Database synchronized successfully");
   } catch (error) {
     console.error("❌ Database synchronization failed:", error);

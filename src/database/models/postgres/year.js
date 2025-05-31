@@ -19,7 +19,6 @@ module.exports = (sequelize) => {
     },
     {
       timestamps: false,
-      tableName: "sport_years", // Explicitly set a different table name to avoid conflicts
     }
   );
 };
