@@ -19,29 +19,46 @@ const searchAcademies = async (filters) => {
   try {
     // Base query for academies
     let baseQuery = `
-      SELECT DISTINCT
+      SELECT 
         a."academyId",
         a."name",
         a."description", 
         a."sports",
         a."facilities",
-        a."images",
-        a."timings",
-        a."contactInfo",
+        a."photos",
+        a."videos",
+        a."operatingHours",
+        a."ageGroups",       
+        a."classTypes",      
+        a."location",         
+        a."city",             
+        a."address",          
+        a."phone",            
+        a."email",            
+        a."website",          
+        a."socialMediaLinks", 
         a."rating",
-        a."reviews",
+        a."reviewsCount",
         a."totalStudents",
-        a."experienceYears",
-        a."certifications",
+        a."totalPrograms",
+        a."foundedYear",
+        a."trailDuration",    
+        a."trailBookable",    
+        a."cctv",             
+        a."isVerified",
         a."achievements",
-        a."feeStructure",
         a."priority",
+        (a."priority"->>'value')::numeric as "priorityValue",
         s."name" as "supplierName",
         s."email" as "supplierEmail",
         s."mobile_number" as "supplierMobile",
         s."city" as "supplierCity",
         s."state" as "supplierState",
-        s."location" as "supplierLocation"
+        s."location" as "supplierLocation"${latitude && longitude && sortBy === "distance" ? `,
+        ST_Distance(
+          s."location",
+          ST_SetSRID(ST_MakePoint($LONGITUDE_PLACEHOLDER$, $LATITUDE_PLACEHOLDER$), 4326)
+        ) as "distance"` : ''}
       FROM 
         "AcademyProfiles" a
       LEFT JOIN 
@@ -49,6 +66,7 @@ const searchAcademies = async (filters) => {
       WHERE 
         a."deletedAt" IS NULL
     `;
+
 
     const countQuery = `
       SELECT 
