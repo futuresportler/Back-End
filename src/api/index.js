@@ -17,6 +17,7 @@ const notificationRoutes = require("./routes/notification.routes");
 const invitationRoutes = require("./routes/invitation.routes");
 const promotionRoutes = require("./routes/promotion.routes");
 const userBookingRoutes = require("./routes/booking.routes");
+const scoreRoutes = require("./routes/score.routes");
 // Mount routes
 router.use("/users", userRoutes);
 router.use("/suppliers", supplierRoutes);
@@ -33,4 +34,5 @@ router.use("/notifications", notificationRoutes);
 router.use("/invitations", invitationRoutes);
 router.use("/promotions", promotionRoutes);
 router.use("/bookings", userBookingRoutes);
+router.use("/scores", scoreRoutes);
 module.exports = router;

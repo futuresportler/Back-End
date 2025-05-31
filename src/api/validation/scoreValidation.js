@@ -1,7 +1,7 @@
 const {
   SPORTS_SCORING_FLAGS,
   SCORE_VALIDATION_RULES,
-} = require("../../constants/scoreConstants");
+} = require("../../config/scoreConstants");
 
 const validateScore = (req, res, next) => {
   try {

@@ -1,7 +1,7 @@
 const {
   AUTO_ACHIEVEMENT_RULES,
   SPORTS_SCORING_FLAGS,
-} = require("../../constants/scoreConstants");
+} = require("../../config/scoreConstants");
 const { v4: uuidv4 } = require("uuid");
 
 class AchievementService {
