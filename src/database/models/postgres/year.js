@@ -19,7 +19,6 @@ module.exports = (sequelize) => {
     },
     {
       timestamps: false,
-      tableName: "Years", // Explicitly set a different table name to avoid conflicts
     }
   );
 };
